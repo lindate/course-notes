@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>闭区间上连续函数的性质 · 高等数学笔记</title>
+<meta name="description" content="四个定理都挂着同一个前缀：闭区间 + 连续函数。结论很直白——闭区间上的连续函数「一定有界、一定有最大值和最小值、异号端点之间必穿过 x 轴、介乎两端函数值之间的值都取得到」。但「闭区间」三个字一个都不能少：换成开区间、或中间断一下，结论立刻垮掉。这一页就专门把「少了条件会怎样」的反例讲透。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 1 章  函数与极限</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 16 讲</div>
+    <h1 class="title"><span class="pnum">P016</span>闭区间上连续函数的性质</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>四个定理都挂着同一个前缀：<strong>闭区间 + 连续函数</strong>。结论很直白——闭区间上的连续函数「一定有界、一定有最大值和最小值、异号端点之间必穿过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴、介乎两端函数值之间的值都取得到」。但「闭区间」三个字一个都不能少：换成开区间、或中间断一下，结论立刻垮掉。这一页就专门把<mark>「少了条件会怎样」</mark>的反例讲透。</p></div>
+    <div class="meta"><span>时长 22 分</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=0">00:00</a><span class="vv"><b>标题两个关键词</b>：必须「闭区间」且「连续」，结论才成立。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=51">00:51</a><span class="vv"><b>最大值/最小值</b>概念：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 取的值、最大值唯一但取最大值的点可以不唯一。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=124">02:04</a><span class="vv"><b>最值可能不存在</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>x</mi></math></span> 无最大值；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 在开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 无最值。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=314">05:14</a><span class="vv"><b>定理一</b>（有界性与最值定理）：闭区间连续 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 有界且有最大、最小值。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=539">08:59</a><span class="vv"><b>两个反例</b>：开区间连续无最值；闭区间但有间断点也无最值。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=848">14:08</a><span class="vv"><b>零点定理</b>：两端异号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 开区间内至少一点函数值为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（过河比喻）。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1333">22:13</a><span class="vv"><b>介值定理</b>：介乎 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 之间的每个值都取得到。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1635">27:15</a><span class="vv"><b>推论</b>：值域恰为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>m</mi><mo>,</mo><mi>M</mi><mo>]</mo></math></span>；端点函数值与最值「一毛钱关系没有」。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=2011">33:31</a><span class="vv"><b>例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>3</mn></msup><mo>−</mo><mn>4</mn><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 内至少有一根（用零点定理）。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">先看标题：两个词缺一不可</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=0">00:00</a>老师一上来就点题：这一节叫「闭区间上连续函数的性质」，你要注意<strong>两点</strong>——第一，性质必须发生在<strong>闭区间</strong>上；第二，函数<strong>必须连续</strong>。两个条件都满足，下面四条结论才成立。整页内容其实就是围绕这两条「为什么要这样要求」展开。</p>
+
+<h2 id="s2">最大值与最小值：先把概念掰清</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=51">00:51</a>在讲定理之前，先理解「最大值」是什么。设在区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>I</mi></math></span> 上有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>∈</mo><mspace width="0.25em"></mspace><mi>I</mi></math></span>，使得对一切 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mspace width="0.25em"></mspace><mi>I</mi></math></span> 都有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>≤</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 就叫做函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>I</mi></math></span> 上的<strong>最大值</strong>，点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 叫<strong>最大值点</strong>。最小值对称定义。</p>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=90">01:30</a>两个容易混的点</span>
+  <p>老师特意强调：<strong>最大值是一个函数值（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的取值），最大值点才是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的位置</strong>。比如函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处取得最大值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>5</mn></math></span>——「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>5</mn></math></span> 是最大值，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 是取最大值的点」，别把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 搞反。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=124">02:04</a>接着老师连抛几个反问，把最值概念彻底澄清：</p>
+
+<ul class="tight">
+  <li><strong>最大值唯一吗？</strong>唯一。最大就是最大，那个最大的数值只有一个。</li>
+  <li><strong>取最大值的点唯一吗？</strong>不一定。图上可能有两个甚至更多点，都取到同一个最大值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</li>
+  <li><strong>最大值和最小值能相等吗？</strong>能。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span> 这种常函数，最大值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mn>1</mn></math></span>，最小值也 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mn>1</mn></math></span>。</li>
+  <li><strong>最大值可能比最小值小吗？</strong>不可能——区间固定时，最大值不会小于最小值。</li>
+  <li><strong>最值一定存在吗？</strong>不一定！这是关键。</li>
+</ul>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=204">03:24</a>为什么「最值不一定存在」要单独拎出来说</span>
+  <p>因为初学者常默认「函数总有最大最小」。老师举了两个反例：</p>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在定义域内：越往 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 靠函数值越大，可以冲到无穷，<strong>没有最大值</strong>（不是「最大值是无穷大」，无穷大不是数，所以叫「不存在」）。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 在<strong>开区间</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 上：最高点该是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 这个端点<strong>不被包含</strong>，所以取不到，既无最大值也无最小值。</li>
+  </ul>
+  <p>这两个例子正是后面「为什么必须闭区间」的伏笔。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 240" role="img" aria-label="最值不唯一且端点函数值未必是最值">
+    <line x1="60" y1="200" x2="600" y2="200" class="m-thin" stroke-width="1.3"></line>
+    <line x1="60" y1="40" x2="60" y2="200" class="m-thin" stroke-width="1.3"></line>
+    <path d="M 110 130 C 140 120, 175 80, 215 80 C 266.7 80, 318.3 172, 370 172 C 421.7 172, 473.3 80, 525 80 C 543 80, 560 92, 580 108" fill="none" class="m-acc" stroke-width="2"></path>
+    <circle cx="215" cy="80" r="3.6" class="m-fill"></circle>
+    <circle cx="525" cy="80" r="3.6" class="m-fill"></circle>
+    <circle cx="110" cy="130" r="3.4" class="m-fill-g"></circle>
+    <circle cx="580" cy="108" r="3.4" class="m-fill-g"></circle>
+    <line x1="215" y1="80" x2="215" y2="200" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="525" y1="80" x2="525" y2="200" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <text x="44" y="50" class="m-sub" font-size="11.5">y</text>
+    <text x="596" y="214" class="m-sub" font-size="11.5">x</text>
+    <text x="124" y="68" class="m-acc" font-size="12">最高点 M（两个）</text>
+    <text x="466" y="68" class="m-acc" font-size="12">也是 M</text>
+    <text x="96" y="148" class="m-sub" font-size="11.5">f(a)</text>
+    <text x="586" y="122" class="m-sub" font-size="11.5">f(b)</text>
+    <text x="300" y="215" class="m-sub" font-size="11.5">端点函数值未必是 M 或 m</text>
+  </svg>
+  <figcaption><b>最值可以「同时」出现在多处。</b>这条曲线有两个高度相同的最高点（都标为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi></math></span>），说明<em>最大值唯一、但取最大值的点不唯一</em>。同时，左右两端点的函数值（绿点）既不在最高也不在最低，说明<strong>端点函数值和最大值、最小值没有必然联系</strong>——这一点后面讲介值定理时会再次用到。</figcaption>
+</figure>
+
+<h2 id="s3">定理一：有界性与最大值最小值定理</h2>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 闭区间上连续函数的最值定理</span>
+  <p>设函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在<strong>闭区间</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上<strong>连续</strong>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上</p>
+  <ol class="tight">
+    <li>一定<strong>有界</strong>；</li>
+    <li>一定<strong>有最大值</strong>和<strong>最小值</strong>。</li>
+  </ol>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=356">05:56</a>老师没给严格证明，而是用一句大白话让结论「长」在脑子里：闭区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 要求你把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 这两个端点都<strong>包含进去</strong>；连续要求你<strong>一笔画</strong>——笔不能抬。那么从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 点起笔画起，中间不管冲多高，最后必须落回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 点。</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=356">05:56</a>视频原话（大意）</span>
+  <p><q>你画这个图的时候，你还得一笔画，也就是说你从这个点开始离开，一笔给他画出来，并且最终这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 点你必须还得落在这个点。那么你跑得再怎么远你也得回来啊——因为你妈妈叫你回家吃饭了！所以他必须是有界的，并且一定有最大值最小值。</q></p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=539">08:59</a>为什么「闭区间 + 连续」少一个都不行（反例必须给）</span>
+  <p>老师给了两个反例，正好对应少掉的两个条件：</p>
+  <ul class="tight">
+    <li><strong>少了「闭」</strong>：仍然连续，但区间是开区间。比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>——有界没问题，但最高该是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 的那个点<strong>是空心的、取不到</strong>，所以没有最大值也没有最小值。</li>
+    <li><strong>少了「连续」</strong>：区间仍是闭的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>]</mo></math></span>，但中间有个间断点。图上最高那个点恰好是间断点，画成<strong>空心</strong>，于是最大值取不到；同样最小值也可能取不到。</li>
+  </ul>
+  <p>两条反例合起来说明：<mark>「闭区间」保证两端点被收纳、曲线被框住；「连续」保证中间没有「漏掉的高度」。</mark>任何一个条件缺失，最值都可能凭空消失。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="两个反例：开区间无最值、闭区间间断点无最值">
+    <text x="40" y="28" class="m-txt" font-size="12.5">反例一：开区间连续，无最值</text>
+    <line x1="60" y1="170" x2="300" y2="170" class="m-thin" stroke-width="1.2"></line>
+    <line x1="150" y1="55" x2="150" y2="226" class="m-thin" stroke-width="1.2"></line>
+    <line x1="95" y1="225" x2="205" y2="115" class="m-acc" stroke-width="2"></line>
+    <circle cx="95" cy="225" r="4" fill="none" class="m-acc" stroke-width="1.4"></circle>
+    <circle cx="205" cy="115" r="4" fill="none" class="m-acc" stroke-width="1.4"></circle>
+    <text x="212" y="132" class="m-sub" font-size="11.5">y = x,  x ∈ (-1, 1)</text>
+    <text x="112" y="242" class="m-warn" font-size="11.5">两端空心 ⇒ 无最大/最小</text>
+
+    <text x="360" y="28" class="m-txt" font-size="12.5">反例二：闭区间但间断，无最值</text>
+    <line x1="380" y1="170" x2="600" y2="170" class="m-thin" stroke-width="1.2"></line>
+    <line x1="380" y1="60" x2="380" y2="170" class="m-thin" stroke-width="1.2"></line>
+    <line x1="600" y1="60" x2="600" y2="170" class="m-thin" stroke-width="1.2"></line>
+    <path d="M 380 150 L 470 90" fill="none" class="m-acc" stroke-width="2"></path>
+    <circle cx="470" cy="90" r="4" fill="none" class="m-warn" stroke-width="1.4"></circle>
+    <circle cx="470" cy="110" r="3.4" class="m-fill"></circle>
+    <path d="M 470 110 L 600 150" fill="none" class="m-acc" stroke-width="2"></path>
+    <text x="470" y="78" class="m-warn" font-size="11.5">最高点空心</text>
+    <text x="430" y="242" class="m-warn" font-size="11.5">间断点 ⇒ 最大值取不到</text>
+  </svg>
+  <figcaption><b>两张图并列，正是「闭区间」与「连续」各自不可替代。</b>左图：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 在开区间，两端都是空心圆圈，想要的最高/最低值恰好落在框外，取不到。右图：区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>]</mo></math></span> 是闭的，但中间有个间断点，而全局最高点正好落在那个间断处（空心），于是最大值不存在。<strong>两个反例合起来说明：定理的两个前提，一个都不能少。</strong></figcaption>
+</figure>
+
+<h2 id="s4">定理二：零点定理</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=848">14:08</a>先说什么叫零点：如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 就叫函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的一个<strong>零点</strong>（注意零点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的值，不是函数值）。</p>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 零点定理</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在闭区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> <strong>异号</strong>（即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>&lt;</mo><mn>0</mn></math></span>），则在开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span> 内<strong>至少存在一点</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span>，使得</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mn>0</mn></math></div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=939">15:39</a>几何上极其直观：两端一正一负，曲线又必须连续（一笔画），那就<strong>一定穿过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴</strong>，穿过去的那一点函数值就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。老师用了一个生活比喻：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1044">17:24</a>视频原话（大意）</span>
+  <p><q>假设这是一条河，你女朋友在河对岸等你，你肯定得过河才能找到她——你一定要过河。过河，就必然经过水位为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的地方。这就是零点定理。</q></p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1125">18:45</a>为什么定理说的是开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span>，不是闭区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span></span>
+  <p>因为两端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>,</mo><mi>b</mi></math></span> 的函数值<strong>异号、不等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>（异号意味着一个正一个负，都不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）。所以零点不可能在端点处出现，只能在<strong>内部</strong>。课上有同学问「为什么不直接写闭区间」，老师答：<span class="t">「写闭区间没啥用，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 处函数值都不等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，取不到零点。」</span></p>
+  <p>另外「<strong>至少存在一点</strong>」是说可能不止一个。如果曲线在内部上下穿越 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴三次，那就有三个零点——「至少一个」永远成立，多几个也不矛盾。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 230" role="img" aria-label="零点定理：连续曲线两端异号必穿 x 轴">
+    <line x1="60" y1="180" x2="600" y2="180" class="m-thin" stroke-width="1.3"></line>
+    <line x1="60" y1="40" x2="60" y2="180" class="m-thin" stroke-width="1.3"></line>
+    <path d="M 110.0 200.0 C 116.7 201.0 136.7 205.7 150.0 206.0 C 163.3 206.3 176.7 204.0 190.0 202.0 C 203.3 200.0 216.7 196.3 230.0 194.0 C 243.3 191.7 258.3 189.7 270.0 188.0 C 281.7 186.3 290.0 185.3 300.0 184.0 C 310.0 182.7 320.0 181.7 330.0 180.0 C 340.0 178.3 350.0 176.3 360.0 174.0 C 370.0 171.7 380.0 169.2 390.0 166.0 C 400.0 162.8 410.0 159.7 420.0 155.0 C 430.0 150.3 440.0 145.2 450.0 138.0 C 460.0 130.8 470.0 121.3 480.0 112.0 C 490.0 102.7 500.0 91.3 510.0 82.0 C 520.0 72.7 530.8 61.3 540.0 56.0 C 549.2 50.7 558.3 49.3 565.0 50.0 C 571.7 50.7 575.8 55.0 580.0 60.0 C 584.2 65.0 588.3 76.7 590.0 80.0" fill="none" class="m-acc" stroke-width="2"></path>
+    <circle cx="110" cy="200" r="3.6" class="m-fill"></circle>
+    <circle cx="590" cy="80" r="3.6" class="m-fill"></circle>
+    <circle cx="330" cy="180" r="4.4" class="m-fill-g"></circle>
+    <line x1="330" y1="180" x2="330" y2="50" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <text x="44" y="50" class="m-sub" font-size="11.5">y</text>
+    <text x="596" y="194" class="m-sub" font-size="11.5">x</text>
+    <text x="86" y="214" class="m-warn" font-size="11.5">f(a) &lt; 0</text>
+    <text x="546" y="46" class="m-good" font-size="11.5">f(b) &gt; 0</text>
+    <text x="338" y="200" class="m-good" font-size="12">ξ：f(ξ)=0</text>
+  </svg>
+  <figcaption><b>两端异号 + 连续 = 必穿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴。</b>左端 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴下方（负），右端 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 在上方（正），连续曲线一笔画过去，必然在某点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span> 跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴，那里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mn>0</mn></math></span>。注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span> 落在<em>开区间</em>内部，端点处函数值非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，取不到零点。</figcaption>
+</figure>
+
+<h2 id="s5">定理三：介值定理</h2>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 介值定理</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在闭区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>=</mo><mi>B</mi></math></span>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>≠</mo><mspace width="0.25em"></mspace><mi>B</mi></math></span>。则对于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 之间的<strong>任意</strong>一个数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span>，在开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span> 内至少存在一点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span>，使得</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mi>C</mi></math></div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1333">22:13</a>直观理解：从高度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 连续画到高度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span>，中间<strong>每一个高度都会扫到</strong>。老师用反证讲：假如某个介于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>,</mo><mi>B</mi></math></span> 之间的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 取不到，那曲线在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 这个高度就出现一个「空洞」——可你明明是连续（一笔画）画过来的，怎么会凭空缺一块？所以不可能缺。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1433">23:53</a>介值定理和零点定理是什么关系</span>
+  <p>零点定理其实是<strong>介值定理的特例</strong>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 取成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 异号——异号无非就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 之间」。所以记住介值定理这一条，零点定理就自动含在里面了。</p>
+</div>
+
+<h3 id="s6">推论：值域就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>m</mi><mo>,</mo><mi>M</mi><mo>]</mo></math></span></h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1635">27:15</a>把介值定理用到最值上，得到课本的一个说法：设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>,</mo><mi>M</mi></math></span> 分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上的最小值和最大值，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的值域是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>m</mi><mo>,</mo><mi>M</mi><mo>]</mo></math></span>。也就是说，从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi></math></span> 之间的<strong>每一个值都被取到</strong>。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1700">28:20</a>端点函数值 ≠ 最值（一毛钱关系没有）</span>
+  <p>老师反复提醒一个错觉：看书上画的图，端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>,</mo><mi>b</mi></math></span> 处的函数值常常正好是最值，于是误以为「端点值就是最值」。其实<strong>完全没关系</strong>。他画了一条两端平平、中间鼓个包的曲线：端点函数值都一般高，但最大值在中间鼓包处、最小值在另一处凹陷——端点和最值毫不相干。所以介值定理里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>,</mo><mi>M</mi></math></span> 是<strong>两套独立的东西</strong>，别混。</p>
+</div>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=1700">28:20</a>视频原话（大意）</span>
+  <p><q>你这画的这不是最小值、这是最大值吗？因为我画的其实是最简单的一种图。这两个端点的函数值啊，和它的最大值最小值啊，其实一毛钱的关系都没有。我给大家举个例子——如果函数的图是这样的，这两个端点的函数值是不是这么大呀，它的最大值在哪呀？最小值在哪呀？是不是？</q></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 240" role="img" aria-label="介值定理：曲线从 A 连续画到 B 必扫过中间高度 C">
+    <line x1="60" y1="190" x2="600" y2="190" class="m-thin" stroke-width="1.3"></line>
+    <line x1="60" y1="40" x2="60" y2="190" class="m-thin" stroke-width="1.3"></line>
+    <path d="M 110 150 C 200 120, 260 80, 330 110 C 420 150, 470 60, 580 70" fill="none" class="m-acc" stroke-width="2"></path>
+    <circle cx="110" cy="150" r="3.6" class="m-fill"></circle>
+    <circle cx="580" cy="70" r="3.6" class="m-fill"></circle>
+    <line x1="60" y1="110" x2="600" y2="110" class="m-warn" stroke-width="1.2" stroke-dasharray="6 5"></line>
+    <line x1="335" y1="110" x2="335" y2="190" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <circle cx="335" cy="110" r="4.4" class="m-fill-g"></circle>
+    <text x="44" y="50" class="m-sub" font-size="11.5">y</text>
+    <text x="596" y="204" class="m-sub" font-size="11.5">x</text>
+    <text x="74" y="146" class="m-sub" font-size="11.5">A = f(a)</text>
+    <text x="556" y="64" class="m-sub" font-size="11.5">B = f(b)</text>
+    <text x="120" y="104" class="m-warn" font-size="11.5">水平线 y = C</text>
+    <text x="300" y="128" class="m-good" font-size="12">ξ：f(ξ) = C</text>
+  </svg>
+  <figcaption><b>介值定理 = 「连续曲线必扫过两端之间的每个高度」。</b>无论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 取在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 之间的哪个位置，画一条 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>C</mi></math></span> 的横线，它一定和曲线至少有一个交点（图中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span>）。老师特别提醒：这里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>,</mo><mi>B</mi></math></span> 是<em>端点函数值</em>，和整条曲线的最值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>,</mo><mi>M</mi></math></span> 不是一回事，别把两头当成最高最低。</figcaption>
+</figure>
+
+<h2 id="s7">例题：证明方程在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 内至少有一根</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=2011">33:31</a>证明方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>3</mn></msup><mo>−</mo><mn>4</mn><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span> 在区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 内至少有一个根。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：构造辅助函数，套零点定理</span>
+    <p>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup><mo>−</mo><mn>4</mn><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span>。它是<strong>多项式函数</strong>，所以在任何区间上都连续，自然在闭区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 上连续。算两端函数值：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><msup><mn>0</mn><mn>3</mn></msup><mo>−</mo><mn>4</mn><mo>⋅</mo><msup><mn>0</mn><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>=</mo><mn>1</mn><mo>&gt;</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><msup><mn>1</mn><mn>3</mn></msup><mo>−</mo><mn>4</mn><mo>⋅</mo><msup><mn>1</mn><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mo>&lt;</mo><mn>0</mn></math></div>
+    <p>两端<strong>异号</strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>&lt;</mo><mn>0</mn></math></span>）。由<strong>零点定理</strong>，在开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 内至少存在一点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span>，使得</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mn>0</mn></math></div>
+    <p>即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ξ</mo><mn>3</mn></msup><mo>−</mo><mn>4</mn><msup><mo>ξ</mo><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span>，说明方程在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 内至少有一个根。</p>
+    <div class="note">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=2131">35:31</a>两个书写细节</span>
+      <p>一是区间：定理要求闭区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 上连续，所以先写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>；但零点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span> 落在<strong>开区间</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 内——因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>,</mo><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo></math></span> 都不等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，取不到端点。二是「至少有一个根」对应「至少存在一点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span>」，不要写「有且仅有一个」，定理只保证存在、不保证唯一。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s8">老师关于「最值唯一吗」的连珠炮</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=204">03:24</a>在引入定理前，老师对「最值」问了一串反问，把容易想当然的地方全抖落出来。原话大意是：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=16&amp;t=204">03:24</a>视频原话（大意）</span>
+  <p><q>最大值是不是唯一的？是。但是取最大值的那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是不是一定是唯一的？这个不一定。比方说在这个点它取一，在这个点它也取一，最大值是一、是唯一的，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的取值可以不相同。最大值和最小值能不能相等？能，比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span>。最大值有没有可能比最小值小？不可能——区间固定的话，最大值不会比最小值小。</q></p>
+</div>
+
+<div class="why">
+  <span class="lbl">这四个反问，其实在区分四对概念</span>
+  <p>把它们并排看就清楚了：</p>
+  <ul class="tight">
+    <li><strong>最大值（数值）</strong>唯一；<strong>最大值点（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的位置）</strong>可以不唯一。</li>
+    <li><strong>最大值</strong>与<strong>最小值</strong>可以相等（常函数），但最大值不会小于最小值。</li>
+    <li>最值<strong>不一定存在</strong>——这正是后面「为什么必须闭区间」的伏笔。</li>
+  </ul>
+  <p>初学者最大的错觉是「函数总有最大最小」，老师用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>x</mi></math></span> 和开区间上的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 把这条错觉打碎，再引出最值定理：<mark>只有「闭区间 + 连续」同时成立，最值才 guaranteed 存在。</mark></p>
+</div>
+
+<h2 id="s9">把四个定理的关系理一遍</h2>
+
+<p>四条性质听起来多，其实是一条主线的四个侧面。最值定理说「闭区间连续 ⇒ 有界且有最值」；零点定理和介值定理则是「连续曲线不会跳空」的两种说法——前者是取不到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的高度（端点异号、中间必穿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴），后者是取不到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>,</mo><mi>B</mi></math></span> 之间任一高度（中间必被扫过）。而介值定理取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mn>0</mn></math></span> 就退化成零点定理。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>定理</th><th>前提</th><th>结论</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>有界性与最值</td><td>闭区间 + 连续</td><td>有界，且有最大、最小值</td></tr>
+      <tr><td>零点定理</td><td>闭区间连续，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>&lt;</mo><mn>0</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∃</mo><mspace width="1em"></mspace><mo>ξ</mo><mo>∈</mo><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mn>0</mn></math></span></td></tr>
+      <tr><td>介值定理</td><td>闭区间连续，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 介于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>,</mo><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 之间</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∃</mo><mspace width="1em"></mspace><mo>ξ</mo><mo>∈</mo><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mi>C</mi></math></span></td></tr>
+      <tr><td>值域推论</td><td>闭区间连续，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>,</mo><mi>M</mi></math></span> 为最值</td><td>值域恰为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>m</mi><mo>,</mo><mi>M</mi><mo>]</mo></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么零点定理要求「开区间」而最值定理要求「闭区间」</span>
+  <p>这俩区间要求恰好相反，但理由一致：最值定理要让<strong>端点也参与</strong>比较（最大值可能在端点取得），所以必须闭；零点定理里端点函数值<strong>非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>（异号），零点只可能出现在内部，所以结论落在开区间。一个要端点的函数值，一个排除端点的函数值——同一个「闭区间」前提，在两个定理里扮演的角色完全不同。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>前提</b> 闭区间 + 连续</span><span class="ar">→</span>
+    <span class="n"><b>最值定理</b> 有界且有最大/最小</span><span class="ar">→</span>
+    <span class="n"><b>零点定理</b> 两端异号 ⇒ 穿过 x 轴</span><span class="ar">→</span>
+    <span class="n"><b>介值定理</b> 两端之间每值都取到</span>
+  </div>
+
+  <h3>四个结论（都挂「闭区间连续」）</h3>
+  <ul class="tight">
+    <li><strong>有界性 + 最值</strong>：必有最大、最小值</li>
+    <li><strong>零点定理</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>&lt;</mo><mn>0</mn></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∃</mo><mspace width="1em"></mspace><mo>ξ</mo><mo>∈</mo><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mn>0</mn></math></span></li>
+    <li><strong>介值定理</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 介于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>,</mo><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 之间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∃</mo><mspace width="1em"></mspace><mo>ξ</mo><mo>∈</mo><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mi>C</mi></math></span></li>
+    <li><strong>值域推论</strong>：值域恰为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>m</mi><mo>,</mo><mi>M</mi><mo>]</mo></math></span>（最小到最大全取到）</li>
+  </ul>
+
+  <h3>两个坑（反例）</h3>
+  <ul class="tight">
+    <li><strong>开区间</strong>连续（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>）：有界但<strong>无最值</strong></li>
+    <li><strong>闭区间但不连续</strong>（间断点恰在最高处）：<strong>最值取不到</strong></li>
+  </ul>
+
+  <h3>三个易混</h3>
+  <ul class="tight">
+    <li>零点定理是介值定理取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mn>0</mn></math></span> 的特例</li>
+    <li>零点落在<strong>开区间</strong>内，端点的函数值非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></li>
+    <li>端点函数值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>,</mo><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span> 与最值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>,</mo><mi>M</mi></math></span> <strong>没关系</strong></li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P013-连续/index.html">连续</a> 连续与间断点（本页「连续」即此义）</li>
+      <li><a href="../P014-间断点/index.html">间断点</a> 间断点的分类（反例二的间断点属此类）</li>
+      <li><a href="../P015-连续函数运算 反函数复合函数的连续/index.html">连续函数运算 反函数复合函数的连续</a> 连续函数的运算（上接本系列）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数的定义（进入第 2 章）</li>
+      <li><a href="../P019-可导与连续关系/index.html">可导与连续关系</a> 可导与连续的关系（连续未必可导）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「闭区间」不能换开区间——反例已证明会失效</li>
+      <li>零点定理只保证「存在」，不保证「唯一」或「有几个」</li>
+      <li>零点、最值都指 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的位置；函数值才是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 16 讲</span><a href="../P015-连续函数运算 反函数复合函数的连续/index.html">← P015</a><a href="../index.html">全部目录</a><a href="../P017-导数的定义/index.html">P017 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">先看标题：两个词缺一不可</a>
+    <a href="#s2">最大值与最小值：先把概念掰清</a>
+    <a href="#s3">定理一：有界性与最大值最小值定理</a>
+    <a href="#s4">定理二：零点定理</a>
+    <a href="#s5">定理三：介值定理</a>
+    <a class="sub" href="#s6">推论：值域就是 [m,M]</a>
+    <a href="#s7">例题：证明方程在 (0,1) 内至少有一根</a>
+    <a href="#s8">老师关于「最值唯一吗」的连珠炮</a>
+    <a href="#s9">把四个定理的关系理一遍</a>
+  </aside>
+</div>
+</body>
+</html>

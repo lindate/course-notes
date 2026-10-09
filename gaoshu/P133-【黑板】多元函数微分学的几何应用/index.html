@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】多元函数微分学的几何应用：曲线与曲面的两套向量 · 高等数学笔记</title>
+<meta name="description" content="这一页把 [[83]] 与 [[84]] 压成一张速查表。曲线的关键量是切向量——逐分量求导就能拿到；曲面的关键量是法向量——隐式 F=0 时取 (Fx,Fy,Fz)，显式 z=f(x,y) 时取 (fx,fy,−1)。这个向量只有两个出口：当方向向量用（点向式，写切线 / 法线），或者当法向量用（">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 133 讲</div>
+    <h1 class="title"><span class="pnum">P133</span>【黑板】多元函数微分学的几何应用：曲线与曲面的两套向量</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这一页把 <a href="../P083-空间曲线的切线和法平面/index.html">空间曲线的切线和法平面</a> 与 <a href="../P084-曲面的切平面和法线/index.html">曲面的切平面和法线</a> 压成一张速查表。<strong>曲线</strong>的关键量是<strong>切向量</strong>——逐分量求导就能拿到；<strong>曲面</strong>的关键量是<strong>法向量</strong>——隐式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mn>0</mn></math></span> 时取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>，显式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 时取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>。这个向量只有两个出口：<mark>当方向向量用（点向式，写切线 / 法线），或者当法向量用（点法式，写法平面 / 切平面）。</mark>输入形式有四种，名字有四个，真正要算的东西永远只有那一个向量。</p></div>
+    <div class="meta"><span>时长 1h20m</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=0">00:00</a><span class="vv"><b>预备</b>：一元向量值函数——三个分量都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 一动向量就动。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=250">04:10</a><span class="vv">几何含义：起点放在原点，终点随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 走出来就是一条<b>空间曲线</b>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=515">08:35</a><span class="vv"><b>导向量</b>：逐分量求导；求完还是一个带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的向量。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=691">11:31</a><span class="vv">拿充电宝的线讲<b>切线</b>：过一点可以引<b>两个</b>切向量，一左一右。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=851">14:11</a><span class="vv"><b>导向量只有一个</b>：它的方向规定为与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增长的方向一致。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=937">15:37</a><span class="vv">例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>t</mi><mo>,</mo><mi>t</mi><mo>,</mo><mi>t</mi><mo>)</mo></math></span>：像一根从墙角长出来的「拖把棍」，导向量朝上。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1100">18:20</a><span class="vv">换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mi>t</mi><mo>,</mo><mo form="prefix">−</mo><mi>t</mi><mo>,</mo><mo form="prefix">−</mo><mi>t</mi><mo>)</mo></math></span>：同一条直线，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增大时它变短，导向量朝下。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1241">20:41</a><span class="vv"><b>例</b>：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>,</mo><mn>4</mn><mi>t</mi><mo>−</mo><mn>3</mn><mo>,</mo><mn>2</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>6</mn><mi>t</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>2</mn></math></span> 处的单位切向量。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1519">25:19</a><span class="vv">四个名字先对齐：曲线配切线 / 法平面，曲面配切平面 / 法线。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1959">32:39</a><span class="vv"><b>例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>3</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，切向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2219">36:59</a><span class="vv">特殊形式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>：切向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mi>y</mi><mo>'</mo><mo>,</mo><mi>z</mi><mo>'</mo><mo>)</mo></math></span>，那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 来自 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2306">38:26</a><span class="vv"><b>例</b>：球面与平面相交成圆，用<b>克莱姆法则</b>解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3093">51:33</a><span class="vv">曲面：球面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn><mn>4</mn></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>，法向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>6</mn><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3360">56:00</a><span class="vv">显函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>：法向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，第三个分量为什么恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>。</span></li>
+    <li><span class="no">15</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3740">1:02:20</a><span class="vv"><b>例</b>：旋转抛物面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">16</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4306">1:11:46</a><span class="vv">最后补证明：凭什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span> 就一定是法向量。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">先分名字：曲线配切线，曲面配切平面</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1519">25:19</a>这一讲真正的难点不在算，而在<strong>认名字</strong>。老师说得很直白：「空间曲线和曲面的切线、切平面、法线、法平面，这个地方特别容易绕。」他当场拿了一条充电宝的线代表空间曲线，又借同学的脑袋当球面，在球上放一本书——<em>那本书就是切平面</em>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1591">26:31</a>「你拿个西瓜，用一本书放在西瓜某一个点上，这样切过去就叫切平面。」</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1649">27:29</a>四个名字定义完就是下面这个样子：曲线上过一点、沿曲线方向的直线叫<strong>切线</strong>；过切线上那个点、并且与切线垂直的平面叫<strong>法平面</strong>。曲面上过一点、贴着曲面的那张平面叫<strong>切平面</strong>；过那一点、并且与切平面垂直的直线叫<strong>法线</strong>。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>项目</th><th>曲线（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 维）</th><th>曲面（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 维）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>要先算的向量</td><td><strong>切向量</strong>（沿着的方向）</td><td><strong>法向量</strong>（垂直着的方向）</td></tr>
+      <tr><td>向量怎么来</td><td>三个分量<strong>逐个求导</strong></td><td>求三个<strong>偏导</strong>，再拼成向量</td></tr>
+      <tr><td>它配的第一套方程</td><td>切线：它当<strong>方向向量</strong>，写<em>点向式</em></td><td>切平面：它当<strong>法向量</strong>，写<em>点法式</em></td></tr>
+      <tr><td>它配的第二套方程</td><td>法平面：它当<strong>法向量</strong>，写<em>点法式</em></td><td>法线：它当<strong>方向向量</strong>，写<em>点向式</em></td></tr>
+      <tr><td>维数记忆</td><td>「切」出来的与曲线同维（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 维），「法」出来的补成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 维</td><td>「切」出来的与曲面同维（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 维），「法」出来的补成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 维</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>表里最值钱的是那两行「反过来的搭配」。<mark>切向量当方向向量写出来的是直线（切线），切向量当法向量写出来的是平面（法平面）</mark>——同一个向量，落在分母上就是直线，落在系数上就是平面。曲面那一列完全对称：法向量当法向量写切平面，当方向向量写法线。做题时如果式子「看着像」但意思不对，十有八九是把这两个角色换错了。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="左：空间曲线上的切线与过该点的法平面；右：曲面上的切平面与过该点的法线">
+    <line x1="48" y1="256" x2="288" y2="256" class="m-line" stroke-width="1.3"></line>
+    <polygon points="298,256 288,252 288,260" class="m-fill"></polygon>
+    <line x1="48" y1="256" x2="48" y2="76" class="m-line" stroke-width="1.3"></line>
+    <polygon points="48,66 44,76 52,76" class="m-fill"></polygon>
+    <text x="300" y="260" class="m-sub" font-size="11.5">x</text>
+    <text x="40" y="70" class="m-sub" font-size="11.5" text-anchor="end">z</text>
+
+    <path d="M 66 244 C 120 226 152 184 196 160 C 236 138 262 112 288 96" fill="none" class="m-line" stroke-width="1.9"></path>
+    <polygon points="163,122 253,142 229,198 139,178" class="m-panel-a"></polygon>
+    <line x1="130" y1="196" x2="272" y2="118" class="m-acc" stroke-width="2.2"></line>
+    <polygon points="282,113 268,115 273,124" class="m-fill-a"></polygon>
+    <circle cx="196" cy="160" r="4.2" class="m-fill-a"></circle>
+
+    <text x="60" y="272" class="m-sub" font-size="11.5">空间曲线</text>
+    <text x="236" y="104" class="m-acc" font-size="11.5" text-anchor="end">切向量</text>
+    <text x="126" y="116" class="m-txt" font-size="11.5" text-anchor="end">法平面</text>
+    <text x="186" y="152" class="m-txt" font-size="11.5" text-anchor="end">P₀</text>
+
+    <line x1="366" y1="240" x2="608" y2="240" class="m-line" stroke-width="1.3"></line>
+    <polygon points="616,240 606,236 606,244" class="m-fill"></polygon>
+    <line x1="366" y1="240" x2="366" y2="88" class="m-line" stroke-width="1.3"></line>
+    <polygon points="366,78 362,88 370,88" class="m-fill"></polygon>
+    <line x1="366" y1="240" x2="422" y2="212" class="m-line" stroke-width="1.3"></line>
+    <polygon points="430,208 418,210 422,218" class="m-fill"></polygon>
+    <text x="618" y="244" class="m-sub" font-size="11.5">x</text>
+    <text x="358" y="82" class="m-sub" font-size="11.5" text-anchor="end">z</text>
+    <text x="432" y="208" class="m-sub" font-size="11.5">y</text>
+
+    <path d="M 392 206 C 392 162 424 138 470 138 C 516 138 548 162 548 206 C 548 246 516 264 470 264 C 424 264 392 246 392 206 Z" class="m-bg-a"></path>
+    <polygon points="380,146 520,126 560,156 420,176" class="m-panel-a"></polygon>
+    <line x1="470" y1="150" x2="452" y2="58" class="m-warn" stroke-width="2.2"></line>
+    <polygon points="449,48 445,60 454,58" class="m-fill-w"></polygon>
+    <circle cx="470" cy="150" r="4.2" class="m-fill-w"></circle>
+    <text x="462" y="172" class="m-txt" font-size="11.5" text-anchor="end">P₀</text>
+    <text x="562" y="120" class="m-sub" font-size="11.5">曲面</text>
+    <text x="566" y="178" class="m-txt" font-size="11.5">切平面</text>
+    <text x="478" y="70" class="m-warn" font-size="11.5">法线（方向向量取 n）</text>
+
+    <text x="24" y="292" class="m-sub" font-size="11.5">同名不同物：曲线的「法」补成平面，曲面的「法」补成直线；两者都由同一个向量决定</text>
+  </svg>
+  <figcaption><b>左右两半的关系是「同维相切、补维取法」。</b>左边曲线是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 维，切线也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 维（橙色），法平面补成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 维（蓝色平行四边形）；右边曲面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 维，切平面也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 维（蓝色平行四边形），法线补成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 维（黄色）。<em>注意两张图里真正要动笔算的都只有一个向量</em>：左边是切向量，右边是法向量。四个名字、四套方程，全都围着这一个向量转。</figcaption>
+</figure>
+
+<h2 id="s2">预备：一元向量值函数的三个要点</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=0">00:00</a>第一个工具是<strong>一元向量值函数</strong>。定义很朴素：如果一个向量的三个分量都由同一个变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 决定，例如</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>(</mo><msub><mi>f</mi><mn>1</mn></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>f</mi><mn>2</mn></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>f</mi><mn>3</mn></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>)</mo></math></div>
+
+<p>那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 一变，三个数跟着变，整个向量就变了——这就叫「一元向量值函数」。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=133">02:13</a>「一元」是因为变量只有一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，「向量值」是因为函数值是一个向量而不是一个数。老师强调过：<mark>这部分不需要背太多定理，理解它「是什么东西」就够了</mark>，因为后面真正要用到的只有一个概念——导向量。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=250">04:10</a>它的几何含义最有信息量：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 固定成一个值得到一个向量，把起点放在原点，终点就落在空间某个位置上。让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 连续变化，这个终点就会走出<strong>一条空间曲线</strong>。所以课本那句「一元向量值函数与空间的一条曲线对应」，说的就是这件事：<em>曲线是终点画出来的轨迹，而向量值函数是「从原点出发指向曲线上一点」的那支箭</em>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=515">08:35</a>求导（课本叫<strong>导向量</strong>）只做一件事：三个分量各自求导。对上面的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>(</mo><msub><mi>f</mi><mn>1</mn></msub><mo>'</mo><mo>,</mo><msub><mi>f</mi><mn>2</mn></msub><mo>'</mo><mo>,</mo><msub><mi>f</mi><mn>3</mn></msub><mo>'</mo><mo>)</mo></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=616">10:16</a>求完要留意两点：它<em>还是向量</em>，而且<em>里面还带着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></em>——所以做题时必须先在切点处把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>t</mi><mn>0</mn></msub></math></span> 定出来，再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>t</mi><mn>0</mn></msub></math></span> 代进去，才能拿到一个具体的向量。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=691">11:31</a>导向量与切向量：为什么有两个切向量、却只有一个导向量</span>
+  <p>老师拿一条线讲这一段：过曲线上的一点作切线，这条切线是一条<strong>直线</strong>，而直线向两端无限延伸。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=691">11:31</a>「从这个点朝左边沿着切线引一个向量，是不是也叫切向量？朝右边引一个，是不是也是个切向量？」所以<mark>切向量有两个，方向相反</mark>。</p>
+  <p>但导向量只有一个。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=765">12:45</a>理由很干脆：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 取定一个值代进去，三个分量就都成了确定的数，这个向量就被算死了，哪来的第二个？那它到底是朝左那个还是朝右那个？课本规定：<strong>导向量的方向与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增长的方向一致。</strong></p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=937">15:37</a>两个例子把这件事说透。第一个：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>(</mo><mi>t</mi><mo>,</mo><mi>t</mi><mo>,</mo><mi>t</mi><mo>)</mo></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增大时三个坐标同比例增大，曲线是从原点朝斜上方长出去的直线——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=937">15:37</a>老师说这就像「拿一根拖把棍正正地杵在墙角上」。它的导向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，朝上，与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增大的方向一致。</p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1100">18:20</a>第二个：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mi>t</mi><mo>,</mo><mo form="prefix">−</mo><mi>t</mi><mo>,</mo><mo form="prefix">−</mo><mi>t</mi><mo>)</mo></math></span>。这条曲线的<em>形状就是同样的那条直线</em>，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增大时三个坐标越来越小，动点反而朝下走，于是导向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>——朝下。</p>
+  <p><strong>同一个几何图形，参数化方式不同，导向量就可能反向。</strong>这说明切向量只关心「方向所在的那条直线」，而导向量额外认了一个朝向，这个朝向完全由参数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 定出来。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1241">20:41</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>(</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mn>4</mn><mi>t</mi><mo>−</mo><mn>3</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>6</mn><mi>t</mi><mo>)</mo></math></span>，求曲线在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>2</mn></math></span> 处的单位切向量。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先求导向量，再除以它的模；「单位切向量」与「导向量」是两个东西</span>
+    <p><strong>第一步，逐分量求导。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>t</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>t</mi><mo>−</mo><mn>3</mn></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>6</mn><mi>t</mi></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>t</mi><mo>−</mo><mn>6</mn></math></span>，所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>(</mo><mn>2</mn><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mn>4</mn><mi>t</mi><mo>−</mo><mn>6</mn><mo>)</mo></math></div>
+    <p><strong>第二步，代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>2</mn></math></span>。</strong></p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><mn>2</mn><mo>)</mo><mo>=</mo><mo>(</mo><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mo>)</mo></math></div>
+    <p>顺手把切点也算出来：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>(</mo><mn>2</mn><mo>)</mo><mo>=</mo><mo>(</mo><mn>5</mn><mo>,</mo><mn>5</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn><mo>)</mo></math></span>。</p>
+    <p><strong>第三步，求模。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><mn>2</mn><mo>)</mo><mo>|</mo><mo>=</mo><msqrt><mrow><mn>1</mn><mn>6</mn><mo>+</mo><mn>1</mn><mn>6</mn><mo>+</mo><mn>4</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>3</mn><mn>6</mn></mrow></msqrt><mo>=</mo><mn>6</mn></math></span>。</p>
+    <p><strong>第四步，单位化。</strong>三个分量同除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn></math></span>，约分后</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo form="prefix">±</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1339">22:19</a>老师在这里专门提了一句：「这个求出来的是<strong>导向量</strong>，你在书上不妨写一下子。」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1453">24:13</a>然后他补了一句很关键的话：「其实我们后面用的就是这个<strong>切向量</strong>——因为不管是曲线还是曲面，切向量都是有用的。」</p>
+    <div class="trap">
+      <span class="lbl">这一步最容易错：把「单位切向量」当成「导向量」</span>
+      <p><span class="bad">只写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>4</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 就交卷。</span>题目问的是<strong>单位</strong>切向量，必须再除以模 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn></math></span>。反过来，如果题目只要「导向量」或「切向量」，模就不必求，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>4</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 反而更简洁。</p>
+      <p>还有一个符号上的问题：既然切向量有两个方向，答案写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo></math></span> 最稳妥。如果题目额外规定了「与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增长方向一致」，那就取正号那一支。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s3">曲线（一）：参数方程给出的曲线</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1748">29:08</a>设空间曲线由参数方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 给出。上一段的结论直接用：这其实就是向量值函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo></math></span> 就是切向量。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1831">30:31</a>所以切线用<strong>点向式</strong>写：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><mrow><mi>x</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><mrow><mi>y</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mi>z</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1917">31:57</a>法平面过同一个点、法向量取同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo></math></span>，用<strong>点法式</strong>写：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><mi>y</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>(</mo><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><mi>z</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>(</mo><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1748">29:08</a>这里有一个容易被忽略的对应关系：直线是「一点加一个方向向量」确定的，平面是「一点加一个法向量」确定的——老师顺口把这句老话重念了一遍：「直线是点和方向向量确定，平面是用点和它的法向量，叫什么式？点法式。」<mark>整节的算术就是从这句话开始的。</mark></p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=1959">32:39</a>设曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>3</mn></mrow></msup></math></span>，求它在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 处的切线与法平面。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先把参数值定出来，再逐分量求导</span>
+    <p><strong>第一步，定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>t</mi><mn>0</mn></msub></math></span>。</strong>三个坐标都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，代人参数方程立刻看出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>t</mi><mn>0</mn></msub><mo>=</mo><mn>1</mn></math></span>。</p>
+    <p><strong>第二步，求切向量。</strong>逐分量求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mi>t</mi><mo>,</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span>，<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2022">33:42</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>1</mn></math></span> 代进去：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mn>3</mn><mo>)</mo></math></div>
+    <p><strong>第三步，写切线。</strong>点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，方向向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>，直接套点向式：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+    <p><strong>第四步，写法平面。</strong>点不变，切向量改当法向量，套点法式：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mn>2</mn><mo>(</mo><mi>y</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mn>3</mn><mo>(</mo><mi>z</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>=</mo><mn>6</mn></math></div>
+    <p><strong>要点</strong>：这道题唯一的新东西是「先找 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>t</mi><mn>0</mn></msub></math></span>」。找到它，切向量的分量和切点的坐标就都从同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>t</mi><mn>0</mn></msub></math></span> 出来，两个结果不会打架。</p>
+  </div>
+</div>
+
+<h2 id="s4">曲线（二）：两种「绕」的输入形式</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2144">35:44</a>课本接着给了两种看起来不一样、其实是一回事的曲线给法。第一种：曲线写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2219">36:59</a>这种形式不需要单独记公式——只要想起一句话：<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 也看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数</strong>，那它还是参数方程，只不过参数换成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 自己。三个分量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，逐个求导就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span>：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mi>z</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></div>
+
+<div class="trap">
+  <span class="lbl">那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 是本节的头号丢分点</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2219">36:59</a>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 看作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导就是一」——这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> <strong>不是题目给的，也不是猜的</strong>。漏掉它，切向量的第一个分量就没了，切线方程的第一个分母、法平面的第一个系数会一起崩掉。</p>
+  <p>同理，如果曲线写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span>，切向量就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>'</mo><mo>,</mo><mn>1</mn><mo>,</mo><mi>z</mi><mo>'</mo><mo>)</mo></math></span>。<mark>谁是自变量，谁的位置上就站着一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</mark></p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2261">37:41</a>第二种给法更绕：曲线不给方程，而是<strong>两张曲面相交</strong>得到的，写成</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mi>G</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2306">38:26</a>理论部分老师说「咱也不讲了」，直接上例子。他举的就是课本上那道经典题。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2306">38:26</a>设曲线由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>6</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 相交而成，求它在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 处的切线与法平面。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，两个方程各对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求一次导</span>
+    <p><strong>第一步，看清这是什么。</strong>上面是球面，下面是平面——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2397">39:57</a>这两张面一交，交线是一个落在平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 上的圆。</p>
+    <p><strong>第二步，两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2397">39:57</a>老师在这里停下来敲了黑板：「<em>你一定要注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数</em>。我们到目前为止，求导、求偏导大家已经全乱套了——什么时候是求导、什么时候是求偏导？」这一句必须记牢：<mark>沿着曲线走的时候，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 不是自由的，它们跟着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 动。</mark></p>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2452">40:52</a>球面方程对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 都是复合函数，要补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span>）：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mi>y</mi><mo>'</mo><mo>+</mo><mn>2</mn><mi>z</mi><mi>z</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span>，消去 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 得</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>+</mo><mi>z</mi><mspace width="1em"></mspace><mi>z</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></div>
+    <p>平面方程对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>y</mi><mo>'</mo><mo>+</mo><mi>z</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span>。两个式子合起来就是一个二元一次方程组：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>y</mi><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>+</mo><mi>z</mi><mspace width="1em"></mspace><mi>z</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi>x</mi></mtd></mtr><mtr><mtd><mi>y</mi><mo>'</mo><mo>+</mo><mi>z</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></mtd></mtr></mtable></mrow></math></div>
+    <p><strong>第三步，用克莱姆法则解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span>。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2533">42:13</a>老师说「这不又到了我们熟悉的克莱姆法则吗」，<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2581">43:01</a>解出来是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mi>x</mi></mrow><mrow><mi>y</mi><mo>−</mo><mi>z</mi></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mi>x</mi><mo>−</mo><mi>y</mi></mrow><mrow><mi>y</mi><mo>−</mo><mi>z</mi></mrow></mfrac></math></div>
+    <p><strong>第四步，代人 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mn>1</mn></mrow><mrow><mo form="prefix">−</mo><mn>2</mn><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo></mrow><mrow><mo form="prefix">−</mo><mn>2</mn><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mo form="prefix">−</mo><mn>3</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>。</p>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2687">44:47</a>再加上来自「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」的那一项，切向量就是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo>)</mo></math></div>
+    <p><strong>第五步，写切线。</strong>点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>。这里出现了<strong>分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong> 的情形，点向式不能照抄（下面单独讲），规范写法是拆成「连等 ＋ 单独等式」：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>1</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>+</mo><mn>2</mn><mo>=</mo><mn>0</mn></math></div>
+    <p><strong>第六步，写法平面。</strong>法向量取同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mn>0</mn><mo>⋅</mo><mo>(</mo><mi>y</mi><mo>+</mo><mn>2</mn><mo>)</mo><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>z</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mi>x</mi><mo>−</mo><mi>z</mi><mo>=</mo><mn>0</mn></math></div>
+    <p>老师说这道题把三个坑一次踩全：切向量第一个分量的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」与「求偏导」的区别、以及分母为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 时怎么写。</p>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>6</mn></math></span> 两边对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导时把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 当常数，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>=</mo><mn>0</mn></math></span>。</span>那是求<strong>偏导</strong>的做法。曲面上随便走的时候 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 确实可以不动，但这里是<em>沿着两曲面的交线走</em>，三个坐标是绑在一起的。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s5">曲面：先认可法向量，再写两套方程</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2798">46:38</a>曲面的情形结构完全对称，只是主角换了人。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2859">47:39</a>假设曲面写成隐式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，课本直接给出结论：</p>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 曲面的法向量</span>
+  <p>曲面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>,</mo><msub><mi>z</mi><mn>0</mn></msub><mo>)</mo></math></span> 处的<strong>法向量</strong>是</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>F</mi><mi>y</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>F</mi><mi>z</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></div>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 的三个一阶偏导数。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2900">48:20</a>这个向量的算法和切向量一样朴素：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 分别对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 求偏导，再把点代人。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2962">49:22</a>拿到法向量以后，法线用点向式、切平面用点法式：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></div>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>(</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><msub><mi>F</mi><mi>y</mi></msub><mo>(</mo><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><msub><mi>F</mi><mi>z</mi></msub><mo>(</mo><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></div>
+
+<p>注意这里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span> 都是在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处取的值。老师说了一句特别实在的话：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2998">49:58</a>「为什么法向量是它？<em>一会儿我给你证明</em>，咱放到后边，要不然我们同学就晕掉了。」他先把用法讲完，最后十分钟才回头补证明——这个顺序值得学。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3093">51:33</a>求球面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn><mn>4</mn></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span> 处的切平面与法线。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先移项凑成右边为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，再求三个偏导</span>
+    <p><strong>第一步，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mn>0</mn></math></span> 的形式。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3150">52:30</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mn>4</mn></math></span>。检验点：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>9</mn><mo>=</mo><mn>1</mn><mn>4</mn></math></span> ✓。这一步不能省——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3150">52:30</a>「因为右边不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>4</mn></math></span> 吗？咱先给它挪过去。」</p>
+    <p><strong>第二步，三个偏导。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>=</mo><mn>2</mn><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mo>=</mo><mn>2</mn><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub><mo>=</mo><mn>2</mn><mi>z</mi></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3194">53:14</a>代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mn>6</mn><mo>)</mo></math></div>
+    <p><strong>第三步，写法线。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3297">54:57</a>三个分母有公因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，约掉以后用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span> 更清爽：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>2</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>3</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+    <p><strong>第四步，写切平面。</strong>法向量取同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mn>2</mn><mo>(</mo><mi>y</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>+</mo><mn>3</mn><mo>(</mo><mi>z</mi><mo>−</mo><mn>3</mn><mo>)</mo><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>=</mo><mn>1</mn><mn>4</mn></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3829">1:03:49</a>老师说他自己<strong>喜欢先写法线</strong>，原因很实用：「法线写出来以后，写切平面的系数就直接抄这三个分母，不用再想一遍。」先写切平面再回头写法线，就没有这个便利。</p>
+  </div>
+</div>
+
+<h2 id="s6">曲面写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>：那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 是从哪来的</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3360">56:00</a>课本接着给了显函数形式：曲面由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 决定。这当然更省事，但必须先把它翻成上一段那种「右边为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>」的样子：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>−</mo><mi>z</mi><mo>=</mo><mn>0</mn></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3445">57:25</a>现在求三个偏导，关键在于<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 看成三个互相独立的变量</strong>：</p>
+
+<dl class="kv">
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>z</mi></math></span> 跟 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 无关，导数为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>=</mo><msub><mi>f</mi><mi>x</mi></msub></math></span>。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span></dt><dd>同理，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mo>=</mo><msub><mi>f</mi><mi>y</mi></msub></math></span>。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 里根本没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，导数为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>z</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 求导，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>。</dd>
+</dl>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3586">59:46</a>于是法向量是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>f</mi><mi>y</mi></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo>)</mo></math></div>
+
+<div class="why">
+  <span class="lbl">为什么第三个分量永远是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>，与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 长什么样无关</span>
+  <p>换个角度想更直观：沿着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴方向往上走一步，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 增加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>−</mo><mi>z</mi></math></span> 就减少 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 方向的变化率恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3586">59:46</a>老师原话是「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 求偏导是最简单的，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 都看作是常数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 求导是个一，所以这个地方就是个负一」。</p>
+  <p><mark>它是整个法向量里唯一不依赖于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的分量。</mark>这也解释了一个现象：为什么老师讲到显函数时反复念叨「这个地方<em>一直都是个一</em>」——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3360">56:00</a>他指的是后面要讲的方向余弦公式里会把它翻成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mn>1</mn></math></span>（整体取反朝上），但<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 本身那里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>。</p>
+  <p>如果当初写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mi>z</mi><mo>−</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，法向量就变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><mo form="prefix">−</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，只是整体差一个符号。<strong>符号不影响方程</strong>：切平面两边同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 还是同一个平面，法线三个分母同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 还是同一条直线。真正要命的是<em>切平面与法线用了差一个负号的两个向量</em>——那它们就不再垂直了。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3740">1:02:20</a>求旋转抛物面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span> 处的切平面与法线。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 已经是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的显函数，直接用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span></span>
+    <p><strong>第一步，认准 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 并检验点。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>2</mn><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mn>1</mn><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mo>=</mo><mn>4</mn></math></span> ✓，与题目给的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>4</mn></math></span> 一致。</p>
+    <p><strong>第二步，求偏导并代入。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mn>2</mn><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mn>2</mn><mi>y</mi></math></span>；在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 处 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mn>4</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mn>2</mn></math></span>。所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo>)</mo></math></div>
+    <p><strong>第三步，写法线。</strong>点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span>、方向向量取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>2</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>4</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac></math></div>
+    <p><strong>第四步，写切平面。</strong></p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>4</mn><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>+</mo><mn>2</mn><mo>(</mo><mi>y</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mi>z</mi><mo>−</mo><mn>4</mn><mo>)</mo><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mn>4</mn><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>−</mo><mi>z</mi><mo>=</mo><mn>6</mn></math></div>
+    <p>检验：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>⋅</mo><mn>2</mn><mo>+</mo><mn>2</mn><mo>⋅</mo><mn>1</mn><mo>−</mo><mn>4</mn><mo>=</mo><mn>6</mn></math></span> ✓，切点确实在平面上。</p>
+    <p><strong>要点</strong>：这道题和例 4 的唯一区别，是法向量的第三个分量从「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>z</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处取值」变成了「固定的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>」。记住这一处区别，显函数形式的题就再没有新东西了。</p>
+    <div class="note">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3904">1:05:04</a>法向量朝上还是朝下，随你</span>
+      <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>4</mn><mo>,</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span> 的第三个分量是负的，说明这支法向量指向下方。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=3952">1:05:52</a>课本为了让它「与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴正向成锐角」，把它整体取反成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><mo form="prefix">−</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，再拿去求方向余弦。对求切平面和法线来说，这两种取法完全等价，只要<em>同一道题里前后一致</em>即可。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s7">特例：向量某个分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的时候怎么办</h2>
+
+<p>这是全节最容易「式子写出来自己都觉得别扭」的地方，单拎出来说清楚。</p>
+
+<p><strong>情形一：切向量的某个分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</strong>例 3 就是这种情况，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>。点向式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><mrow><mi>x</mi><mo>'</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><mrow><mi>y</mi><mo>'</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mi>z</mi><mo>'</mo></mrow></mfrac></math></span> 是三个分式连等，而分母一旦为零，这个写法就不再有意义。正确的理解是：<mark>某个分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，说明沿着这条切线走的时候，对应的那个坐标<strong>从头到尾不变</strong></mark>，这其实是一条额外的信息，必须单独写出来。</p>
+
+<ul class="tight">
+  <li>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span>，就写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><mrow><mi>x</mi><mo>'</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mi>z</mi><mo>'</mo></mrow></mfrac></math></span> 并且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span>（即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></math></span>）。例 3 的结果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>+</mo><mn>2</mn><mo>=</mo><mn>0</mn></math></span> 就是这个意思。</li>
+  <li>若有两个分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>=</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>），那切线就是一条平行于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的直线，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 即可。</li>
+</ul>
+
+<p><strong>情形二：法向量的某个分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</strong>这时切平面的点法式仍然照写，只是对应项的系数变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，这一项直接消失。例如在抛物面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn></math></span> 上取点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mn>2</mn><mi>x</mi><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mn>2</mn><mi>y</mi><mo>=</mo><mn>2</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，切平面是</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>0</mn><mo>⋅</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>0</mn><mo>)</mo><mo>+</mo><mn>2</mn><mo>(</mo><mi>y</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mi>z</mi><mo>−</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mn>2</mn><mi>y</mi><mo>−</mo><mi>z</mi><mo>=</mo><mn>2</mn></math></div>
+<p>而法线的第一个分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，同样要拆开写：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>y</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac></math></span> 且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>。</p>
+
+<div class="blk trap">
+  <span class="lbl">一条通用判据</span>
+  <p>凡是分母或系数里出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，先别急着「约掉」或者「当作没有」。<strong>那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 是一个方程</strong>：切向量分量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mn>0</mn></math></span> 意味着某个坐标是常数（切线落在某个坐标平面内）；法向量分量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mn>0</mn></math></span> 意味着切平面平行于某条坐标轴。<em>把它写成一个单独的等式，既不会错，也顺手检查了自己的答案是否合理。</em></p>
+</div>
+
+<h2 id="s8">补证明：为什么法向量偏偏是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span></h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4306">1:11:46</a>现在回头补上开头欠下的那笔账。要证的事情是：<strong>曲面上过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的一切曲线，它们在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处的切向量都落在同一张平面里</strong>，而这张平面就是切平面，垂直于它的那个向量就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>。</p>
+
+<ol class="steps">
+  <li><span class="sh">任取一条曲线。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4163">1:09:23</a>曲面上过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 有一条曲线，写成参数方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>，并且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><msub><mi>t</mi><mn>0</mn></msub></math></span> 时对应的就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span>。它的切向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mo>(</mo><mi>x</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mi>y</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mi>z</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span>。</li>
+  <li><span class="sh">曲线在曲面上，所以满足曲面方程。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4373">1:12:53</a>把曲线的三个分量代进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mi>z</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>)</mo><mo>≡</mo><mn>0</mn></math></span>。这是恒等式——曲线上每一个点都满足它。</li>
+  <li><span class="sh">两边对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 求导。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4444">1:14:04</a>这里要看清「三条路」：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 先经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 三个中间变量，再经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>。于是按复合函数求导法则
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mspace width="1em"></mspace><mi>x</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo><mo>+</mo><msub><mi>F</mi><mi>y</mi></msub><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo><mo>+</mo><msub><mi>F</mi><mi>z</mi></msub><mspace width="1em"></mspace><mi>z</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></div>
+    右边为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，因为左边的恒等式恒等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</li>
+  <li><span class="sh">把等式读成两个向量的数量积。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4497">1:14:57</a>左边这个式子，恰好是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>」与「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>'</mo><mo>,</mo><mi>y</mi><mo>'</mo><mo>,</mo><mi>z</mi><mo>'</mo><mo>)</mo></math></span>」的<strong>数量积</strong>。两个向量的数量积等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，说明它们<strong>垂直</strong>。</li>
+  <li><span class="sh">分清谁固定、谁在变。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4600">1:16:40</a>这是整个证明的灵魂。曲面是固定的，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span> 作为函数是固定的；点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 也是固定的，代入以后这三个值成了确定的数——<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span> 完全固定</mark>。而曲线上过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的曲线可以任意取，取一条变一条，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo></math></span> 跟着变。</li>
+  <li><span class="sh">结论。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4727">1:18:47</a>一个固定的向量，与一切变化的切向量都垂直——那么这些切向量只能全都躺在一个平面上，这个平面就是切平面。它的法向量自然就是那个固定的向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>。</li>
+</ol>
+
+<div class="why">
+  <span class="lbl">「为什么法向量要这么取」这个问题的答案</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=4727">1:18:47</a>证明结束后老师说了一句很坦诚的话：「有同学问：老师，法向量你为什么要取这个东西？——因为我们是由这个式子推出来的。<em>我们发现这三个东西组成的向量，和它所有的导向量都是垂直的</em>，所以我们把这个向量拿来做它的法向量。」</p>
+  <p>这句话把顺序讲清楚了：<strong>不是先规定「法向量是谁」，再验证它垂直于切线；而是先有了「垂直于一切切线」这个要求，再从推导里看出这个要求的解就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>。</strong></p>
+  <p>把这一段和 <a href="../P085-方向导数与梯度/index.html">方向导数与梯度</a> 对照着看会更爽：在 <a href="../P085-方向导数与梯度/index.html">方向导数与梯度</a> 里，同一条结论是从「梯度垂直于等值面」推出来的——因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mi>C</mi></math></span> 正是一族等值面，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>F</mi><mo>=</mo><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>。两条完全不同的路（一条走几何、一条走方向导数）通向同一个向量，说明它确实是本质的。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="曲面上过同一点的许多曲线，它们的切向量都落在一张平面内，法向量与它们都垂直">
+    <path d="M 86 214 C 130 96 250 66 356 88 C 458 110 530 176 552 238 C 420 264 176 262 86 214 Z" class="m-bg-a"></path>
+    <polygon points="194,174 366,214 446,146 274,106" class="m-panel-a"></polygon>
+    <line x1="320" y1="160" x2="397" y2="178" class="m-acc" stroke-width="2"></line>
+    <polygon points="406,180 393,181 396,172" class="m-fill-a"></polygon>
+    <line x1="320" y1="160" x2="284" y2="191" class="m-acc" stroke-width="2"></line>
+    <polygon points="279,194 291,191 286,183" class="m-fill-a"></polygon>
+    <line x1="320" y1="160" x2="243" y2="142" class="m-acc" stroke-width="2"></line>
+    <polygon points="235,140 247,137 250,146" class="m-fill-a"></polygon>
+    <circle cx="320" cy="160" r="4.4" class="m-fill-w"></circle>
+    <line x1="320" y1="160" x2="320" y2="64" class="m-warn" stroke-width="2.4"></line>
+    <polygon points="320,50 314,66 326,66" class="m-fill-w"></polygon>
+    <text x="312" y="182" class="m-txt" font-size="11.5" text-anchor="end">P₀</text>
+    <text x="330" y="64" class="m-warn" font-size="12">法向量 n = (F x, F y, F z)</text>
+    <text x="212" y="118" class="m-sub" font-size="11.5">曲面 F(x, y, z) = 0</text>
+    <text x="372" y="200" class="m-acc" font-size="11.5">切线方向（任取一条曲线）</text>
+    <text x="24" y="290" class="m-sub" font-size="11.5">曲线随便取、切向量随便变，但 n 固定不变，且与每一个切向量都垂直</text>
+  </svg>
+  <figcaption><b>证明的几何画面：一个固定的箭头，压住所有变化的切向量。</b>蓝色平行四边形是通过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的切平面；橙色三支箭头是从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 出发、沿三条不同曲线方向的切向量——它们<em>各不相同</em>，却都被同一张平面接住了。黄色箭头 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span> 是那个全程不变的向量，它与三支橙色箭头<strong>都垂直</strong>。<mark>「固定」与「变化」的对比，就是这一步证明的全部内容。</mark></figcaption>
+</figure>
+
+<h2 id="s9">易错清单</h2>
+
+<div class="blk trap">
+  <span class="lbl">一 · 切向量的第一个分量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 忘了写</span>
+  <p>只要曲线写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，或者由两曲面相减消去一个变量得到，切向量一定长成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mi>y</mi><mo>'</mo><mo>,</mo><mi>z</mi><mo>'</mo><mo>)</mo></math></span> 这样。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=133&amp;t=2687">44:47</a>老师在例 3 里专门回头问了这个问题：「这个地方为什么是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>？——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 看作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导是一。」<strong>判据：切向量有三个分量，任何时候都不该只剩两个。</strong></p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">二 · 「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」被做成了「求偏导」</span>
+  <p>两曲面相交给出的曲线，求导时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都要补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span>；曲面方程求法向量时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是三个<em>独立</em>变量，互不牵连。<mark>区别不在写法，而在「有没有只让一个变量动」</mark>：沿着曲线走，三个坐标绑在一起动；在曲面上求偏导，只让一个动。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">三 · 显函数形式的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 或漏掉</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 时法向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，第三个分量<strong>恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span></strong>，不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，也不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>z</mi></msub></math></span>（这里根本没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>z</mi></msub></math></span> 这个东西，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 只是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的函数）。它来自 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>−</mo><mi>z</mi></math></span> 里的那一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>z</mi></math></span>。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">四 · 切平面与法线用了差一个负号的法向量</span>
+  <p>切平面用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>、法线用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><mo form="prefix">−</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，两个符号各取一个——这样切平面与法线就不再垂直，必然算错。<strong>做法：先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 写在草稿纸最上面，后面两个方程都从同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 抄。</strong></p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">五 · 分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 时照抄点向式</span>
+  <p>点向式只在三个分量全不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 时能直接写。有分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 时，把那一项拆成<strong>单独的等式</strong>（例 3 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>+</mo><mn>2</mn><mo>=</mo><mn>0</mn></math></span>、上面那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 都是这个做法）。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">六 · 方程右边不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 就直接求偏导</span>
+  <p>用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span> 之前，曲面必须先写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn><mn>4</mn></math></span> 要写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mn>4</mn><mo>=</mo><mn>0</mn></math></span>。这道题里常数求导为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，侥幸不影响；但换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>2</mn><mi>z</mi></math></span> 这类题，不移项直接对左边求偏导就会少掉分量。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="四种输入形式到切向量或法向量、再到四套方程的流程图">
+    <rect x="200" y="12" width="240" height="34" class="m-panel-s"></rect>
+    <text x="320" y="34" class="m-txt" font-size="12" text-anchor="middle">先分清：给的是曲线还是曲面</text>
+    <line x1="320" y1="46" x2="320" y2="62" class="m-thin" stroke-width="1.2"></line>
+    <line x1="160" y1="62" x2="480" y2="62" class="m-thin" stroke-width="1.2"></line>
+    <line x1="160" y1="62" x2="160" y2="78" class="m-thin" stroke-width="1.2"></line>
+    <line x1="480" y1="62" x2="480" y2="78" class="m-thin" stroke-width="1.2"></line>
+
+    <rect x="24" y="78" width="272" height="30" class="m-panel-a"></rect>
+    <text x="160" y="98" class="m-acc" font-size="12" text-anchor="middle">曲 线 → 求出切向量</text>
+    <rect x="344" y="78" width="272" height="30" class="m-panel-a"></rect>
+    <text x="480" y="98" class="m-acc" font-size="12" text-anchor="middle">曲 面 → 求出法向量</text>
+
+    <text x="32" y="128" class="m-txt" font-size="11.5">① 参数方程：三个分量各求导</text>
+    <text x="32" y="146" class="m-math" font-size="11.5">切向量 = (x′, y′, z′)</text>
+    <text x="32" y="176" class="m-txt" font-size="11.5">② y = y(x)、z = z(x)，或两曲面相交</text>
+    <text x="32" y="194" class="m-math" font-size="11.5">切向量 = (1, y′, z′)</text>
+    <text x="32" y="212" class="m-sub" font-size="11.5">那个 1 来自 x 对 x 求导</text>
+
+    <text x="352" y="128" class="m-txt" font-size="11.5">③ 隐式 F(x, y, z) = 0</text>
+    <text x="352" y="146" class="m-math" font-size="11.5">法向量 = (F x, F y, F z)</text>
+    <text x="352" y="176" class="m-txt" font-size="11.5">④ 显式 z = f(x, y)</text>
+    <text x="352" y="194" class="m-math" font-size="11.5">法向量 = (f x, f y, −1)</text>
+    <text x="352" y="212" class="m-sub" font-size="11.5">那个 −1 来自移项后的 −z</text>
+
+    <line x1="160" y1="224" x2="160" y2="240" class="m-thin" stroke-width="1.2"></line>
+    <line x1="480" y1="224" x2="480" y2="240" class="m-thin" stroke-width="1.2"></line>
+    <rect x="24" y="240" width="272" height="44" class="m-panel"></rect>
+    <text x="160" y="258" class="m-txt" font-size="11.5" text-anchor="middle">当方向向量 → 切线（点向式）</text>
+    <text x="160" y="276" class="m-txt" font-size="11.5" text-anchor="middle">当法向量 → 法平面（点法式）</text>
+    <rect x="344" y="240" width="272" height="44" class="m-panel"></rect>
+    <text x="480" y="258" class="m-txt" font-size="11.5" text-anchor="middle">当法向量 → 切平面（点法式）</text>
+    <text x="480" y="276" class="m-txt" font-size="11.5" text-anchor="middle">当方向向量 → 法线（点向式）</text>
+  </svg>
+  <figcaption><b>整页的流程就是这一张图。</b>从上往下只有三步：判断对象是曲线还是曲面 → 按对应的输入形式算出那一个向量 → 挑一个角色（方向向量或法向量）写出需要的方程。<em>四种输入形式里，「参数方程」和「隐式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mn>0</mn></math></span>」是标准款，「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>」和「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>」是标准款移项或换参数以后的变形</em>——变形款之所以要单独记，只是因为它们各自多出一个容易漏的分量（那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 和那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>）。</figcaption>
+</figure>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>认对象</b> 曲线还是曲面</span><span class="ar">→</span>
+    <span class="n"><b>算一个向量</b> 切向量 / 法向量</span><span class="ar">→</span>
+    <span class="n"><b>挑角色</b> 方向向量 / 法向量</span><span class="ar">→</span>
+    <span class="n"><b>写方程</b> 点向式 / 点法式</span>
+  </div>
+
+  <h3>四种输入形式</h3>
+  <dl class="kv">
+    <dt>曲线·参数方程</dt><dd>切向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mo>(</mo><mi>x</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mi>y</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mi>z</mi><mo>'</mo><mo>(</mo><msub><mi>t</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span>，先在切点定出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>t</mi><mn>0</mn></msub></math></span></dd>
+    <dt>曲线·<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span></dt><dd>切向量是 <mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mi>y</mi><mo>'</mo><mo>,</mo><mi>z</mi><mo>'</mo><mo>)</mo></math></span></mark>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 来自 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导</dd>
+    <dt>曲线·两曲面相交</dt><dd>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，两边对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导，克莱姆法则解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span>，再补上那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></dd>
+    <dt>曲面·隐式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mn>0</mn></math></span></dt><dd>法向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处取值</dd>
+    <dt>曲面·显式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span></dt><dd>法向量是 <mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span></mark>，第三个分量恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span></dd>
+  </dl>
+
+  <h3>四套方程</h3>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><mrow><mi>x</mi><mo>'</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><mrow><mi>y</mi><mo>'</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mi>z</mi><mo>'</mo></mrow></mfrac><mspace width="1em"></mspace><mo>(</mo><mtext>切线/法线，点向式</mtext><mo>)</mo></math></div>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><mi>y</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><mi>z</mi><mo>'</mo><mo>(</mo><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>(</mo><mtext>法平面/切平面，点法式</mtext><mo>)</mo></math></div>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>切向量的第一个分量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 忘了写；法向量的第三个分量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 写成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</li>
+    <li>某个分量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 时照抄点向式——要拆成「连等 ＋ 单独等式」（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>+</mo><mn>2</mn><mo>=</mo><mn>0</mn></math></span> 就是这样来的）。</li>
+  </ul>
+
+  <h3>多想一句</h3>
+  <p>证明的顺序值得记：不是先规定法向量、再验证它垂直，而是<strong>先要求「垂直于一切切向量」，再从推导里看出解就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span></strong>。这也正是 <a href="../P085-方向导数与梯度/index.html">方向导数与梯度</a> 里「梯度垂直于等值面」的另一个说法。</p>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P083-空间曲线的切线和法平面/index.html">空间曲线的切线和法平面</a> 空间曲线的切线和法平面（本页曲线部分的原始版本）</li>
+      <li><a href="../P084-曲面的切平面和法线/index.html">曲面的切平面和法线</a> 曲面的切平面和法线（本页曲面部分的原始版本）</li>
+      <li><a href="../P082-一元向量值函数及其导数/index.html">一元向量值函数及其导数</a> 一元向量值函数及其导数（导向量就是切向量）</li>
+      <li><a href="../P081-隐函数求导/index.html">隐函数求导</a> 隐函数求导（两曲面相交时补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span> 的依据）</li>
+      <li><span class="cur">直线的点向式方程、平面的点法式方程</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P134-【黑板】方向导数与梯度/index.html">【黑板】方向导数与梯度</a> 【黑板】方向导数与梯度（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>F</mi></math></span>）</li>
+      <li><a href="../P135-【黑板】极值/index.html">【黑板】极值</a> 【黑板】极值（驻点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mn>0</mn></math></span>，与法向量为零是同一件事的两种说法）</li>
+      <li><a href="../P131-【补充】克莱姆法则/index.html">【补充】克莱姆法则</a> 克莱姆法则（例 3 解方程组用）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>切线（点向式，连等）× 法平面（点法式，和式）——都由同一个切向量决定</li>
+      <li>切平面（点法式）× 法线（点向式）——都由同一个法向量决定</li>
+      <li>「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」（沿曲线走，要补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span>）× 「求偏导」（只让一个变量动）</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mi>y</mi><mo>'</mo><mo>,</mo><mi>z</mi><mo>'</mo><mo>)</mo></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> × <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>：一个来自「自变量对自变量」，一个来自「移项」</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 133 讲</span><a href="../P132-【黑板】隐函数求导/index.html">← P132</a><a href="../index.html">全部目录</a><a href="../P134-【黑板】方向导数与梯度/index.html">P134 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">先分名字：曲线配切线，曲面配切平面</a>
+    <a href="#s2">预备：一元向量值函数的三个要点</a>
+    <a href="#s3">曲线（一）：参数方程给出的曲线</a>
+    <a href="#s4">曲线（二）：两种「绕」的输入形式</a>
+    <a href="#s5">曲面：先认可法向量，再写两套方程</a>
+    <a href="#s6">曲面写成 z=f(x,y)：那个 −1 是从哪来的</a>
+    <a href="#s7">特例：向量某个分量为 0 的时候怎么办</a>
+    <a href="#s8">补证明：为什么法向量偏偏是 (Fx,Fy,Fz)</a>
+    <a href="#s9">易错清单</a>
+  </aside>
+</div>
+</body>
+</html>

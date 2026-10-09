@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>无穷小的比较 · 等价无穷小替换 · 高等数学笔记</title>
+<meta name="description" content="无穷小之间要比的不是「谁小」，而是谁趋于零更快。比完之后，最有价值的一件事出现了：在乘除的因式位置上，一个无穷小可以被它的等价无穷小直接换掉，极限不变。这一招让一大批极限题从「要硬凑重要极限」变成一眼出答案——但它有一条铁律：只能换因式，不能换加减项。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 1 章  函数与极限</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 12 讲</div>
+    <h1 class="title"><span class="pnum">P012</span>无穷小的比较 · 等价无穷小替换</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>无穷小之间要比的不是「谁小」，而是<strong>谁趋于零更快</strong>。比完之后，最有价值的一件事出现了：在乘除的因式位置上，一个无穷小可以被它的等价无穷小直接换掉，极限不变。这一招让一大批极限题从「要硬凑重要极限」变成<strong>一眼出答案</strong>——但它有一条铁律：<mark>只能换因式，不能换加减项</mark>。</p></div>
+    <div class="meta"><span>时长 50m07s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=0">00:00</a><span class="vv">无穷小的比较在比什么：<b>谁趋于零更快</b>。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 两组例子说清。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=208">03:28</a><span class="vv"><b>五个定义</b>：高阶、低阶、同阶、等价、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span> 阶无穷小。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=268">04:28</a><span class="vv">记号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的写法：<b>它是小写斜体 o，不是零</b>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=565">09:25</a><span class="vv"><b>五个小例子</b>把五种定义各走一遍（含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>3</mn></math></span> 那道）。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=847">14:07</a><span class="vv">例题：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mi>n</mi></mrow></mroot><mo>−</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 同阶（证明略，只记公式）。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=930">15:30</a><span class="vv">定理：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>∼</mo><mo>α</mo></math></span> <b>等价于</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mo>α</mo><mo>+</mo><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></math></span>，即「大致相等，差一点点」。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1335">22:15</a><span class="vv"><b>常用等价无穷小总表</b>——老师当场把整张表总结了一遍。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1627">27:07</a><span class="vv">表里带<b>负号</b>的公式怎么记，以及怎么从图形上理解。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1838">30:38</a><span class="vv"><b>替换定理</b>：为什么因式位置可以换。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2187">36:27</a><span class="vv"><b>整体替换</b>：公式里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 可以换成任何趋于零的整块东西。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2067">34:27</a><span class="vv"><b>替换法的四道例题</b>（并与第一重要极限的老做法作对比）。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2790">46:30</a><span class="vv"><b>本节课最重要的警告</b>：乘除能换、加减不能换，附一个反面例子。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">无穷小的比较，比的是什么</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=0">00:00</a>上节课说，极限为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的量叫<strong>无穷小</strong>。那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时都是无穷小——都是往 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 跑，凭什么还要分个高下？</p>
+
+<p>因为<strong>它们跑到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的「速度」差得很远</strong>。看两个例子：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></div>
+
+<p>两个极限都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，含义却完全不同。第一个式子说：分子比分母小得太多，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> <em>跑得快</em>。第二个式子把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 约掉之后剩下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> <em>跑得快</em>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=109">01:49</a>老师用了一个很直观的检验：取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>1</mn></math></span>，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>1</mn></math></span>。<strong>本来就小的数，三次方之后小得离谱</strong>——这就是「趋于零更快」的意思。</p>
+
+<figure class="fig">
+  <svg viewBox="31 16 640 238" role="img" aria-label="x、sin x、x 平方、x 立方趋于零的速度对比">
+    <line x1="66" y1="216" x2="66" y2="28" class="m-line" stroke-width="1.4"></line>
+    <line x1="66" y1="216" x2="646" y2="216" class="m-line" stroke-width="1.4"></line>
+    <polygon points="650,216 640,212 640,220" class="m-fill"></polygon>
+    <polygon points="66,24 62,34 70,34" class="m-fill"></polygon>
+    <line x1="122" y1="216" x2="122" y2="188" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <path d="M 66.0 216.0 L 80.0 211.6 L 94.0 207.2 L 108.0 202.8 L 122.0 198.4 L 136.0 194.0 L 150.0 189.6 L 164.0 185.2 L 178.0 180.8 L 192.0 176.4 L 206.0 172.0 L 220.0 167.6 L 234.0 163.2 L 248.0 158.8 L 262.0 154.4 L 276.0 150.0 L 290.0 145.6 L 304.0 141.2 L 318.0 136.8 L 332.0 132.4 L 346.0 128.0 L 360.0 123.6 L 374.0 119.2 L 388.0 114.8 L 402.0 110.4 L 416.0 106.0 L 430.0 101.6 L 444.0 97.2 L 458.0 92.8 L 472.0 88.4 L 486.0 84.0 L 500.0 79.6 L 514.0 75.2 L 528.0 70.8 L 542.0 66.4 L 556.0 62.0 L 570.0 57.6 L 584.0 53.2 L 598.0 48.8 L 612.0 44.4 L 626.0 40.0" fill="none" class="m-thin" stroke-width="1.6"></path>
+    <path d="M 66.0 216.0 L 80.0 211.6 L 94.0 207.2 L 108.0 202.8 L 122.0 198.4 L 136.0 194.1 L 150.0 189.7 L 164.0 185.4 L 178.0 181.0 L 192.0 176.7 L 206.0 172.5 L 220.0 168.2 L 234.0 164.0 L 248.0 159.8 L 262.0 155.6 L 276.0 151.5 L 290.0 147.5 L 304.0 143.4 L 318.0 139.4 L 332.0 135.5 L 346.0 131.6 L 360.0 127.8 L 374.0 124.0 L 388.0 120.3 L 402.0 116.6 L 416.0 113.0 L 430.0 109.5 L 444.0 106.0 L 458.0 102.6 L 472.0 99.3 L 486.0 96.0 L 500.0 92.8 L 514.0 89.7 L 528.0 86.7 L 542.0 83.8 L 556.0 80.9 L 570.0 78.1 L 584.0 75.4 L 598.0 72.8 L 612.0 70.3 L 626.0 67.9" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <path d="M 66.0 216.0 L 80.0 215.9 L 94.0 215.6 L 108.0 215.0 L 122.0 214.2 L 136.0 213.2 L 150.0 212.0 L 164.0 210.6 L 178.0 209.0 L 192.0 207.1 L 206.0 205.0 L 220.0 202.7 L 234.0 200.2 L 248.0 197.4 L 262.0 194.4 L 276.0 191.2 L 290.0 187.8 L 304.0 184.2 L 318.0 180.4 L 332.0 176.3 L 346.0 172.0 L 360.0 167.5 L 374.0 162.8 L 388.0 157.8 L 402.0 152.6 L 416.0 147.2 L 430.0 141.6 L 444.0 135.8 L 458.0 129.8 L 472.0 123.5 L 486.0 117.0 L 500.0 110.3 L 514.0 103.4 L 528.0 96.2 L 542.0 88.8 L 556.0 81.2 L 570.0 73.4 L 584.0 65.4 L 598.0 57.2 L 612.0 48.7 L 626.0 40.0" fill="none" class="m-good" stroke-width="1.8"></path>
+    <path d="M 66.0 216.0 L 94.0 216.0 L 122.0 215.8 L 150.0 215.4 L 178.0 214.6 L 206.0 213.2 L 234.0 211.2 L 262.0 208.5 L 290.0 204.7 L 318.0 200.0 L 346.0 194.0 L 374.0 186.7 L 402.0 178.0 L 430.0 167.7 L 458.0 155.6 L 486.0 141.8 L 514.0 125.9 L 542.0 107.9 L 570.0 87.7 L 598.0 65.1 L 626.0 40.0" fill="none" class="m-warn" stroke-width="1.8"></path>
+    <circle cx="122" cy="198.4" r="3.2" class="m-fill-a"></circle>
+    <circle cx="122" cy="214.2" r="3.2" class="m-fill-g"></circle>
+    <circle cx="122" cy="215.7" r="3.2" class="m-fill-w"></circle>
+    <text x="70" y="62" class="m-sub" font-size="12">x = 0.1 时：</text>
+    <text x="70" y="82" class="m-acc" font-size="12">x = 0.100，sin x = 0.0998</text>
+    <text x="70" y="102" class="m-good" font-size="12">x ² = 0.010</text>
+    <text x="70" y="122" class="m-warn" font-size="12">x ³ = 0.001</text>
+    <text x="596" y="70" class="m-acc" font-size="12">y = sin x</text>
+    <text x="548" y="34" class="m-sub" font-size="12">y = x</text>
+    <text x="128" y="224" class="m-sub" font-size="11.5">0.1</text>
+    <text x="632" y="232" class="m-sub" font-size="12">x</text>
+    <text x="48" y="40" class="m-sub" font-size="12">y</text>
+    <text x="152" y="172" class="m-acc" font-size="12">sin x 几乎贴着 x</text>
+    <text x="304" y="146" class="m-sub" font-size="12">y = x ²</text>
+    <text x="470" y="96" class="m-sub" font-size="12">y = x ³</text>
+  </svg>
+  <figcaption><b>四条曲线都从原点出发往右往上走，但它们「离开 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的速度」完全不同。</b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 几乎重叠（这就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的图形含义）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 贴在地板上；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 几乎不动。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>1</mn></math></span> 看那三个点：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>0</mn><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>1</mn></math></span>——<b>同一个小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，三次方之后只剩下千分之一。</b>这就是「趋于零更快」。</figcaption>
+</figure>
+
+<h2 id="s2">五个定义，一张表装下</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=208">03:28</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>,</mo><mo>β</mo></math></span> 是同一变化过程中的两个无穷小（也就是它们的极限都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>），看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac></math></span> 的极限是几，就给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 起不同的名字：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac></math></span> 的极限</th><th>名称</th><th>记号</th><th>通俗理解</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 的<strong>高阶</strong>无穷小</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 跑得快得多</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∞</mo></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 的<strong>低阶</strong>无穷小</td>
+        <td>—</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 跑得慢得多</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>（非零常数）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> <strong>同阶</strong>无穷小</td>
+        <td>—</td>
+        <td>速度相当，只差一个倍数</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> <strong>等价</strong>无穷小</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>∼</mo><mo>β</mo></math></span></td>
+        <td>速度几乎一样</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><msup><mo>α</mo><mrow><mi>k</mi></mrow></msup></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mi>C</mi><mo>≠</mo><mn>0</mn></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>&gt;</mo><mn>0</mn></math></span>）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 的 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span> 阶</strong>无穷小</td>
+        <td>—</td>
+        <td>要用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>α</mo><mrow><mi>k</mi></mrow></msup></math></span> 去比才对得上</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=418">06:58</a>表里最要紧的一条关系是：<strong>等价无穷小是同阶无穷小的特例</strong>——同阶只要求极限是非零常数，等价只是把那个常数指定成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1272">21:12</a>那为什么还单独给它一个名字和记号？因为它<em>用得太多了</em>，值得单拎出来。</p>
+
+<div class="trap">
+  <span class="lbl">两个必须养成的习惯</span>
+  <p><span class="bad">一、说「谁是谁的高阶/低阶/同阶无穷小」时，必须写清楚 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的变化过程。</span>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（高阶），在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 时趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∞</mo></math></span>（低阶）——<strong>不写「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo></math></span> 什么」，这句话根本没有意义</strong>。</p>
+  <p><span class="bad">二、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 是「比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 高阶的无穷小」的记号，它不是一个零。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=268">04:28</a>定义只说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>→</mo><mn>0</mn></math></span>，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> <em>远远小于</em> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>，并不是说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mn>0</mn></math></span>。书写时注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi></math></span> 是<b>小写斜体</b>，别写成大圆圈，也别写成数字 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</p>
+</div>
+
+<h2 id="s3">五个例子，把五种定义各走一遍</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=565">09:25</a>只看定义是空的，走一遍例子才落地。下面五道都是课上讲的：</p>
+
+<ol class="steps">
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mi>o</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的高阶无穷小。<br><span class="note">这里的坑：算出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>3</mn><mi>x</mi><mo>→</mo><mn>0</mn></math></span>，容易顺手写成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span>」。<strong>它不是零，是「比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 高阶的无穷小」</strong>——它本身仍然是个趋于零的量。</span></li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn><mo>/</mo><mi>n</mi></mrow><mrow><mn>1</mn><mo>/</mo><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mi>n</mi><mo>→</mo><mo>∞</mo></math></span></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 的<strong>低阶</strong>无穷小。<br><span class="note"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=608">10:08</a>这里自变量换成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，它同样是无穷小，只是变化过程写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mn>0</mn></math></span>。</span></li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>3</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>9</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>3</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>3</mn><mo>)</mo></mrow><mrow><mi>x</mi><mo>−</mo><mn>3</mn></mrow></mfrac><mo>=</mo><mi>x</mi><mo>+</mo><mn>3</mn><mo>→</mo><mspace width="0.25em"></mspace><mn>6</mn></math></span></span>，极限是非零常数，所以二者<strong>同阶</strong>。<br><span class="note"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=651">10:51</a>能约掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>3</mn><mo>)</mo></math></span> 的理由要说清：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>3</mn></math></span> 但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>3</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>3</mn></math></span> 趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 却<em>永远不等于</em> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，放在分母上没有问题。</span></li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>→</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span></span>，由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span> 阶的定义（取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>2</mn></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的<strong>二阶</strong>无穷小。<br><span class="note"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=758">12:38</a>也可以说它是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 的<strong>同阶</strong>无穷小——两种说法都对，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>→</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span> 是非零常数。<strong>「二阶（对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 而言）」和「同阶（对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 而言）」是同一件事。</strong></span></li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mn>1</mn></math></span></span>（第一重要极限），所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，二者<strong>等价</strong>。<br><span class="note"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=810">13:30</a>所有等价无穷小公式都带着「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo></math></span> 什么」这个前提，用之前必须核对题目里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是否真的趋向那个值。</span></li>
+</ol>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=847">14:07</a>证明：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mi>n</mi></mrow></mroot><mo>−</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mi>x</mi></math></span> 是等价无穷小。</span></p>
+  <div class="sol">
+    <p>这道题的证明过程比较麻烦，课上没有展开——<strong>但这个结论必须记住</strong>，因为它是最常用的一族公式。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 取成具体数字就得到两个必背式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt><mo>−</mo><mn>1</mn><mo>∼</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>x</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn><mo>∼</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mi>x</mi></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=915">15:15</a>规律是「几次根号就除以几」。做题时几乎不会遇到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次根号，基本都是平方根和立方根，所以这两个式子必须条件反射。</p>
+  </div>
+</div>
+
+<h2 id="s4">定理：等价无穷小 = 大致相等 + 一点点误差</h2>
+
+<div class="blk thm">
+  <span class="lbl">定理</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>∼</mo><mo>α</mo></math></span> 的<strong>充要条件</strong>是</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>β</mo><mo>=</mo><mo>α</mo><mo>+</mo><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></math></div>
+  <p>也就是说：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 之间只差一个「比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 高阶的无穷小」。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=984">16:24</a>这句话可以讲得很直白：既然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span>，那 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 就<em>差不多大</em>；但「差不多」不等于「相等」，中间那点差别是存在的，只是它比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 小得多——用小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi></math></span> 记下来。</p>
+
+<div class="why">
+  <span class="lbl">证明的思路（必要性）</span>
+  <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>−</mo><mo>α</mo></math></span> 拿去比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>β</mo><mo>−</mo><mo>α</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>−</mo><mn>1</mn><mo>→</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></div>
+  <p>极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，按高阶无穷小的定义，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>−</mo><mo>α</mo><mo>=</mo><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></math></span>，移项即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mo>α</mo><mo>+</mo><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></math></span>。</p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1155">19:15</a>反过来（充分性）同样直接：若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mo>α</mo><mo>+</mo><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>∼</mo><mo>α</mo></math></span>。</p>
+  <p><strong>这个定理的价值不在两个变换本身，而在它给了一个更好用的视角</strong>：以后看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∼</mo></math></span>，脑子里就翻译成「等于它，再加一个可以忽略的高阶小量」。学泰勒公式时，这个视角会变成主要工具。</p>
+</div>
+
+<h2 id="s5">必须背下来的等价无穷小表</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1335">22:15</a>这张表课上是从头总结到尾的。先记住共同前提：<mark>以下全部在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时成立</mark>。</p>
+
+<div class="tbl-wrap">
+  <table>
+    <tbody>
+      <tr class="grp"><td>一阶 · 切于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span>（最常用）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></td></tr>
+      <tr class="grp"><td>二阶 · 带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，作差时用</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn><mo>∼</mo><mo form="prefix">−</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></span></td></tr>
+      <tr class="grp"><td>根式 · 几次根号就除以几</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt><mo>−</mo><mn>1</mn><mo>∼</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>x</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn><mo>∼</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mi>x</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt><mo>∼</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>x</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mn>1</mn><mo>−</mo><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot><mo>∼</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mi>x</mi></math></span></td></tr>
+      <tr class="grp"><td>指数 · 底数为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>&gt;</mo><mn>0</mn></math></span> 且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>≠</mo><mn>1</mn></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mn>1</mn><mo>−</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>∼</mo><mo form="prefix">−</mo><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span></td></tr>
+      <tr class="grp"><td>作差专用 · 高阶（后续课程内容）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>6</mn></mrow></mfrac></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mfrac><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="blk plain">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1627">27:07</a>带负号的那一半怎么记</span>
+  <p>表里有一半是带负号的（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>……）。看着像两倍工作量，其实<strong>只要判断「谁减谁」，符号自己就出来了</strong>：</p>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的取值在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 之间，<strong>永远不超过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></strong>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>≥</mo><mn>0</mn></math></span> 为正，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn><mo>≤</mo><mn>0</mn></math></span> 为负。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 时大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn></math></span> 为正，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 为负。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 时大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt><mo>−</mo><mn>1</mn></math></span> 为正，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt></math></span> 为负。</li>
+  </ul>
+  <p><strong>一句话：谁大谁写在前面。</strong>所以真正需要背的只有一半，另一半靠符号当场写。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1554">25:54</a>老师还给了另一种理解方式——从图形上看：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 在原点附近几乎重合；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的图像向上挪一格（挪完正好在原点与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴相切）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 向左挪一格；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn></math></span> 是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 向下挪一格。<strong>挪完之后，它们全都在原点附近贴着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span>。</strong></p>
+
+<figure class="fig">
+  <svg viewBox="25 26 640 368" role="img" aria-label="五条不同的曲线在原点附近几乎与 y 等于 x 重合">
+    <line x1="340" y1="44" x2="340" y2="356" class="m-line" stroke-width="1.3"></line>
+    <line x1="140" y1="200" x2="566" y2="200" class="m-line" stroke-width="1.3"></line>
+    <polygon points="570,200 560,196 560,204" class="m-fill"></polygon>
+    <polygon points="340,40 336,50 344,50" class="m-fill"></polygon>
+    <path d="M 197.0 310.0 L 483.0 90.0" fill="none" class="m-thin" stroke-width="1.4" stroke-dasharray="5 4"></path>
+    <path d="M 197.0 304.5 L 203.5 300.2 L 210.0 295.9 L 216.5 291.5 L 223.0 287.0 L 229.5 282.5 L 236.0 277.9 L 242.5 273.3 L 249.0 268.6 L 255.5 263.9 L 262.0 259.1 L 268.5 254.3 L 275.0 249.5 L 281.5 244.6 L 288.0 239.7 L 294.5 234.8 L 301.0 229.9 L 307.5 224.9 L 314.0 220.0 L 320.5 215.0 L 327.0 210.0 L 333.5 205.0 L 340.0 200.0 L 346.5 195.0 L 353.0 190.0 L 359.5 185.0 L 366.0 180.0 L 372.5 175.1 L 379.0 170.1 L 385.5 165.2 L 392.0 160.3 L 398.5 155.4 L 405.0 150.5 L 411.5 145.7 L 418.0 140.9 L 424.5 136.1 L 431.0 131.4 L 437.5 126.7 L 444.0 122.1 L 450.5 117.5 L 457.0 113.0 L 463.5 108.5 L 470.0 104.1 L 476.5 99.8 L 483.0 95.5" fill="none" class="m-acc" stroke-width="1.7"></path>
+    <path d="M 197.0 300.6 L 203.5 296.7 L 210.0 292.7 L 216.5 288.7 L 223.0 284.6 L 229.5 280.4 L 236.0 276.1 L 242.5 271.8 L 249.0 267.3 L 255.5 262.8 L 262.0 258.3 L 268.5 253.7 L 275.0 249.0 L 281.5 244.3 L 288.0 239.5 L 294.5 234.6 L 301.0 229.8 L 307.5 224.9 L 314.0 219.9 L 320.5 215.0 L 327.0 210.0 L 333.5 205.0 L 340.0 200.0 L 346.5 195.0 L 353.0 190.0 L 359.5 185.0 L 366.0 180.1 L 372.5 175.1 L 379.0 170.2 L 385.5 165.4 L 392.0 160.5 L 398.5 155.7 L 405.0 151.0 L 411.5 146.3 L 418.0 141.7 L 424.5 137.2 L 431.0 132.7 L 437.5 128.2 L 444.0 123.9 L 450.5 119.6 L 457.0 115.4 L 463.5 111.3 L 470.0 107.3 L 476.5 103.3 L 483.0 99.4" fill="none" class="m-good" stroke-width="1.7"></path>
+    <path d="M 216.5 328.9 L 223.0 319.6 L 229.5 310.7 L 236.0 302.2 L 242.5 294.0 L 249.0 286.2 L 255.5 278.6 L 262.0 271.3 L 268.5 264.3 L 275.0 257.5 L 281.5 251.0 L 288.0 244.6 L 294.5 238.5 L 301.0 232.5 L 307.5 226.7 L 314.0 221.1 L 320.5 215.6 L 327.0 210.3 L 333.5 205.1 L 340.0 200.0 L 346.5 195.1 L 353.0 190.2 L 359.5 185.5 L 366.0 180.9 L 372.5 176.4 L 379.0 172.0 L 385.5 167.7 L 392.0 163.5 L 398.5 159.4 L 405.0 155.4 L 411.5 151.4 L 418.0 147.5 L 424.5 143.7 L 431.0 140.0 L 437.5 136.3 L 444.0 132.7 L 450.5 129.2 L 457.0 125.7 L 463.5 122.3 L 470.0 118.9 L 476.5 115.6 L 483.0 112.3" fill="none" class="m-vio" stroke-width="1.7"></path>
+    <path d="M 197.0 284.6 L 203.5 281.7 L 210.0 278.7 L 216.5 275.6 L 223.0 272.5 L 229.5 269.2 L 236.0 265.9 L 242.5 262.5 L 249.0 259.1 L 255.5 255.5 L 262.0 251.8 L 268.5 248.1 L 275.0 244.2 L 281.5 240.3 L 288.0 236.3 L 294.5 232.1 L 301.0 227.9 L 307.5 223.5 L 314.0 219.0 L 320.5 214.5 L 327.0 209.8 L 333.5 204.9 L 340.0 200.0 L 346.5 194.9 L 353.0 189.7 L 359.5 184.4 L 366.0 179.0 L 372.5 173.4 L 379.0 167.6 L 385.5 161.8 L 392.0 155.7 L 398.5 149.5 L 405.0 143.2 L 411.5 136.7 L 418.0 130.0 L 424.5 123.2 L 431.0 116.2 L 437.5 109.0 L 444.0 101.6 L 450.5 94.1 L 457.0 86.3 L 463.5 78.4 L 470.0 70.3" fill="none" class="m-warn" stroke-width="1.7"></path>
+    <path d="M 197.0 322.6 L 204.1 315.2 L 211.3 308.0 L 218.4 301.0 L 225.6 294.2 L 232.8 287.5 L 239.9 281.0 L 247.1 274.7 L 254.2 268.5 L 261.4 262.4 L 268.5 256.4 L 275.7 250.5 L 282.8 244.7 L 290.0 239.0 L 297.1 233.3 L 304.3 227.7 L 311.4 222.1 L 318.6 216.5 L 325.7 211.0 L 332.9 205.5 L 340.0 200.0 L 347.2 194.5 L 354.3 189.0 L 361.5 183.5 L 368.6 177.9 L 375.8 172.3 L 382.9 166.7 L 390.1 161.0 L 397.2 155.3 L 404.4 149.5 L 411.5 143.6 L 418.7 137.6 L 425.8 131.5 L 433.0 125.3 L 440.1 119.0 L 447.3 112.5 L 454.4 105.8 L 461.6 99.0 L 468.7 92.0 L 475.9 84.8 L 483.0 77.4" fill="none" class="m-line" stroke-width="1.7"></path>
+    <circle cx="340" cy="200" r="4" class="m-fill-a"></circle>
+    <text x="490" y="66" class="m-warn" font-size="12">e ˣ − 1</text>
+    <text x="490" y="84" class="m-txt" font-size="12">tan x</text>
+    <text x="490" y="102" class="m-acc" font-size="12">sin x</text>
+    <text x="490" y="120" class="m-good" font-size="12">arctan x</text>
+    <text x="490" y="138" class="m-vio" font-size="12">ln(1+x)</text>
+    <text x="118" y="320" class="m-sub" font-size="11.5">y = x（虚线）</text>
+    <text x="560" y="216" class="m-sub" font-size="12">x</text>
+    <text x="322" y="50" class="m-sub" font-size="12">y</text>
+    <text x="318" y="216" class="m-sub" font-size="11.5">O</text>
+    <text x="146" y="376" class="m-sub" font-size="12">在原点附近，六条曲线挤成了一条</text>
+  </svg>
+  <figcaption><b>这张图把整张表一次性讲完了。</b>五条完全不同的曲线——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>——加上那条虚线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span>，<b>在原点附近挤成了一条线，肉眼分不出来</b>。这就是「等价无穷小」的全部含义：它们的函数表达式差得很远，但在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 这一小段里，用哪一个结果都一样。<b>注意它们离开原点后如何分岔</b>：这也正是为什么等价替换只能在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 很接近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 时、并且只能在特定位置上使用。</figcaption>
+</figure>
+
+<h2 id="s6">替换定理：为什么因式位置可以换</h2>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 等价无穷小替换</span>
+  <p>设在同一变化过程中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>∼</mo><mo>α</mo><mo>'</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>∼</mo><mo>β</mo><mo>'</mo></math></span>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mfrac><mrow><mo>β</mo><mo>'</mo></mrow><mrow><mo>α</mo><mo>'</mo></mrow></mfrac></math></span> <strong>存在</strong>，则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>=</mo><mo largeop="true" movablelimits="true">lim</mo><mfrac><mrow><mo>β</mo><mo>'</mo></mrow><mrow><mo>α</mo><mo>'</mo></mrow></mfrac></math></div>
+  <p>一句话：<strong>在商的分子、分母位置上，可以把整个无穷小换成它的等价无穷小，极限不变。</strong></p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=1941">32:21</a>证明的思路很简单，把「多出来的」乘进去再约掉：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>β</mo></mrow><mrow><mo>β</mo><mo>'</mo></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mo>β</mo><mo>'</mo></mrow><mrow><mo>α</mo><mo>'</mo></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mo>α</mo><mo>'</mo></mrow><mrow><mo>α</mo></mrow></mfrac></math></div>
+
+<p>三块分别看：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>β</mo><mo>'</mo></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>（因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>∼</mo><mo>β</mo><mo>'</mo></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>α</mo><mo>'</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>（因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>∼</mo><mo>α</mo><mo>'</mo></math></span>），中间那块就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo><mo>'</mo></mrow><mrow><mo>α</mo><mo>'</mo></mrow></mfrac></math></span>。三个相乘，极限等于中间那块。<strong>前后的因子都趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，等于白搭——这就是替换合法的全部理由。</strong></p>
+
+<div class="why">
+  <span class="lbl">为什么这件事很重要</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2067">34:27</a>以前算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>3</mn><mi>x</mi></mrow></mfrac></math></span>，标准做法是「硬凑」第一重要极限：上下各凑出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></mrow><mrow><mn>2</mn><mi>x</mi></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>3</mn><mi>x</mi></mrow><mrow><mn>3</mn><mi>x</mi></mrow></mfrac></math></span>，再约掉。现在直接替换：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>3</mn><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>2</mn><mi>x</mi></mrow><mrow><mn>3</mn><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+  <p><strong>一步到位。</strong>这就是老师说「第一重要极限以后很少用」的原因——它能做的大部分事，等价替换做得更快。</p>
+</div>
+
+<h2 id="s7">整体替换：公式里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是一个「位置」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2187">36:27</a>这一条极易被忽略，但极其有用。公式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 里的两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，<strong>不是「字母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」，而是「一个趋于零的整块东西」</strong>。只要那个东西趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，就可以整体塞进去：</p>
+
+<div class="tbl-wrap">
+  <table class="k">
+    <thead>
+      <tr><th>原式</th><th>因为</th><th>替换成</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>3</mn><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi><mo>→</mo><mn>0</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>x</mi><mo>→</mo><mn>0</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>x</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>→</mo><mn>0</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></msup><mo>−</mo><mn>1</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>→</mo><mn>0</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>判断标准只有一条：<strong>把它整体看成一个数，这个数是不是趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>？</strong>是就能换，不是就不能换。比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 就<em>不能</em>换，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</p>
+
+<h2 id="s8">四道课堂例题</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2350">39:10</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>5</mn><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>→</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>5</mn><mi>x</mi><mo>→</mo><mn>0</mn></math></span>，整体替换：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>5</mn><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>2</mn><mi>x</mi></mrow><mrow><mn>5</mn><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>5</mn></mrow></mfrac></math></div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <p>分子换掉，分母不换也可以——<strong>替换定理允许只换一个</strong>。这里分母本身很好提公因式：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>x</mi></mrow><mrow><mi>x</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><mo>)</mo></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2411">40:11</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mroot><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <p>这题同时考「整体替换」和「负号公式」，两步都要小心：</p>
+    <ul class="tight">
+      <li>分子：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>+</mo><mo>□</mo></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn><mo>∼</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>□</mo></math></span>，这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>□</mo><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，所以分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∼</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>。</li>
+      <li>分母：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn><mo>∼</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>（用的是<strong>带负号</strong>的那一个）。</li>
+    </ul>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mroot><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+    <p><strong>最常错的就是分母的符号。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 不超过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn></math></span> 是负的，等价无穷小必须带负号；写成正的，答案就变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 了。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2668">44:28</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>x</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>x</mi><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <p>第一题：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是分子里的一个<strong>因式</strong>，可以换。替换后分子变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，与分母约掉，极限为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</p>
+    <p>第二题：整个式子全是乘除，所以每一块都可以换。</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>x</mi><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi><mo>⋅</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></mfrac><mo>=</mo><mn>2</mn></math></div>
+    <p><strong>关键观察</strong>：只换「乘除关系里的整块」，最前面那个孤立的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不必动（它已经是最简形式了）。</p>
+  </div>
+</div>
+
+<h2 id="s9">铁律：只能换因式，不能换加减项</h2>
+
+<div class="blk trap">
+  <span class="lbl">这是本节课最重要的警告</span>
+  <p><strong>分子或分母里<em>相乘、相除</em>的部分（因式）可以替换；<em>相加、相减</em>的部分一般不能替换。</strong></p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2790">46:30</a>原因就藏在替换定理里：定理说的是「商的分子分母可以同时换」，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac></math></span> 中的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 各自是<strong>一整个因子</strong>。而加减项不构成一个因子，替换之后各自留下的「高阶误差」并不会被约掉，它们会积累起来，把结果改掉。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">反例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=2849">47:29</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac></math></span>。先看错误做法。</span></p>
+  <div class="sol">
+    <span class="lbl">错解</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，于是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>x</mi><mo>−</mo><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac><mo>=</mo><mn>0</mn><mspace width="2em"></mspace><mo>(</mo><mtext>这是错的</mtext><mo>)</mo></math></div>
+    <p><span class="bad">这是错的。</span>分子是<strong>相减</strong>，不是因式，两个替换留下的误差被一起抹掉了——真相是分子并不比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 小，它和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 是<em>同阶</em>的。</p>
+    <span class="lbl">正确做法</span>
+    <p>先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 化成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>。这时分子变成了<strong>乘积</strong>，就能放心换：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>⋅</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p>所以</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p><strong>对照一下：错解给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，正确答案是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>。</strong>这就是「加减项硬换」的代价——它能把一个非零的极限直接算成零。</p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="24 6 640 256" role="img" aria-label="tan x 与 sin x 之间的缝隙随 x 增大而变宽">
+    <line x1="70" y1="236" x2="70" y2="22" class="m-line" stroke-width="1.4"></line>
+    <line x1="70" y1="236" x2="618" y2="236" class="m-line" stroke-width="1.4"></line>
+    <polygon points="622,236 612,232 612,240" class="m-fill"></polygon>
+    <polygon points="70,18 66,28 74,28" class="m-fill"></polygon>
+    <path d="M 70.0 236.0 L 83.0 232.7 L 96.0 229.4 L 109.0 226.1 L 122.0 222.8 L 135.0 219.4 L 148.0 216.1 L 161.0 212.7 L 174.0 209.2 L 187.0 205.8 L 200.0 202.3 L 213.0 198.8 L 226.0 195.2 L 239.0 191.5 L 252.0 187.8 L 265.0 184.0 L 278.0 180.2 L 291.0 176.3 L 304.0 172.2 L 317.0 168.1 L 330.0 163.9 L 343.0 159.5 L 356.0 155.1 L 369.0 150.5 L 382.0 145.7 L 395.0 140.8 L 408.0 135.7 L 421.0 130.3 L 434.0 124.8 L 447.0 119.1 L 460.0 113.0 L 473.0 106.7 L 486.0 100.1 L 499.0 93.1 L 512.0 85.7 L 525.0 77.9 L 538.0 69.7 L 551.0 60.8 L 564.0 51.4 L 577.0 41.3 L 590.0 30.4 L 590.0 124.9 L 577.0 126.7 L 564.0 128.6 L 551.0 130.6 L 538.0 132.6 L 525.0 134.7 L 512.0 136.8 L 499.0 139.0 L 486.0 141.3 L 473.0 143.6 L 460.0 146.0 L 447.0 148.5 L 434.0 151.0 L 421.0 153.5 L 408.0 156.1 L 395.0 158.8 L 382.0 161.5 L 369.0 164.2 L 356.0 167.0 L 343.0 169.8 L 330.0 172.7 L 317.0 175.6 L 304.0 178.6 L 291.0 181.6 L 278.0 184.6 L 265.0 187.7 L 252.0 190.7 L 239.0 193.9 L 226.0 197.0 L 213.0 200.2 L 200.0 203.3 L 187.0 206.5 L 174.0 209.8 L 161.0 213.0 L 148.0 216.3 L 135.0 219.5 L 122.0 222.8 L 109.0 226.1 L 96.0 229.4 L 83.0 232.7 L 70.0 236.0 Z" class="m-bg-a"></path>
+    <path d="M 70.0 236.0 L 83.0 232.7 L 96.0 229.4 L 109.0 226.1 L 122.0 222.8 L 135.0 219.4 L 148.0 216.1 L 161.0 212.7 L 174.0 209.2 L 187.0 205.8 L 200.0 202.3 L 213.0 198.8 L 226.0 195.2 L 239.0 191.5 L 252.0 187.8 L 265.0 184.0 L 278.0 180.2 L 291.0 176.3 L 304.0 172.2 L 317.0 168.1 L 330.0 163.9 L 343.0 159.5 L 356.0 155.1 L 369.0 150.5 L 382.0 145.7 L 395.0 140.8 L 408.0 135.7 L 421.0 130.3 L 434.0 124.8 L 447.0 119.1 L 460.0 113.0 L 473.0 106.7 L 486.0 100.1 L 499.0 93.1 L 512.0 85.7 L 525.0 77.9 L 538.0 69.7 L 551.0 60.8 L 564.0 51.4 L 577.0 41.3 L 590.0 30.4" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <path d="M 70.0 236.0 L 83.0 232.7 L 96.0 229.4 L 109.0 226.1 L 122.0 222.8 L 135.0 219.5 L 148.0 216.2 L 161.0 212.9 L 174.0 209.6 L 187.0 206.3 L 200.0 203.0 L 213.0 199.7 L 226.0 196.4 L 239.0 193.1 L 252.0 189.8 L 265.0 186.5 L 278.0 183.2 L 291.0 179.9 L 304.0 176.6 L 317.0 173.3 L 330.0 170.0 L 343.0 166.7 L 356.0 163.4 L 369.0 160.1 L 382.0 156.8 L 395.0 153.5 L 408.0 150.2 L 421.0 146.9 L 434.0 143.6 L 447.0 140.3 L 460.0 137.0 L 473.0 133.7 L 486.0 130.4 L 499.0 127.1 L 512.0 123.8 L 525.0 120.5 L 538.0 117.2 L 551.0 113.9 L 564.0 110.6 L 577.0 107.3 L 590.0 104.0" fill="none" class="m-line" stroke-width="1.6" stroke-dasharray="5 4"></path>
+    <line x1="122" y1="236" x2="122" y2="222.8" class="m-thin" stroke-width="1"></line>
+    <text x="104" y="252" class="m-sub" font-size="11.5">x = 0.1</text>
+    <text x="168" y="250" class="m-good" font-size="12">这里的缝几乎看不见</text>
+    <text x="468" y="88" class="m-acc" font-size="12.5">tan x</text>
+    <text x="516" y="134" class="m-sub" font-size="12.5">sin x</text>
+    <text x="496" y="184" class="m-sub" font-size="12">y = x</text>
+    <text x="286" y="130" class="m-vio" font-size="12">蓝色区域就是 tan x − sin x</text>
+    <text x="606" y="252" class="m-sub" font-size="12">x</text>
+    <text x="52" y="30" class="m-sub" font-size="12">y</text>
+    <text x="50" y="108" class="m-sub" font-size="11.5">1</text>
+    <line x1="64" y1="104" x2="74" y2="104" class="m-thin" stroke-width="1"></line>
+  </svg>
+  <figcaption><b>为什么「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>」推不出「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>」。</b>蓝色区域是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，它在原点附近<em>确实很窄</em>——所以在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>1</mn></math></span> 那里你根本看不出差别，这才让「直接替换」显得很有道理。但<strong>「很小」和「等于零」是两回事</strong>：这条缝的宽度恰好是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 这个量级，去掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 之后剩下的是一个非零常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>，而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">那什么时候加减也能换</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=12&amp;t=3200">53:20</a>课上留了一句：<strong>加减项在满足一定条件时其实也可以换</strong>。那个条件属于后续内容（本质是要求两个量各自的「下一阶项」不互相抵消）。<strong>但大一阶段，你为加减项做的替换基本都是错的</strong>，所以先把规矩记死：<mark>乘除能换，加减别换</mark>。真遇到加减，先想办法把它变成乘积——像上面那样提取公因式，是很常见的出路。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>无穷小比较 = 比<strong>趋于零的速度</strong>；等价无穷小替换 = <strong>因式位置上可以换</strong>。</p>
+
+  <h3>铁律（最重要）</h3>
+  <p><mark>乘除能换，加减不能换。</mark></p>
+  <p>反例记牢：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac></math></span>，硬换得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，正确答案是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。正确出路是<b>提公因式变成乘积</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>。</p>
+
+  <h3>五档速度</h3>
+  <dl class="kv">
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><mo>α</mo></mrow></mfrac><mo>→</mo><mn>0</mn></math></span></dt><dd>高阶，记 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mi>o</mi><mo>(</mo><mo>α</mo><mo>)</mo></math></span>，<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi></math></span> 不是零</strong></dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mo>∞</mo></math></span></dt><dd>低阶</dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mspace width="0.25em"></mspace><mi>C</mi><mo>≠</mo><mn>0</mn></math></span></dt><dd>同阶（速度相当，差个倍数）</dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mn>1</mn></math></span></dt><dd>等价 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>∼</mo><mo>β</mo></math></span>（同阶的特例）</dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>β</mo></mrow><mrow><msup><mo>α</mo><mrow><mi>k</mi></mrow></msup></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mi>C</mi><mo>≠</mo><mn>0</mn></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 阶（要用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>α</mo><mrow><mi>k</mi></mrow></msup></math></span> 去比）</dd>
+  </dl>
+
+  <h3>必背表（都在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时）</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，反过来 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn><mo>∼</mo><mo form="prefix">−</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></span></li>
+    <li>根式：<strong>几次根号除以几</strong>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt><mo>−</mo><mn>1</mn><mo>∼</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn><mo>∼</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mfrac></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>，反过来 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>∼</mo><mo form="prefix">−</mo><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span></li>
+    <li>作差用：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>6</mn></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></span></li>
+  </ul>
+  <p><strong>负号不用背</strong>：谁大谁写在前面，符号自然对（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>≤</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 为正）。</p>
+
+  <h3>动手前问自己三句</h3>
+  <ol class="tight">
+    <li>前提对吗？—— 必须 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>□</mo><mo>→</mo><mn>0</mn></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 时的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 不能换。</li>
+    <li>位置对吗？—— 它是不是一个<strong>因式</strong>？加减项不许换。</li>
+    <li>整体换了吗？—— 公式里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是「一整块趋于零的东西」，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn></math></span> 里那个位置是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P009-无穷小与无穷大/index.html">无穷小与无穷大</a> 无穷小与无穷大（极限为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的量）</li>
+      <li><span class="cur">第一重要极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span></span></li>
+      <li><span class="cur">因式分解、约分、根式与对数运算</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P010-极限运算法则/index.html">极限运算法则</a> 极限运算法则</li>
+      <li><a href="../P031-泰勒公式/index.html">泰勒公式</a> 泰勒公式（等价无穷小的「升级版」，能处理加减项）</li>
+      <li><a href="../P030-洛必达法则/index.html">洛必达法则</a> 洛必达法则</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> <strong>不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>，是「比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 高阶的无穷小」</li>
+      <li>说「高阶/同阶」时必须写出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo></math></span> 什么</li>
+      <li>只换分子或只换分母<strong>都可以</strong>，不必两边都换</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 12 讲</span><a href="../P011-极限存在准则第一第二重要极限/index.html">← P011</a><a href="../index.html">全部目录</a><a href="../P013-连续/index.html">P013 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">无穷小的比较，比的是什么</a>
+    <a href="#s2">五个定义，一张表装下</a>
+    <a href="#s3">五个例子，把五种定义各走一遍</a>
+    <a href="#s4">定理：等价无穷小 = 大致相等 + 一点点误差</a>
+    <a href="#s5">必须背下来的等价无穷小表</a>
+    <a href="#s6">替换定理：为什么因式位置可以换</a>
+    <a href="#s7">整体替换：公式里的 x 是一个「位置」</a>
+    <a href="#s8">四道课堂例题</a>
+    <a href="#s9">铁律：只能换因式，不能换加减项</a>
+  </aside>
+</div>
+</body>
+</html>

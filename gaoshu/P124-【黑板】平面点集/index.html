@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】平面点集 · 高等数学笔记</title>
+<meta name="description" content="这一节是多发词汇、少见计算的一段：老师自己都说它「讲了吧也没啥用，不讲吧你又嫌我不讲」。但后面谈二元函数的定义域、极限、连续时，一张嘴就要用这些词。所以本页只做两件事：把名字和定义对上号，再用「一句话定义 + 一个正例 + 一个反例」把每个词钉死。新授课见 [[75]]。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 124 讲</div>
+    <h1 class="title"><span class="pnum">P124</span>【黑板】平面点集</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这一节是<strong>多发词汇、少见计算</strong>的一段：老师自己都说它「讲了吧也没啥用，不讲吧你又嫌我不讲」。但后面谈二元函数的<mark>定义域、极限、连续</mark>时，一张嘴就要用这些词。所以本页只做两件事：<strong>把名字和定义对上号</strong>，再用「<strong>一句话定义 + 一个正例 + 一个反例</strong>」把每个词钉死。新授课见 <a href="../P075-平面点集 多元函数概念 极限 连续/index.html">平面点集 多元函数概念 极限 连续</a>。</p></div>
+    <div class="meta"><span>时长 24m10s</span><span class="w" title="考试权重">●●○○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=0">00:00</a><span class="vv">第 9 章开篇。<b>概念多、用处少</b>，「以了解为主」。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=38">00:38</a><span class="vv">为什么能放松：多元考<mark>大块计算</mark>，不抠一元小细节。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=89">01:29</a><span class="vv"><b>δ 邻域</b>：以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 为心、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 为半径的圆面。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=171">02:51</a><span class="vv">两个细节：<b>圆周不取</b>（画虚线）、<b>圆心取</b>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=302">05:02</a><span class="vv"><b>去心 δ 邻域</b>：多写「大于零」，把圆心掏掉。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=350">05:50</a><span class="vv"><b>内点</b>：存在邻域完全包在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 里。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=440">07:20</a><span class="vv"><b>外点</b>：存在邻域与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 没有交集。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=515">08:35</a><span class="vv"><b>边界点</b>：任意邻域里既有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点、又有非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=582">09:42</a><span class="vv">边界点<mark>可能属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 也可能不属于</mark>：实线与虚线边界对照。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=790">13:10</a><span class="vv"><b>开集</b>（点全是内点）与<b>闭集</b>（边界也收进来）。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=1067">17:47</a><span class="vv"><b>连通集</b>：任给两点可用集合内的折线连起来。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=1158">19:18</a><span class="vv"><b>区域</b>（连通的开集）与<b>闭区域</b>（区域连同边界）。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=124&amp;t=1273">21:13</a><span class="vv"><b>有界 / 无界</b>：能否用一个足够大的圆把集合包住。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、为什么先讲这些「没什么用」的概念</h2>
+
+<p>老师的开场白几乎是在替学生吐槽：<q>下面我们看一下第九章第一部分，叫平面点集。这一小部分的内容还挺多，但其实也没什么太大的用处，所以这部分的定义大家就以了解为主吧。</q>理由他也给了：<q>多元函数的微分大块的计算比较多，一元函数那些小细节，像连续未必可导，就抠得不是特别细。</q></p>
+
+<p>那为什么还要讲？因为<strong>接下来每一句话都要用到这些词</strong>。一元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的定义域是数轴上的<strong>区间</strong>；而二元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 都是自变量，<mark>它的定义域是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上的一个「区域」</mark>。要把「区域」说清楚，就得先发词汇：邻域、内点、边界、开集、闭集、连通、有界。</p>
+
+<p>三个地方绕不开它们：写二元极限要说「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 趋近于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span>」——「趋近」靠<strong>邻域</strong>才说得清；谈连续要说「在区域上连续」；写二重积分时，积分区域的开闭直接影响能不能套公式。<mark>花二十分钟认词，省后面无数次的含糊。</mark></p>
+
+<h2 id="s2">二、邻域：把「附近」变成能算的东西</h2>
+
+<div class="blk def">
+  <span class="lbl">定义 · δ 邻域与去心 δ 邻域</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 是平面上一点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>&gt;</mo><mn>0</mn></math></span>。到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的距离<strong>小于</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 的全体点，叫做 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的 <strong>δ 邻域</strong>，记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>,</mo><mo>δ</mo><mo>)</mo></math></span>：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>U</mi><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>,</mo><mo>δ</mo><mo>)</mo><mo>=</mo><mo>{</mo><mspace width="1em"></mspace><mi>P</mi><mo>∣</mo><mspace width="0.25em"></mspace><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo><mspace width="1em"></mspace><mo>}</mo></math></div>
+  <p>把「心」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 挖掉，就得到<strong>去心 δ 邻域</strong>，也就是距离<strong>大于零</strong>且小于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 的全体点：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>{</mo><mspace width="1em"></mspace><mi>P</mi><mo>∣</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo><mspace width="1em"></mspace><mo>}</mo></math></div>
+</div>
+
+<p>老师连着问了两个「包不包括」：<q>外边这一圈是虚线，圆上的点到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的距离是不是等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span>？包括还是不包括？</q>不包括，因为定义写的是<strong>小于</strong>。<q><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 本身包括还是不包括？</q>包括，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 到自己的距离 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mo>δ</mo></math></span>。<mark>所以 δ 邻域的「心」在里面，「皮」不在里面。</mark></p>
+
+<div class="why">
+  <span class="lbl">去心邻域里那个「大于零」为什么要写</span>
+  <p>老师把这件事说得很轻松：<q>这个式子就多了一个限制，要求大于零。老师你这不是废话吗？根号不是一定大于等于零吗？它说大于零的意思就是<strong>不等于零</strong>呗——那到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的距离等于零的点不就是它本身吗？所以就把这个心给他去了呀。</q></p>
+  <p>也就是说：<strong>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&gt;</mo><mn>0</mn></math></span>」这个条件唯一的作用，就是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 自己排除掉。</strong>因为距离一定非负，「距离大于零」正好等价于「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>P</mi><mn>0</mn></msub></math></span>」。老师把这个动作形容成<q>把这个心给他掏走了</q>。</p>
+  <p><mark>为什么非要用「去心」这一版？</mark>因为讲极限时关心的是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 无限接近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 时函数怎么变」，而<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 这一点上函数值是多少、甚至有没有定义，都不该影响极限</strong>——把靠近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的点全算进来，唯独不要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 自己。</p>
+</div>
+
+<p>另一个看着小、却一直要用的规矩是<strong>线的虚实</strong>：定义里写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span>，<strong>不含等号</strong>，所以圆周上的点不属于邻域，必须画虚线。一句话：<mark>严格不等 ⇒ 虚线（边界取不到）；带等号 ⇒ 实线（边界取得到）</mark>。老师讲「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>」时专门停下强调：<q>这个线得画虚线，因为是大于零，没说等于零。</q></p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 236" role="img" aria-label="δ 邻域含圆心，去心 δ 邻域把圆心挖掉">
+    <circle cx="150" cy="112" r="66" class="m-box-a" stroke-width="1.5"></circle>
+    <line x1="150" y1="112" x2="216" y2="112" class="m-acc" stroke-width="1.8"></line>
+    <circle cx="150" cy="112" r="4.2" class="m-fill-a"></circle>
+    <text x="176" y="106" class="m-acc" font-size="11.5">δ</text>
+    <text x="122" y="134" class="m-fill-a" font-size="11.5">P0</text>
+    <text x="94" y="40" class="m-txt" font-size="12">δ 邻域 U(P0, δ)</text>
+    <text x="66" y="200" class="m-sub" font-size="11.5">圆周不取（画虚线）</text>
+    <text x="66" y="218" class="m-sub" font-size="11.5">圆心取：距离 0 &lt; δ</text>
+
+    <circle cx="470" cy="112" r="66" class="m-box-a" stroke-width="1.5"></circle>
+    <circle cx="470" cy="112" r="9" class="m-hole" stroke-width="1.4"></circle>
+    <line x1="461" y1="103" x2="479" y2="121" class="m-warn" stroke-width="1.6"></line>
+    <text x="486" y="106" class="m-warn" font-size="11.5">P0（被挖掉）</text>
+    <text x="414" y="40" class="m-txt" font-size="12">去心 δ 邻域</text>
+    <text x="386" y="200" class="m-sub" font-size="11.5">多一个条件：0 &lt; |P P0| &lt; δ</text>
+    <text x="386" y="218" class="m-sub" font-size="11.5">「&gt; 0」的作用：把 P0 排除</text>
+
+    <line x1="300" y1="46" x2="300" y2="196" class="m-thin" stroke-width="1"></line>
+  </svg>
+  <figcaption><b>两个邻域只差一件事：圆心在不在里面。</b>左边 δ 邻域＝圆的内部加圆心，圆周（虚线）不算；右边去心邻域把圆心挖掉（小圈加斜线）。<em>记法：去心 = 多写一个「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&gt;</mo><mn>0</mn></math></span>」= 把心掏走，其余完全一样。</em></figcaption>
+</figure>
+
+<h2 id="s3">三、点与集合：一张对照表钉死</h2>
+
+<p>这些分类说白了就是「点站在集合的什么位置」。判断不能靠感觉，全落在一句可检验的话上——<strong>能不能找到一个足够小的邻域</strong>。<q>你不能说在里边啊，数学必须有明确的定义。</q></p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>概念</th><th>一句话定义</th><th>正例</th><th>反例 / 对照</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>内点</strong></td>
+        <td>存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><mi>P</mi><mo>,</mo><mo>δ</mo><mo>)</mo><mo>⊆</mo><mspace width="0.25em"></mspace><mi>E</mi></math></span>（周围一圈全是自己人）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi><mo>=</mo><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>}</mo></math></span> 里，原点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>（取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>=</mo><mn>0</mn><mo>.</mo><mn>5</mn></math></span>）</td>
+        <td>圆周上的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> <strong>不是</strong>内点：任何邻域都伸到圆外</td>
+      </tr>
+      <tr>
+        <td><strong>外点</strong></td>
+        <td>存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><mi>P</mi><mo>,</mo><mo>δ</mo><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的交集为空（周围一圈全是外人）</td>
+        <td>同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 中，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>5</mn><mo>,</mo><mn>5</mn><mo>)</mo></math></span> 是外点</td>
+        <td>原点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> <strong>不是</strong>外点：每个邻域里都有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点</td>
+      </tr>
+      <tr>
+        <td><strong>边界点</strong></td>
+        <td>任意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><mi>P</mi><mo>,</mo><mo>δ</mo><mo>)</mo></math></span> 里<strong>既有</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点、<strong>又有</strong>非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点（骑在墙头上）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>1</mn></msub><mo>=</mo><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>}</mo></math></span> 的边界点，<strong>且属于</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>1</mn></msub></math></span></td>
+        <td>同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub><mo>=</mo><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>1</mn><mo>}</mo></math></span> 的边界点，但<strong>不属于</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub></math></span></td>
+      </tr>
+      <tr>
+        <td><strong>开集</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的每一个点都是<strong>内点</strong></td>
+        <td>圆环 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mn>1</mn><mo>&lt;</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>2</mn><mo>}</mo></math></span>（两条边界都画虚线）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mn>1</mn><mo>≤</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>}</mo></math></span> 不是开集：边界上的点不是内点</td>
+      </tr>
+      <tr>
+        <td><strong>闭集</strong></td>
+        <td>内点连同<strong>它的边界</strong>都属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>}</mo></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>1</mn><mo>}</mo></math></span> 不是闭集：边界被排除在外</td>
+      </tr>
+      <tr>
+        <td><strong>连通集</strong></td>
+        <td>任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 里两点，都可用<strong>完全落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 内</strong>的折线连起来</td>
+        <td>圆盘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>1</mn><mo>}</mo></math></span>：一块，连得起来</td>
+        <td>两个互不相交的圆盘之并：折线必须「穿过外面」，连不起来</td>
+      </tr>
+      <tr>
+        <td><strong>区域</strong></td>
+        <td><strong>连通的开集</strong></td>
+        <td>圆环 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mn>1</mn><mo>&lt;</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>2</mn><mo>}</mo></math></span>——连通又是开集</td>
+        <td>两个不相交圆盘之并：是开集但不连通，<strong>不是</strong>区域</td>
+      </tr>
+      <tr>
+        <td><strong>闭区域</strong></td>
+        <td>区域连同它的边界</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>}</mo></math></span>——连通，边界也收进来了</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>1</mn><mo>}</mo></math></span> 不是闭区域：边界没收进来</td>
+      </tr>
+      <tr>
+        <td><strong>有界集</strong></td>
+        <td>存在一个足够大的圆把整个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 包住</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>}</mo></math></span>：取半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 的圆就包住了</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn><mo>}</mo></math></span> 包不住——圆再大，它也往外延伸</td>
+      </tr>
+      <tr>
+        <td><strong>无界集</strong></td>
+        <td>找不到这样的圆</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn><mo>}</mo></math></span>（<strong>无界开区域</strong>）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mi>x</mi><mo>+</mo><mi>y</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>}</mo></math></span> 也是无界集，但是<strong>无界闭区域</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">内点的「存在」有多松，边界点凭什么「不一定属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>」</span>
+  <p><strong>先说内点。</strong>老师自问自答：<q>这个点离边界很近，它还是内点吗？也是。这时候你这个邻域取小一点不就行了嘛。</q>定义只要求「<strong>存在</strong>」一个邻域，而它可以想取多小就取多小。<mark>只要点不在边界上、也不在外面，总能找到一个小圆把它包进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>。</mark>这个「存在」的松紧，和一元的极限定义里「存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>」是一个味道。</p>
+  <p><strong>再说边界点。</strong>关键在：<strong>边界点由集合 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 定义，不由画法定义。</strong>老师一句话把学生问住：<q>你假设你是个二年级的小朋友——这个点是不是在它的边界上？</q>是。所以同一圈线配不同的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，归属就不同：配 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≤</mo></math></span> 它属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，配 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&lt;</mo></math></span> 它不属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，<strong>但两次都是边界点</strong>——「边界点的全体」才叫边界，边界与集合本身可能相交、也可能不相交。</p>
+</div>
+
+<p>开集与闭集都能和一元对照着记：<strong>开集</strong>就是「点全是内点」，相当于<strong>开区间</strong>（不含端点）；<strong>闭集</strong>就是「内点连同边界都属于它」，相当于<strong>闭区间</strong>（含端点）——只是一个二维、一个一维。</p>
+
+<div class="why">
+  <span class="lbl">连通为什么必须强调「折线得落在集合里」</span>
+  <p>这个词老师是用一个笑话引入的：<q>有同学可能是用的移动，有可能是电信——俺们这里是联通啊。联通是什么意思呢？就是不是移动的呗，也不是电信的。</q>笑完给正经定义：<q>说白了就是<strong>一块</strong>，连成一起的就叫连通的。</q></p>
+  <p>真正要抠的是后半句。<q>任给两点你用折线连不起来——折线的点都得属于这个集合 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>。你倒是能连起来，这玩意儿出去了，那还行吗？</q><mark>所以「连得起来」不是随便连，而是「有一根完全躺在集合内部的线」。</mark>把连通加到开集上就得到<strong>区域 = 连通的开集</strong>；区域再带上边界，就是<strong>闭区域</strong>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 220" role="img" aria-label="概念链条：邻域、内点、开集、区域与边界点、闭集、闭区域">
+    <rect x="16" y="44" width="140" height="56" rx="6" class="m-panel-a"></rect>
+    <text x="28" y="68" class="m-txt" font-size="12">δ 邻域</text>
+    <text x="28" y="88" class="m-sub" font-size="11.5">距离 &lt; δ</text>
+
+    <rect x="176" y="44" width="140" height="56" rx="6" class="m-panel-hi"></rect>
+    <text x="188" y="68" class="m-txt" font-size="12">内点</text>
+    <text x="188" y="88" class="m-sub" font-size="11.5">存在邻域 ⊂ E</text>
+
+    <rect x="336" y="44" width="140" height="56" rx="6" class="m-panel-s"></rect>
+    <text x="348" y="68" class="m-txt" font-size="12">开集</text>
+    <text x="348" y="88" class="m-sub" font-size="11.5">点全是内点</text>
+
+    <rect x="496" y="44" width="140" height="56" rx="6" class="m-panel-hi"></rect>
+    <text x="508" y="68" class="m-txt" font-size="12">区域</text>
+    <text x="508" y="88" class="m-sub" font-size="11.5">连通 + 开集</text>
+
+    <line x1="156" y1="72" x2="170" y2="72" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="174,72 164,67 164,77" class="m-fill-a"></polygon>
+    <line x1="316" y1="72" x2="330" y2="72" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="334,72 324,67 324,77" class="m-fill-a"></polygon>
+    <line x1="476" y1="72" x2="490" y2="72" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="494,72 484,67 484,77" class="m-fill-a"></polygon>
+
+    <rect x="16" y="128" width="220" height="56" rx="6" class="m-panel-s"></rect>
+    <text x="28" y="152" class="m-txt" font-size="12">边界点</text>
+    <text x="28" y="172" class="m-sub" font-size="11.5">邻域里既有 E 的点，也有非 E 的点</text>
+
+    <rect x="256" y="128" width="220" height="56" rx="6" class="m-panel-s"></rect>
+    <text x="268" y="152" class="m-txt" font-size="12">闭集</text>
+    <text x="268" y="172" class="m-sub" font-size="11.5">边界也收进来</text>
+
+    <rect x="496" y="128" width="140" height="56" rx="6" class="m-panel-hi"></rect>
+    <text x="508" y="152" class="m-txt" font-size="12">闭区域</text>
+    <text x="508" y="172" class="m-sub" font-size="11.5">区域 + 边界</text>
+
+    <line x1="236" y1="156" x2="250" y2="156" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="254,156 244,151 244,161" class="m-fill-a"></polygon>
+    <line x1="476" y1="156" x2="490" y2="156" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="494,156 484,151 484,161" class="m-fill-a"></polygon>
+
+    <text x="16" y="208" class="m-txt" font-size="11.5">有界：存在大圆包住集合。上一行加「连通」得区域，下一行加边界得闭集与闭区域。</text>
+  </svg>
+  <figcaption><b>十几个定义其实就是这两行。</b>上一行是「开」的一支：邻域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo></math></span> 内点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo></math></span> 开集 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo></math></span> 区域（再加「连通」）；下一行是「闭」的一支：边界点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo></math></span> 闭集 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo></math></span> 闭区域。<em>接缝在「边界」上——<strong>把边界收进来，开就变闭</strong>。「有界」管集合跑得远不远，和开闭无关。</em></figcaption>
+</figure>
+
+<h2 id="s4">四、一串判定例子</h2>
+
+<p>老师最后给了几道「说出它是什么集合」的题，全靠上面的定义拼出来，他说<q>你就过一遍就行</q>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q">判断类型：① <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="true">)</mo></mrow><mo>∣</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>&lt;</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>2</mn><mo>}</mo></math></span>；② <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="true">)</mo></mrow><mo>∣</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>≤</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>}</mo></math></span>；③ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="true">)</mo></mrow><mo>∣</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn><mo>}</mo></math></span>；④ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="true">)</mo></mrow><mo>∣</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>y</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>}</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先说边界画实线还是虚线（定开闭），再看连不连通、包不包得住</span>
+    <p><strong>① 圆环，开集。</strong>老师说：<q>这个图大家还是比较熟的呀，这不就是这么一个圆环吗？</q>两个不等式都是<strong>严格</strong>不等号，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 两条边界都取不到、都画虚线，所以每一点都是内点——是<strong>开集</strong>；而且它是一个连通的整体，所以还是<strong>区域</strong>。</p>
+    <p><strong>② 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≤</mo></math></span> 的圆环，闭集。</strong><q>因为是大于等于一、小于等于二，那么一和二这个边界，你不就得画实线吗？那不就是个闭集吗？</q>它是<strong>闭区域</strong>。</p>
+    <p><strong>③ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>，无界开区域。</strong>先画 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 那条直线，再<strong>代一个点</strong>定方向：取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>2</mn><mo>&gt;</mo><mn>0</mn></math></span>，所以是直线上方的<strong>半个平面</strong>。它向上无限延伸，<q>你找一个半径很大的圆能给它框住吗？框不住，你半径取得再大也不行</q>——<strong>无界</strong>。边界是虚线，所以是<strong>无界的开区域</strong>。</p>
+    <p><strong>④ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，无界闭区域。</strong>图形与 ③ 一样，只是<q>因为有等于这个符号了，所以这个边界是一个实线</q>。</p>
+    <p><mark>四道题并排看，分工很干净：开闭只看「边界取不取」，有界只看「圆包不包得住」，是不是区域只看「连不连通」。</mark></p>
+  </div>
+</div>
+
+<h2 id="s5">五、易错清单</h2>
+
+<div class="blk trap">
+  <span class="lbl">一 · 把「邻域」的圆周也算进去</span>
+  <p>δ 邻域是「距离 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&lt;</mo><mo>δ</mo></math></span>」：<strong>圆周不算</strong>（画虚线）、<strong>圆心算</strong>。去心邻域两头都不要：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span>。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">二 · 认为「边界点一定不属于集合」</span>
+  <p>边界点的定义是「任意邻域里既有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点又有非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点」，<strong>与它属不属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 无关</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>}</mo></math></span> 的边界点全属于它；换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&lt;</mo></math></span>，同一条圆周上的点就都不属于了——但它们都是边界点。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">三 · 把「连通」「区域」「有界」混成一个问题</span>
+  <p><strong>区域 = 连通的开集</strong>，比开集多一个「连通」；连通要求折线<strong>整根都落在集合内部</strong>，所以两个隔得很近但不相交的圆盘仍不连通。而<strong>有界</strong>管的是「能不能被一个大圆包住」，和开闭、连通都无关。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>这一节是<strong>认词</strong>，不是算题：所有定义都归到一句「<mark>能不能找到一个足够小的邻域</mark>」。</p>
+
+  <h3>三个「取 / 不取」</h3>
+  <ul class="tight">
+    <li>δ 邻域：圆心<strong>取</strong>，圆周<strong>不取</strong>。</li>
+    <li>去心邻域：多写「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&gt;</mo><mn>0</mn></math></span>」，把圆心<strong>掏掉</strong>。</li>
+    <li>画图：<strong>严格不等 ⇒ 虚线；带等号 ⇒ 实线。</strong></li>
+  </ul>
+
+  <h3>三种点</h3>
+  <dl class="kv">
+    <dt>内点</dt><dd>存在邻域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⊆</mo><mspace width="0.25em"></mspace><mi>E</mi></math></span>（周围全是自己人）</dd>
+    <dt>外点</dt><dd>存在邻域与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 无交集（周围全是外人）</dd>
+    <dt>边界点</dt><dd>邻域内既有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点又有非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点；<strong>属不属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 不一定</strong></dd>
+  </dl>
+
+  <h3>两种集合</h3>
+  <ul class="tight">
+    <li><strong>开集</strong>：点全是内点。<strong>闭集</strong>：边界也收进来。</li>
+    <li><strong>连通</strong>：任意两点可用集合内的折线连起来。</li>
+    <li><strong>区域</strong> = 连通的开集；<strong>闭区域</strong> = 区域 + 边界。</li>
+    <li><strong>有界</strong>：存在一个大圆把它包住；包不住就是无界。</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ol class="tight">
+    <li>边界点不一定属于集合——同一条圆周，配「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≤</mo></math></span>」属于，配「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&lt;</mo></math></span>」不属于。</li>
+    <li>开闭、连通、有界是<strong>三把不同的尺子</strong>，别混成一个问题。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P075-平面点集 多元函数概念 极限 连续/index.html">平面点集 多元函数概念 极限 连续</a> 平面点集·多元函数概念·极限·连续（本页的新授课版本）</li>
+      <li><span class="cur">平面两点间距离公式；直线与圆的一般方程</span></li>
+      <li><span class="cur">一元的开区间、闭区间（开集闭集的「一维版」）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P125-【黑板】二元函数定义 极限 连续/index.html">【黑板】二元函数定义 极限 连续</a> 【黑板】二元函数定义 极限 连续（「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>P</mi><mn>0</mn></msub></math></span>」就要用邻域）</li>
+      <li><a href="../P126-【黑板】偏导数/index.html">【黑板】偏导数</a> 【黑板】偏导数</li>
+      <li><span class="cur">重积分的「积分区域」——开闭决定边界上的值要不要管</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>δ 邻域（含圆心）与去心 δ 邻域（挖掉圆心）</li>
+      <li>边界点（一个点）与边界（边界点的全体）</li>
+      <li>开集、闭集看<strong>边界取不取</strong>；有界看<strong>包不包得住</strong></li>
+      <li>区域（连通 + 开）与开集（可分成好几块）</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 124 讲</span><a href="../P123-【黑板】空间曲线/index.html">← P123</a><a href="../index.html">全部目录</a><a href="../P125-【黑板】二元函数定义 极限 连续/index.html">P125 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、为什么先讲这些「没什么用」的概念</a>
+    <a href="#s2">二、邻域：把「附近」变成能算的东西</a>
+    <a href="#s3">三、点与集合：一张对照表钉死</a>
+    <a href="#s4">四、一串判定例子</a>
+    <a href="#s5">五、易错清单</a>
+  </aside>
+</div>
+</body>
+</html>

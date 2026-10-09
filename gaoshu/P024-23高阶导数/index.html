@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>高阶导数：把导数再求一次、再求一次 · 高等数学笔记</title>
+<meta name="description" content="高阶导数没有新概念——它就是把一阶导数当成新函数，再求一次导。难点全在记号和找规律：二阶导 y&#x27;&#x27; 既是加速度也是凹凸，而 sinx、ex 的 n 阶导有漂亮的通式，莱布尼茨公式则是乘积高阶导的「杨辉三角」。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  导数与微分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 24 讲</div>
+    <h1 class="title"><span class="pnum">P024</span>高阶导数：把导数再求一次、再求一次</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>高阶导数没有新概念——它就是把<strong>一阶导数当成新函数，再求一次导</strong>。难点全在<mark>记号</mark>和<mark>找规律</mark>：二阶导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 既是加速度也是凹凸，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导有漂亮的通式，莱布尼茨公式则是乘积高阶导的「杨辉三角」。</p></div>
+    <div class="meta"><span>时长 32m16s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=0">00:00</a><span class="vv"><b>概念</b>：高阶导数就是反复求导，一阶导还是个函数。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=71">01:11</a><span class="vv"><b>记号一</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 怎么读、怎么来。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=122">02:02</a><span class="vv"><b>记号二</b>：平方在「中间」还是「后边」；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mi>n</mi></mrow></msup></math></span> 天壤之别。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=352">05:52</a><span class="vv"><b>意义</b>：二阶导的物理意义（加速度）与几何意义（凹凸）。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=552">09:12</a><span class="vv"><b>小例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>a</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo></math></span>（里层别忘）。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=733">12:13</a><span class="vv"><b>通式一</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=833">13:53</a><span class="vv"><b>通式二</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导，用诱导公式递推。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=919">15:19</a><span class="vv"><b>通式三</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=1033">17:13</a><span class="vv"><b>通式四</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导，现推不用背。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=1520">25:20</a><span class="vv"><b>和差</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 直接分开。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=1624">27:04</a><span class="vv"><b>莱布尼茨公式</b>：与二项式定理、杨辉三角对照。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=2501">41:41</a><span class="vv"><b>例题</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mn>2</mn><mn>0</mn><mo>)</mo></mrow></msup></math></span>，只会留三项。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">概念：高阶导数就是把导数再求一次</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=0">00:00</a>老师开场就说：<q>高阶导数从概念上挺好理解——你原来不是求一次吗，你多求两次不就是高阶的吗？就这么简单。</q>它没有任何新定义，本质就是：</p>
+
+<ol class="steps">
+  <li><span class="sh">先求一阶导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 本身还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的一个函数（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>2</mn><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span> 仍是函数）。</li>
+  <li><span class="sh">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 当成新函数，再对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求一次导。</span>得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>，即「导数的导数」。</li>
+  <li><span class="sh">想求几阶就继续。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 再求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>'</mo></math></span>，依次类推。</li>
+</ol>
+
+<p>所以「高阶」二字只描述动作重复了多少次，不引入任何新数学对象。</p>
+
+<h2 id="s2">记号：这一页最该先搞清楚的</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=71">01:11</a>记号是老师反复叮嘱的部分，因为长得像的符号意思差很远。两套记法等价：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>阶数</th><th>撇记法</th><th>分式记法</th><th>读法</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>一阶</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求一次导</td></tr>
+      <tr><td>二阶</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求两次导</td></tr>
+      <tr><td>三阶</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>'</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>3</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求三次导</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mi>n</mi></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mi>n</mi></mrow></msup></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次导</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=122">02:02</a>老师特别点了两个「位置」陷阱：</p>
+
+<ul class="tight">
+  <li><strong>平方在「中间」还是「后边」。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 的平方一个在分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span> 上、一个在分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>x</mi></math></span> 上，表示「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求两次导」；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></math></span> 是「一阶导整体平方」，二者<strong>完全是两回事</strong>。</li>
+  <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mi>n</mi></mrow></msup></math></span> 天壤之别。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 加了小括号，表示「求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导」；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mi>n</mi></mrow></msup></math></span> 没有括号，表示「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次方」。老师原话：<q>从四阶导开始我们不再写撇，写个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn></math></span> 加个小括号表示 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的四阶导；如果是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的四次方。</q></li>
+</ul>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 280" role="img" aria-label="二阶导与一阶导平方、n阶导与n次方的记号区分">
+    <rect x="30" y="44" width="270" height="92" rx="9" class="m-panel-a"></rect>
+    <text x="50" y="80" class="m-txt" font-size="13">d²y / dx²</text>
+    <text x="50" y="104" class="m-sub" font-size="11.5">二阶导：平方在 d 与 dx 上</text>
+    <text x="50" y="124" class="m-sub" font-size="11.5">「对 x 求两次」</text>
+    <rect x="340" y="44" width="270" height="92" rx="9" class="m-panel"></rect>
+    <text x="360" y="80" class="m-txt" font-size="13">(dy / dx)²</text>
+    <text x="360" y="104" class="m-warn" font-size="11.5">一阶导的平方：整体平方</text>
+    <text x="360" y="124" class="m-warn" font-size="11.5">「先求导再平方」，不是二阶导</text>
+    <rect x="30" y="156" width="270" height="92" rx="9" class="m-panel-a"></rect>
+    <text x="50" y="192" class="m-txt" font-size="13">y ⁽ⁿ⁾</text>
+    <text x="50" y="216" class="m-sub" font-size="11.5">n 阶导：n 加小括号</text>
+    <text x="50" y="236" class="m-sub" font-size="11.5">「求导 n 次」</text>
+    <rect x="340" y="156" width="270" height="92" rx="9" class="m-panel"></rect>
+    <text x="360" y="192" class="m-txt" font-size="13">y ⁿ</text>
+    <text x="360" y="216" class="m-warn" font-size="11.5">y 的 n 次方：无括号</text>
+    <text x="360" y="236" class="m-warn" font-size="11.5">「乘方」，不是求导</text>
+  </svg>
+  <figcaption><b>长得像，意思差十万八千里。</b>左边两张是「求导」：平方在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mo>/</mo><mi>d</mi><mi>x</mi></math></span> 上的是二阶导，加括号的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导。右边两张只是普通运算：整体平方是一阶导的平方，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mi>n</mi></mrow></msup></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次方。考试改卷时老师会「数撇」——求五阶导你得写五个撇或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mn>5</mn><mo>)</mo></mrow></msup></math></span>，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>5</mn></mrow></msup></math></span> 直接算错。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么分式记法把平方写在上下两处</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 的来历是：一阶导记成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span>，再对它求一次导，写作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>。把外层那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span> 与里层合并，分子叠出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mo>(</mo><mi>d</mi><mi>y</mi><mo>)</mo><mo>=</mo><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></math></span>，分母叠出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>d</mi><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，于是得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>。所以<strong>上下两个平方分别来自两次「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」</strong>，不是把什么数平方了。老师也承认这写法「不如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 好理解」，但书上都这么印，得认。</p>
+</div>
+
+<h2 id="s3">二阶导的两层意义：物理与几何</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=352">05:52</a>二阶导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 之所以重要，是因为它同时承担物理意义和几何意义——这是老师讲 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span> 那道例题时自然带出来的。</p>
+
+<h3 id="s4">物理意义：加速度</h3>
+
+<p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 是位移（位置随时间变化），则</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>'</mo><mo>=</mo><mtext>速度</mtext><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo><mtext>加速度</mtext></math></div>
+
+<p>以课上例题 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 是常数）为例，里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 求导别忘：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>'</mo><mo>=</mo><mo>ω</mo><mi mathvariant="normal">cos</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>=</mo><mo form="prefix">−</mo><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup><mi>S</mi></math></div>
+
+<p>结果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup><mi>S</mi></math></span> 是说：<strong>加速度与位移大小成正比、方向相反</strong>。这正是弹簧振子、单摆这类简谐运动的标志——位移越大、拉回越猛。所以二阶导在物理里就是「速度变化快慢」即加速度。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="简谐运动 S=sin ωt 的位移、速度、加速度三层关系">
+    <line x1="60" y1="200" x2="600" y2="200" class="m-line" stroke-width="1.3"></line>
+    <path d="M70 200 Q160 60 250 200 T430 200 T610 200" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <line x1="250" y1="200" x2="250" y2="60" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <circle cx="250" cy="60" r="4" class="m-fill-a"></circle>
+    <text x="258" y="58" class="m-acc" font-size="12">S 最大（端点）</text>
+    <text x="70" y="222" class="m-sub" font-size="11.5">平衡位置 0</text>
+    <text x="430" y="222" class="m-sub" font-size="11.5">另一侧端点</text>
+    <rect x="380" y="40" width="232" height="120" rx="9" class="m-panel-a"></rect>
+    <text x="396" y="66" class="m-txt" font-size="12">S = sin(ω t)</text>
+    <text x="396" y="90" class="m-txt" font-size="12">S' = ω cos(ω t)  ·  速度</text>
+    <text x="396" y="114" class="m-good" font-size="12">S'' = −ω² S  ·  加速度</text>
+    <text x="396" y="140" class="m-sub" font-size="11.5">方向相反 → 拉回平衡位置</text>
+  </svg>
+  <figcaption><b>二阶导 = 加速度。</b>在正弦式运动里，位移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span> 到端点最大时，加速度也最大却指向反方向（图上箭头回拉）。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup><mi>S</mi></math></span> 这条式子把「位移」与「加速度」锁在一起，是力学里判别简谐运动的标准。所以看到二阶导，先想「它描述的量变化得多快」。</figcaption>
+</figure>
+
+<h3 id="s5">几何意义：凹凸</h3>
+
+<p>在纯数学里，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的符号决定曲线的弯曲方向：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></th><th>几何语言</th><th>直观</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&gt;</mo><mn>0</mn></math></span></td><td>凹（向上凹 / 凹向上）</td><td>切线在曲线下方，像碗</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&lt;</mo><mn>0</mn></math></span></td><td>凸（向下凹 / 凸向上）</td><td>切线在曲线上方，像帽</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mn>0</mn></math></span> 且变号</td><td>拐点</td><td>凹凸切换处</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>这条几何意义在后面画函数图形时会成为主力（见 <a href="../P036-函数图形的绘制/index.html">函数图形的绘制</a>）。它和物理意义的区别只是视角：物理里自变量是时间、二阶导是加速度；几何里自变量是横坐标、二阶导是弯曲方向。<strong>同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>，换坐标系就换了一层解释。</strong></p>
+
+<h2 id="s6">小例题：练手二阶导</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=552">09:12</a>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>a</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>,</mo><mi>b</mi></math></span> 常数），求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">解</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mi>a</mi></math></span>（常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 求导为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo>(</mo><mi>a</mi><mo>)</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span>。</p>
+    <p>一条直线，一阶导是常数斜率，再求导自然是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。这是「二阶导为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>」的最简例子，也呼应了上面「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 不弯曲（是直线）」。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=608">10:08</a>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 是常数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 是变量），求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">解：里层函数求导别忘</span>
+    <p>外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>，内层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>。一阶导：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>(</mo><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>)</mo><mo>⋅</mo><mo>(</mo><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo>ω</mo><mi mathvariant="normal">cos</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></div>
+    <p>二阶导时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 是常数只管挂着，外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>、内层还是要再对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 求导：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>)</mo><mo>⋅</mo><mo>(</mo><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></div>
+    <div class="trap">
+      <span class="lbl">最常漏的一步</span>
+      <p><span class="bad">写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mo>ω</mo><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>。</span>第二次复合时又忘了对里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span> 求导（乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>）。每剥一层洋葱都要把当层的内层导数乘上，两次相乘得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup></math></span>。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s7">通式一：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=733">12:13</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 是求导的「钉子户」——求多少次还是自己：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></div>
+
+<p>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup></math></span>，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>，每求一次就多一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span> 因子，所以</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></math></div>
+
+<p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mi>e</mi></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>e</mi><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup><mo>=</mo><mn>1</mn></math></span>，就退化回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>。这条通式「没有任何技巧，你求多少次不都是它吗」。</p>
+
+<h2 id="s8">通式二：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=733">12:13</a>这是必须记住的两大递推公式之一。老师用诱导公式一步步推：</p>
+
+<ol class="steps">
+  <li><span class="sh">一阶导。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>（诱导公式）。</li>
+  <li><span class="sh">二阶导。</span>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span> 再求导，外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>、内层加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>（常数，导数为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>），得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mn>2</mn><mo>⋅</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>。</li>
+  <li><span class="sh">三阶导。</span>同理再加一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mn>3</mn><mo>⋅</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>。</li>
+  <li><span class="sh">归纳。</span>每求一阶，相位就多 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。</li>
+</ol>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><mi mathvariant="normal">sin</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mfrac><mrow><mi>n</mi><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+
+<p>老师强调：<q>这个公式大家需要记住，做题的时候可以直接用。</q>同理（直接给结论）：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><mi mathvariant="normal">cos</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mfrac><mrow><mi>n</mi><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=919">15:19</a>这两条把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 的高阶导彻底「封死」：只关心 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn></math></span> 的余数，就知道落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 上。</p>
+
+<div class="why">
+  <span class="lbl">为什么用「加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mo>/</mo><mn>2</mn></math></span>」而不是直接记符号</span>
+  <p>死记 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>→</mo><mi mathvariant="normal">cos</mi><mo>→</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mo>→</mo><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mo>→</mo><mi mathvariant="normal">sin</mi></math></span> 容易在中间错位；用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mo>+</mo><mi>n</mi><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span> 一个式子全包，等于把「转了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 个直角」写进相位里。算第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>7</mn></math></span> 阶导？直接代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>=</mo><mn>7</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mo>+</mo><mn>7</mn><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo><mo>=</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mo>+</mo><mn>3</mn><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。一张公式顶一整圈循环。</p>
+</div>
+
+<h2 id="s9">通式四：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导（现推）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=1033">17:13</a>这条老师明确说<q>记不住，现推就行</q>。规律就在逐阶求导里：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>3</mn></mrow></msup></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msup><mi>y</mi><mrow><mo>(</mo><mn>4</mn><mo>)</mo></mrow></msup><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>6</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>4</mn></mrow></msup></mrow></mfrac></math></div>
+
+<p>观察三件事：符号正负交替（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span>）；分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次方；分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>!</mo></math></span>。合并得</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mfrac><mrow><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>!</mo></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow></mfrac></math></div>
+
+<div class="note">
+  <span class="lbl">现推的捷径</span>
+  <p>考试若卡住，就从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></mfrac></math></span> 开始连求两三次，符号、分母指数、分子阶乘的规律立刻现形。老师提醒里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>x</mi></math></span> 还要再求导（乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>），不过它正好是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，所以「乘了等于没乘」——但意识不能丢，遇到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>2</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 时这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 会变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>。</p>
+</div>
+
+<h2 id="s10">和差的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导：直接分开</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=1520">25:20</a>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>,</mo><mi>v</mi></math></span> 都有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导数，则</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>u</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>u</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>±</mo><mspace width="0.25em"></mspace><msup><mi>v</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></div>
+
+<p>因为求导是线性运算，加减直接带进去，和求一阶时一模一样。这条很简单，老师没多费时间。</p>
+
+<h2 id="s11">乘积的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导：莱布尼茨公式</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=1624">27:04</a>乘积的高阶导不像和差那样能直接分开，要用<strong>莱布尼茨公式</strong>。它长这样：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>n</mi></mrow></munderover><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mi>n</mi></mrow><mrow><mi>k</mi></mrow></mfrac><mo>)</mo></mrow><msup><mi>u</mi><mrow><mo>(</mo><mi>k</mi><mo>)</mo></mrow></msup><msup><mi>v</mi><mrow><mo>(</mo><mi>n</mi><mo>−</mo><mi>k</mi><mo>)</mo></mrow></msup></math></div>
+
+<p>展开写出来（老师特意先写「没写完」的版本，再补零阶导）：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mi>n</mi></mrow><mrow><mn>0</mn></mrow></mfrac><mo>)</mo></mrow><msup><mi>u</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mi>v</mi><mo>+</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mi>n</mi></mrow><mrow><mn>1</mn></mrow></mfrac><mo>)</mo></mrow><msup><mi>u</mi><mrow><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow></msup><mi>v</mi><mo>'</mo><mo>+</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mi>n</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>)</mo></mrow><msup><mi>u</mi><mrow><mo>(</mo><mi>n</mi><mo>−</mo><mn>2</mn><mo>)</mo></mrow></msup><mi>v</mi><mo>'</mo><mo>'</mo><mo>+</mo><mo>⋯</mo><mo>+</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mi>n</mi></mrow><mrow><mi>n</mi></mrow></mfrac><mo>)</mo></mrow><mi>u</mi><msup><mi>v</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=2342">39:02</a>关键点：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 都从「零阶导」开始算</strong>。零阶导不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，而是函数本身——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>u</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup><mo>=</mo><mi>u</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>v</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup><mo>=</mo><mi>v</mi></math></span>。老师特意停下来问：<q><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 的零阶导等于啥？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 啊，它没求导那就是它本身。</q></p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 290" role="img" aria-label="莱布尼茨公式系数与杨辉三角、二项式定理一致">
+    <text x="200" y="28" text-anchor="middle" class="m-txt" font-size="12.5">杨辉三角（二项式系数）</text>
+    <text x="200" y="50" text-anchor="middle" class="m-sub" font-size="11.5">1</text>
+    <text x="178" y="68" text-anchor="middle" class="m-sub" font-size="11.5">1</text>
+    <text x="222" y="68" text-anchor="middle" class="m-sub" font-size="11.5">1</text>
+    <text x="156" y="86" text-anchor="middle" class="m-sub" font-size="11.5">1</text>
+    <text x="200" y="86" text-anchor="middle" class="m-sub" font-size="11.5">2</text>
+    <text x="244" y="86" text-anchor="middle" class="m-sub" font-size="11.5">1</text>
+    <text x="134" y="104" text-anchor="middle" class="m-good" font-size="11.5">1</text>
+    <text x="178" y="104" text-anchor="middle" class="m-good" font-size="11.5">3</text>
+    <text x="222" y="104" text-anchor="middle" class="m-good" font-size="11.5">3</text>
+    <text x="266" y="104" text-anchor="middle" class="m-good" font-size="11.5">1</text>
+    <line x1="320" y1="40" x2="320" y2="110" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <rect x="360" y="40" width="262" height="156" rx="9" class="m-panel-a"></rect>
+    <text x="376" y="64" class="m-txt" font-size="12">二项式 (a+b)ⁿ：相加</text>
+    <text x="376" y="86" class="m-txt" font-size="11.5">C(n,k) aⁿ⁻ᵏ bᵏ</text>
+    <text x="376" y="110" class="m-sub" font-size="11.5">对应「+」展开</text>
+    <text x="376" y="142" class="m-txt" font-size="12">莱布尼茨 (uv)⁽ⁿ⁾：相乘</text>
+    <text x="376" y="164" class="m-warn" font-size="11.5">C(n,k) u⁽ᵏ⁾ v⁽ⁿ⁻ᵏ⁾</text>
+    <text x="376" y="184" class="m-sub" font-size="11.5">系数相同、运算不同</text>
+    <text x="40" y="150" class="m-sub" font-size="11.5">系数 1,1 / 1,2,1 / 1,3,3,1</text>
+    <text x="40" y="170" class="m-sub" font-size="11.5">两公式共用</text>
+    <text x="40" y="200" class="m-txt" font-size="12">唯一差别：二项式是「加」，莱布尼茨是「乘」</text>
+    <text x="40" y="222" class="m-sub" font-size="11.5">且莱布尼茨里除首尾外，u、v 都带导（含零阶导=自身）</text>
+  </svg>
+  <figcaption><b>莱布尼茨公式 = 二项式定理的「乘积版」。</b>系数完全照搬杨辉三角（1,1 / 1,2,1 / 1,3,3,1…），区别只在：二项式展开是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mo>+</mo><mi>b</mi><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></math></span> 的<strong>相加</strong>，莱布尼茨是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 的<strong>相乘</strong>，且除首尾两项外，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 都带着导数（零阶导就是函数自己）。所以认得杨辉三角，就认得莱布尼茨的结构。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么它和二项式「一毛钱关系没有」却长得一样</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=2024">33:44</a>老师原话：<q>上面的二项式定理和今儿讲的求导一毛钱关系没有，但式子几乎一样。</q>相似是表面：二项式来自「每次从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 里二选一」，莱布尼茨来自「乘积求导时每次从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 里选一个求导」，两种「二选一」恰好都数出组合数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mi>n</mi></mrow><mrow><mi>k</mi></mrow></mfrac><mo>)</mo></mrow></math></span>。所以结构同、来源异——别因为像就混为一谈。</p>
+</div>
+
+<div class="trap">
+  <span class="lbl">莱布尼茨最易错：漏掉零阶导那两项</span>
+  <p>展开 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 时，第一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>u</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><msup><mi>v</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup></math></span> 和最后一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>u</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup><msup><mi>v</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 都合法（零阶导=自身）。新手常只写中间带导的项，把首尾丢掉，结果少两截。</p>
+</div>
+
+<h2 id="s12">例题：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mn>2</mn><mn>0</mn><mo>)</mo></mrow></msup></math></span></h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=2501">41:41</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mn>2</mn><mn>0</mn><mo>)</mo></mrow></msup></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：让哪边当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 有讲究</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=2501">41:41</a>老师的关键心思：<strong>选 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mo>=</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span>，而不是反过来。</strong>原因马上见——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 求三阶导就归零，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 求多少次都还在。</p>
+    <p>先各自摸清底：</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>=</mo><mn>2</mn><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>2</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>u</mi><mrow><mo>(</mo><mi>k</mi><mo>)</mo></mrow></msup><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>(</mo><mi>k</mi><mo>≥</mo><mn>3</mn><mo>)</mo></math></span>。</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mo>=</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>v</mi><mrow><mo>(</mo><mi>k</mi><mo>)</mo></mrow></msup><mo>=</mo><msup><mn>2</mn><mrow><mi>k</mi></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span>（每求一次多一个因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>）。</li>
+    </ul>
+    <p>套莱布尼茨公式，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 从三阶起全为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以<strong>只会留下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn></math></span> 三项</strong>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mn>2</mn><mn>0</mn><mo>)</mo></mrow></msup><mo>=</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mn>2</mn><mn>0</mn></mrow><mrow><mn>0</mn></mrow></mfrac><mo>)</mo></mrow><mi>u</mi><mspace width="1em"></mspace><msup><mi>v</mi><mrow><mo>(</mo><mn>2</mn><mn>0</mn><mo>)</mo></mrow></msup><mo>+</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mn>2</mn><mn>0</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>)</mo></mrow><mi>u</mi><mo>'</mo><mspace width="1em"></mspace><msup><mi>v</mi><mrow><mo>(</mo><mn>1</mn><mn>9</mn><mo>)</mo></mrow></msup><mo>+</mo><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mn>2</mn><mn>0</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>)</mo></mrow><mi>u</mi><mo>'</mo><mo>'</mo><mspace width="1em"></mspace><msup><mi>v</mi><mrow><mo>(</mo><mn>1</mn><mn>8</mn><mo>)</mo></mrow></msup></math></div>
+    <p>代入各自结果：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mn>2</mn><mn>0</mn><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>⋅</mo><msup><mn>2</mn><mrow><mn>2</mn><mn>0</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup><mo>+</mo><mn>2</mn><mn>0</mn><mo>⋅</mo><mo>(</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>⋅</mo><msup><mn>2</mn><mrow><mn>1</mn><mn>9</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup><mo>+</mo><mfrac><mrow><mn>2</mn><mn>0</mn><mo>⋅</mo><mn>1</mn><mn>9</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>⋅</mo><mn>2</mn><mo>⋅</mo><msup><mn>2</mn><mrow><mn>1</mn><mn>8</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></div>
+    <p>把公共因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>2</mn><mrow><mn>1</mn><mn>8</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 提出来：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mn>2</mn><mn>0</mn><mo>)</mo></mrow></msup><mo>=</mo><msup><mn>2</mn><mrow><mn>1</mn><mn>8</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup><mo>(</mo><mn>4</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>8</mn><mn>0</mn><mi>x</mi><mo>+</mo><mn>3</mn><mn>8</mn><mn>0</mn><mo>)</mo><mo>=</mo><msup><mn>2</mn><mrow><mn>2</mn><mn>0</mn></mrow></msup><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>2</mn><mn>0</mn><mi>x</mi><mo>+</mo><mn>9</mn><mn>5</mn><mo>)</mo></math></div>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 选反了。</span>若选 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 永远不为零、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 三阶归零，展开后 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn></math></span> 阶导——式子一样能算，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 那堆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>2</mn><mrow><mi>k</mi></mrow></msup></math></span> 会落在「不归零」的那一侧，项数没减少，计算更繁。老师特意把颜色都配成和公式一致，就是暗示<strong>选 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 的原则：让它能早点归零</strong>。</p>
+    </div>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl">莱布尼茨公式要背吗</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=24&amp;t=2423">40:23</a>老师明确：<q>这个公式不要记，做题的时候大家就到这一步就行</q>——即展开到「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn></math></span> 那几项」，因为一阶导部分做题时已经有了，<strong>不必死背整条公式</strong>。能用通式直接代的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 这几类；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 记不住就现推。所以本页真正要「背」的只有三个通式加记号规则。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>高阶导 = 反复求导；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导的<strong>记号</strong>与<strong>通式</strong>是重点，莱布尼茨公式只展开、不背整条。</p>
+
+  <h3>记号红线</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>（求两次）<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≠</mo><msup><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></math></span>（先求导再平方）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span>（求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次）<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≠</mo><mspace width="0.25em"></mspace><msup><mi>y</mi><mrow><mi>n</mi></mrow></msup></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次方）；四阶起写括号</li>
+  </ul>
+
+  <h3>三个必背通式</h3>
+  <dl class="kv">
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span></dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mfrac><mrow><mi>n</mi><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span></dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>+</mo><mfrac><mrow><mi>n</mi><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span></dd>
+  </dl>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mfrac><mrow><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>!</mo></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow></mfrac></math></span>（记不住现推）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><msup><mo>)</mo><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>u</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup><mo>±</mo><mspace width="0.25em"></mspace><msup><mi>v</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span>。</p>
+
+  <h3>两层意义</h3>
+  <ul class="tight">
+    <li>物理：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo></math></span> 加速度（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup><mi>S</mi></math></span> 简谐运动）</li>
+    <li>几何：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 凹向上、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> 凸向上</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>复合函数里层导数漏乘（例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>'</mo></math></span> 要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ω</mo><mrow><mn>2</mn></mrow></msup></math></span> 不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>）</li>
+    <li>莱布尼茨漏首尾零阶导项；选 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 不让它归零导致项数爆炸</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置</div>
+    <ul>
+      <li><a href="../P023-基本求导法则与公式/index.html">基本求导法则与公式</a> 基本求导法则与公式（洋葱法则在此处反复用）</li>
+      <li><span class="cur">和角公式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mi>A</mi><mo>+</mo><mi>B</mi><mo>)</mo></math></span>、阶乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mi>n</mi></mrow><mrow><mi>k</mi></mrow></mfrac><mo>)</mo></mrow></math></span>、杨辉三角</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P025-隐函数求导对数求导/index.html">隐函数求导对数求导</a> 隐函数求导（二阶导照样求，里层意识同款）</li>
+      <li><a href="../P031-泰勒公式/index.html">泰勒公式</a> 泰勒公式（用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶导构造多项式）</li>
+      <li><a href="../P036-函数图形的绘制/index.html">函数图形的绘制</a> 函数图形的绘制（靠 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 判凹凸）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>二阶导 ≠ 一阶导的平方</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mo>(</mo><mi>n</mi><mo>)</mo></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mi>n</mi></mrow></msup></math></span></li>
+      <li>莱布尼茨（乘）与二项式（加）结构同、来源异</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 24 讲</span><a href="../P023-基本求导法则与公式/index.html">← P023</a><a href="../index.html">全部目录</a><a href="../P025-隐函数求导对数求导/index.html">P025 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">概念：高阶导数就是把导数再求一次</a>
+    <a href="#s2">记号：这一页最该先搞清楚的</a>
+    <a href="#s3">二阶导的两层意义：物理与几何</a>
+    <a class="sub" href="#s4">物理意义：加速度</a>
+    <a class="sub" href="#s5">几何意义：凹凸</a>
+    <a href="#s6">小例题：练手二阶导</a>
+    <a href="#s7">通式一：ex 与 ax 的 n 阶导</a>
+    <a href="#s8">通式二：sinx 的 n 阶导</a>
+    <a href="#s9">通式四：ln(1+x) 的 n 阶导（现推）</a>
+    <a href="#s10">和差的 n 阶导：直接分开</a>
+    <a href="#s11">乘积的 n 阶导：莱布尼茨公式</a>
+    <a href="#s12">例题：y=x2e2x 求 y(20)</a>
+  </aside>
+</div>
+</body>
+</html>

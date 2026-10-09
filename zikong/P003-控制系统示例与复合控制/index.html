@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>从火炮到水温：系统示例与复合控制 · 自动控制原理笔记</title>
+<meta name="description" content="本节给第一章收口：先用炉温、函数记录仪复习「由工作原理图画方框图」，再讲火炮方位角系统（核心器件自整角机把角差变成电压）与水温调节系统。复合控制＝前馈＋反馈是本集头号考点——给只会「事后纠偏」的反馈，装一路「提前预判」。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   自动控制原理笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+/* ==========================================================================
+   ↓↓↓ 以下为【自动控制原理】系列专用组件 ↓↓↓
+   与上方通用骨架并存：通用骨架管「怎么排版」，本节管「自控怎么表达」。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   17. 内容角色标记
+   本系列硬性要求区分四类内容来源，视觉上必须一眼可辨：
+     视频核心 core（靛蓝）· 前置补课 pre（紫）· 考研补充 exam（琥珀）· 知识拓展 ext（灰）
+   -------------------------------------------------------------------------- */
+.blk.core { border-left-color: var(--accent); background: var(--accent-bg); }
+.blk.core .lbl { color: var(--accent-ink); }
+.blk.pre  { border-left-color: var(--violet); background: var(--violet-bg); }
+.blk.pre  .lbl { color: var(--violet); }
+.blk.exam { border-left-color: var(--warn);   background: var(--warn-bg); }
+.blk.exam .lbl { color: var(--warn); }
+.blk.ext  { border-left-color: var(--ink-4);  background: var(--paper-2); }
+.blk.ext  .lbl { color: var(--ink-3); }
+
+/* 行内角色徽章：小圆点 + 文字，颜色即语义 */
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: .38em;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.role::before {
+  content: "";
+  width: .44em; height: .44em;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.role.r-core { color: var(--accent); }
+.role.r-pre  { color: var(--violet); }
+.role.r-exam { color: var(--warn); }
+.role.r-ext  { color: var(--ink-3); }
+
+/* 页首角色图例 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.5rem;
+  margin: 1.2rem 0 0;
+  padding: .8rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: .78rem;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.legend .role { font-size: .78rem; }
+
+/* --------------------------------------------------------------------------
+   18. 方框图组件
+   控制系统方框图的五大要素：方框 · 信号线 · 比较点 · 引出点 · 负号。
+   颜色一律走 class —— SVG 表示属性里不能写 var()。
+   -------------------------------------------------------------------------- */
+/* 方框：看得见摸得着的元部件 */
+figure.fig svg .d-box   { fill: var(--paper);     stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-box-a { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.4; }
+figure.fig svg .d-box-v { fill: var(--violet-bg); stroke: var(--violet); stroke-width: 1.4; }
+figure.fig svg .d-box-w { fill: var(--warn-bg);   stroke: var(--warn);   stroke-width: 1.4; }
+
+/* 信号线 */
+figure.fig svg .d-line  { stroke: var(--ink-2);  stroke-width: 1.3; fill: none; }
+figure.fig svg .d-thin  { stroke: var(--line-2); stroke-width: 1.1; fill: none; }
+figure.fig svg .d-acc   { stroke: var(--accent); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-fb    { stroke: var(--violet); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-warn  { stroke: var(--warn);   stroke-width: 1.6; fill: none; }
+figure.fig svg .d-dash  { stroke-dasharray: 5 4; }
+
+/* 比较点 / 引出点 / 箭头 */
+figure.fig svg .d-sum   { fill: var(--paper); stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-sum-a { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+figure.fig svg .d-tap   { fill: var(--ink-2); stroke: none; }
+figure.fig svg .d-arrow   { fill: var(--ink-2);  stroke: none; }
+figure.fig svg .d-arrow-a { fill: var(--accent); stroke: none; }
+figure.fig svg .d-arrow-v { fill: var(--violet); stroke: none; }
+figure.fig svg .d-arrow-w { fill: var(--warn);   stroke: none; }
+
+/* 区域底色（把前向通道 / 反馈通道整片标出来） */
+figure.fig svg .d-band   { fill: var(--accent-bg); stroke: none; opacity: .55; }
+figure.fig svg .d-band-v { fill: var(--violet-bg); stroke: none; opacity: .55; }
+
+/* 窄屏微调 */
+@media (max-width: 46rem) {
+  .legend { gap: .35rem .95rem; font-size: .74rem; }
+  .legend .role { font-size: .74rem; }
+}
+
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 1 章  自动控制的一般概念</b><span class="sep">·</span>卢京潮《自动控制原理》· 西北工业大学<span class="sep">·</span>第 3 讲</div>
+    <h1 class="title"><span class="pnum">P003</span>从火炮到水温：系统示例与复合控制</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>本节给第一章收口：先用炉温、函数记录仪复习「由工作原理图画方框图」，再讲火炮方位角系统（核心器件自整角机把角差变成电压）与水温调节系统。<mark>复合控制＝前馈＋反馈</mark>是本集头号考点——给只会「事后纠偏」的反馈，装一路「提前预判」。</p></div>
+    <div class="meta"><span>时长 39m46s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=1">00:01</a><span class="vv"><b>开场</b>：本章剩下哪些内容，本节要办的两件事。</span></li>
+    <li class="sep"><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=55">00:55</a><span class="vv"><b>复习</b>：三种控制方式、负反馈原理、系统组成。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=288">04:48</a><span class="vv"><b>旧例回顾</b>：炉温、函数记录仪，由工作原理图画方框图。</span></li>
+    <li class="sep"><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=704">11:44</a><span class="vv"><b>例1 火炮方位角系统</b>：工作原理与要求。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=794">13:14</a><span class="vv"><b>自整角机</b>：发送机、接收机，怎么把「角差」变成电压。</span></li>
+    <li class="sep"><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=1446">24:06</a><span class="vv"><b>炮瞄方框图</b>：自整角机当比较元件。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=2044">34:04</a><span class="vv"><b>加流量计</b>：用冷水流量提前补偿。</span></li>
+    <li class="sep"><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=2323">38:43</a><span class="vv"><b>复合控制</b>：前馈＋反馈，本集头号考点。</span></li>
+  </ol>
+</div>
+
+<div class="legend">
+  <span class="role r-core">视频核心</span> 老师课上实际讲授的内容（本页正文默认即为此类）
+  <span class="role r-pre">前置补课</span> 为听懂本课而补的基础
+  <span class="role r-exam">考研补充</span> 对做题有用、课上未展开
+  <span class="role r-ext">知识拓展</span> 有价值但当前非必须
+</div>
+
+<h2 id="s1">一、本节课的任务与「方框图」</h2>
+
+<p>开场交代本章剩余：控制系统的示例、自动控制系统的分类、对控制系统性能的基本要求、本课程的研究内容。本节 39 分钟只办两件事——<strong>把上节两个系统再推一遍</strong>，再用两个新系统讲透<strong>复合控制</strong>；分类与性能要求放到 <a href="../P004-系统分类与性能要求/index.html">系统分类与性能要求</a>。</p>
+
+<p>这一章真正的技能是：<mark>把一台真实设备的运行过程，翻译成一张只有方框和箭头的图。</mark>这张<strong>方框图</strong>是后续一切数学分析的入口——微分方程、传递函数、稳定性判据都要先有它。每讲一个系统都走同一套动作：先弄清工作原理，再问「什么量跟踪什么量」，然后从被控量倒推出整张图。</p>
+
+<h3 id="s2">1.1 三种控制方式与负反馈</h3>
+
+<p>自动控制＝没有人直接参与，用控制装置使被控量按给定量的规律运行。实现方式三种——<strong>开环、闭环、复合</strong>。其中<mark>闭环（负反馈）控制是本课程研究的主体</mark>；开环简单但精度不高；复合控制本节举例专门说明。</p>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 负反馈控制原理（一句话版本）</span>
+  <p>把系统的输出信号引回输入端，和输入信号相比较，达到<strong>减小偏差、消除偏差</strong>的目的。任何闭环系统遵循的核心机理都是它——老师把「深入理解负反馈控制原理」列为本课程的基本功。</p>
+</div>
+
+<h3 id="s3">1.2 系统由哪些环节拼成</h3>
+
+<p>系统分两块：<strong>被控对象</strong>与<strong>控制装置</strong>。搞控制主要关注后者，把它分细：<strong>测量 → 比较 → 放大 → 执行</strong>，再加<strong>给定</strong>与<strong>校正</strong>两类元件。老师用人体作比：测量像眼睛、比较像大脑、执行像胳膊。</p>
+
+<figure class="fig">
+  <svg viewBox="0 30 640 194" role="img" aria-label="控制系统组成方框图：给定元件给出的信号进入比较元件，与测量元件送回的反馈信号相减得到偏差，偏差经放大元件、执行机构作用到被控对象；被控对象的被控量经测量元件反馈回比较元件；除被控对象外其余环节合称控制装置">
+    <defs>
+      <marker id="ar10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar10a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar10v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <rect x="8" y="58" width="306" height="160" rx="8" class="m-panel-a"/>
+    <text x="161" y="50" class="m-sub" font-size="11.5" text-anchor="middle">控制装置</text>
+
+    <text x="54" y="70" class="m-sub" font-size="11.5" text-anchor="middle">给定 r</text>
+    <rect x="16" y="76" width="76" height="32" rx="3" class="d-box"/>
+    <text x="54" y="97" class="m-txt" font-size="12" text-anchor="middle">给定元件</text>
+    <line x1="92" y1="92" x2="106" y2="92" class="d-line" marker-end="url(#ar10)"/>
+
+    <circle cx="122" cy="92" r="14" class="d-sum-a"/>
+    <line x1="108" y1="92" x2="136" y2="92" class="d-line"/>
+    <line x1="122" y1="78" x2="122" y2="106" class="d-line"/>
+    <text x="122" y="73" class="m-sub" font-size="11.5" text-anchor="middle">比较元件</text>
+    <text x="104" y="82" class="m-sub" font-size="12">+</text>
+    <text x="104" y="112" class="m-sub" font-size="13">−</text>
+
+    <line x1="136" y1="92" x2="160" y2="92" class="d-acc" marker-end="url(#ar10a)"/>
+    <rect x="162" y="76" width="76" height="32" rx="3" class="d-box"/>
+    <text x="200" y="97" class="m-txt" font-size="12" text-anchor="middle">放大元件</text>
+    <line x1="238" y1="92" x2="262" y2="92" class="d-acc" marker-end="url(#ar10a)"/>
+    <rect x="264" y="76" width="80" height="32" rx="3" class="d-box"/>
+    <text x="304" y="97" class="m-txt" font-size="12" text-anchor="middle">执行机构</text>
+    <line x1="344" y1="92" x2="368" y2="92" class="d-acc" marker-end="url(#ar10a)"/>
+    <rect x="370" y="70" width="102" height="44" rx="3" class="d-box-a"/>
+    <text x="421" y="90" class="m-txt" font-size="12" text-anchor="middle">被控对象</text>
+    <text x="421" y="107" class="m-sub" font-size="11.5" text-anchor="middle">（加热炉等）</text>
+    <line x1="472" y1="92" x2="544" y2="92" class="d-acc" marker-end="url(#ar10a)"/>
+    <text x="548" y="86" class="m-txt" font-size="12">被控量 c</text>
+    <circle cx="504" cy="92" r="3.5" class="d-tap"/>
+
+    <line x1="504" y1="92" x2="504" y2="190" class="d-fb"/>
+    <line x1="504" y1="190" x2="316" y2="190" class="d-fb"/>
+    <rect x="240" y="174" width="76" height="32" rx="3" class="d-box-v"/>
+    <text x="278" y="195" class="m-txt" font-size="12" text-anchor="middle">测量元件</text>
+    <line x1="240" y1="190" x2="122" y2="190" class="d-fb"/>
+    <line x1="122" y1="190" x2="122" y2="107" class="d-fb" marker-end="url(#ar10v)"/>
+    <text x="161" y="213" class="m-sub" font-size="11.5" text-anchor="middle">反馈：把被控量送回比较</text>
+  </svg>
+  <figcaption><b>控制装置＝给定＋比较＋放大＋执行＋测量（再加校正）。</b>信号单向前进：给定给出希望值，比较元件把它与测量元件送回的反馈相减得<strong>偏差</strong>，偏差经放大、执行作用到被控对象，得到的被控量再被测量、送回比较。<em>只有被控对象是「被控制的东西」，其余环节合称控制装置</em>——所以后面建模时，被控对象单独处理，控制装置则按功能拆成若干方框。</figcaption>
+</figure>
+
+<p>校正元件的三种摆法：放进前向通道叫<strong>串联校正</strong>；把输出局部引回做<strong>反馈校正</strong>；把干扰或输入提前引入叫<strong>前馈校正</strong>。<mark>前馈＋反馈，就构成复合控制</mark>——这正是例 2 要兑现的一句话。</p>
+
+<h2 id="s4">二、复习两个旧例：由工作原理图到方框图</h2>
+
+<p>老师没有直接讲新内容，而是把炉温、函数记录仪重新推了一遍：画方框图这个动作必须练成肌肉记忆。口诀只有一句——<mark>两头先定，从后往前推。</mark></p>
+
+<h3 id="s5">2.1 炉温控制系统：从被控量倒着问回去</h3>
+
+<p>先定两头：<strong>被控对象＝加热炉</strong>（放最右），<strong>被控量＝炉温</strong>（从加热炉右边引出），<strong>给定量＝给定电位器电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span></strong>（放最左）。再从被控量追问「谁在直接影响它」：<strong>阀门 → 减速器 → 电动机 → 放大器</strong>，而放大器的输入是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span> 与热电偶反馈电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>t</mi></msub></math></span> 的偏差。</p>
+
+<figure class="fig">
+  <svg viewBox="0 56 640 156" role="img" aria-label="炉温控制系统方框图：给定电位器电压 ur 与热电偶反馈电压 ut 在比较点相减得偏差，经放大器、电动机、减速器、阀门作用到被控对象加热炉得到炉温；热电偶感受炉温把反馈电压送回比较点">
+    <defs>
+      <marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar7a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar7v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <text x="8" y="68" class="m-sub" font-size="11.5">给定电位器</text>
+    <text x="8" y="86" class="m-math" font-size="12">u_r</text>
+    <line x1="10" y1="96" x2="28" y2="96" class="d-line" marker-end="url(#ar7)"/>
+    <circle cx="42" cy="96" r="13" class="d-sum-a"/>
+    <line x1="29" y1="96" x2="55" y2="96" class="d-line"/>
+    <line x1="42" y1="83" x2="42" y2="109" class="d-line"/>
+    <text x="26" y="80" class="m-sub" font-size="12">+</text>
+    <text x="26" y="114" class="m-sub" font-size="13">−</text>
+
+    <line x1="55" y1="96" x2="78" y2="96" class="d-acc" marker-end="url(#ar7a)"/>
+    <rect x="80" y="80" width="72" height="32" rx="3" class="d-box"/>
+    <text x="116" y="101" class="m-txt" font-size="12" text-anchor="middle">放大器</text>
+    <line x1="152" y1="96" x2="174" y2="96" class="d-acc" marker-end="url(#ar7a)"/>
+    <rect x="176" y="80" width="72" height="32" rx="3" class="d-box"/>
+    <text x="212" y="101" class="m-txt" font-size="12" text-anchor="middle">电动机</text>
+    <line x1="248" y1="96" x2="270" y2="96" class="d-acc" marker-end="url(#ar7a)"/>
+    <rect x="272" y="80" width="72" height="32" rx="3" class="d-box"/>
+    <text x="308" y="101" class="m-txt" font-size="12" text-anchor="middle">减速器</text>
+    <line x1="344" y1="96" x2="366" y2="96" class="d-acc" marker-end="url(#ar7a)"/>
+    <rect x="368" y="80" width="60" height="32" rx="3" class="d-box"/>
+    <text x="398" y="101" class="m-txt" font-size="12" text-anchor="middle">阀门</text>
+    <line x1="428" y1="96" x2="450" y2="96" class="d-acc" marker-end="url(#ar7a)"/>
+    <rect x="452" y="74" width="100" height="44" rx="3" class="d-box-a"/>
+    <text x="502" y="94" class="m-txt" font-size="12" text-anchor="middle">加热炉</text>
+    <text x="502" y="111" class="m-sub" font-size="11.5" text-anchor="middle">被控对象</text>
+    <line x1="552" y1="96" x2="620" y2="96" class="d-acc" marker-end="url(#ar7a)"/>
+    <text x="586" y="88" class="m-txt" font-size="12" text-anchor="middle">炉温 T</text>
+    <circle cx="588" cy="96" r="3.5" class="d-tap"/>
+
+    <line x1="588" y1="96" x2="588" y2="184" class="d-fb"/>
+    <line x1="588" y1="184" x2="366" y2="184" class="d-fb"/>
+    <rect x="256" y="168" width="110" height="32" rx="3" class="d-box-v"/>
+    <text x="311" y="189" class="m-txt" font-size="12" text-anchor="middle">热电偶 u_t</text>
+    <line x1="256" y1="184" x2="42" y2="184" class="d-fb"/>
+    <line x1="42" y1="184" x2="42" y2="110" class="d-fb" marker-end="url(#ar7v)"/>
+    <text x="150" y="206" class="m-sub" font-size="11.5" text-anchor="middle">反馈：热电偶感受炉温</text>
+  </svg>
+  <figcaption><b>炉温控制系统方框图（第一章的「标准骨架」）。</b>前向通道从比较点出发：放大器 → 电动机 → 减速器 → 阀门 → 加热炉；炉温经热电偶反馈回比较点。<em>从后往前推的每一步答案几乎唯一</em>，因为问的是「谁在<strong>直接</strong>影响它」——工程系统里一个量通常只有一个主要直接来源，所以倒推比正推可靠。这张骨架后面几乎每个系统都是它的变形。</figcaption>
+</figure>
+
+<h3 id="s6">2.2 函数记录仪：双回路的系统</h3>
+
+<p>要求「笔的位移跟踪输入电压的变化规律」。同样两头先定：<strong>被控对象＝记录笔</strong>，<strong>被控量＝笔的位移</strong>，<strong>给定量＝要记录的那个电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span></strong>。倒推：绳轮机构 ← 减速器 ← 电动机 ← 放大器，放大器输入是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span> 与<strong>电桥反馈电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>p</mi></msub></math></span></strong> 的偏差。</p>
+
+<p>与炉温不同的是多了一个<strong>内回路</strong>：电动机同轴带着一台<strong>测速机</strong>，把转速换成电压送回放大器前端。因为要求笔「记得准、跟得快」（动态特性好），才加这一路测速反馈。电桥直接与笔位移相连，构成外回路的位置反馈。</p>
+
+<figure class="fig">
+  <svg viewBox="0 52 640 176" role="img" aria-label="函数记录仪方框图：给定电压 ur 与电桥反馈电压在比较点相减得偏差，再与测速机反馈电压在第二比较点相减，经放大器、电动机、减速器、绳轮机构驱动记录笔；电桥测量笔位移构成外回路，测速机测量电动机转速构成内回路">
+    <defs>
+      <marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar8a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar8v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <text x="8" y="72" class="m-math" font-size="12">u_r</text>
+    <line x1="10" y1="90" x2="22" y2="90" class="d-line" marker-end="url(#ar8)"/>
+    <circle cx="38" cy="90" r="13" class="d-sum-a"/>
+    <line x1="25" y1="90" x2="51" y2="90" class="d-line"/>
+    <line x1="38" y1="77" x2="38" y2="103" class="d-line"/>
+    <text x="22" y="80" class="m-sub" font-size="12">+</text>
+    <text x="22" y="108" class="m-sub" font-size="13">−</text>
+
+    <line x1="51" y1="90" x2="72" y2="90" class="d-acc" marker-end="url(#ar8a)"/>
+    <circle cx="86" cy="90" r="12" class="d-sum"/>
+    <line x1="74" y1="90" x2="98" y2="90" class="d-line"/>
+    <line x1="86" y1="78" x2="86" y2="102" class="d-line"/>
+    <text x="72" y="80" class="m-sub" font-size="12">+</text>
+    <text x="72" y="106" class="m-sub" font-size="13">−</text>
+
+    <line x1="98" y1="90" x2="118" y2="90" class="d-acc" marker-end="url(#ar8a)"/>
+    <rect x="120" y="74" width="66" height="32" rx="3" class="d-box"/>
+    <text x="153" y="95" class="m-txt" font-size="12" text-anchor="middle">放大器</text>
+    <line x1="186" y1="90" x2="204" y2="90" class="d-acc" marker-end="url(#ar8a)"/>
+    <rect x="206" y="74" width="66" height="32" rx="3" class="d-box"/>
+    <text x="239" y="95" class="m-txt" font-size="12" text-anchor="middle">电动机</text>
+    <line x1="272" y1="90" x2="290" y2="90" class="d-acc" marker-end="url(#ar8a)"/>
+    <rect x="292" y="74" width="66" height="32" rx="3" class="d-box"/>
+    <text x="325" y="95" class="m-txt" font-size="12" text-anchor="middle">减速器</text>
+    <line x1="358" y1="90" x2="376" y2="90" class="d-acc" marker-end="url(#ar8a)"/>
+    <rect x="378" y="74" width="80" height="32" rx="3" class="d-box"/>
+    <text x="418" y="95" class="m-txt" font-size="12" text-anchor="middle">绳轮机构</text>
+    <line x1="458" y1="90" x2="476" y2="90" class="d-acc" marker-end="url(#ar8a)"/>
+    <rect x="478" y="68" width="90" height="44" rx="3" class="d-box-a"/>
+    <text x="523" y="88" class="m-txt" font-size="12" text-anchor="middle">记录笔</text>
+    <text x="523" y="105" class="m-sub" font-size="11.5" text-anchor="middle">被控对象</text>
+    <line x1="568" y1="90" x2="632" y2="90" class="d-acc" marker-end="url(#ar8a)"/>
+    <text x="600" y="82" class="m-sub" font-size="11.5" text-anchor="middle">笔位移</text>
+    <circle cx="600" cy="90" r="3.5" class="d-tap"/>
+
+    <line x1="600" y1="90" x2="600" y2="196" class="d-fb"/>
+    <line x1="600" y1="196" x2="316" y2="196" class="d-fb"/>
+    <rect x="220" y="180" width="96" height="32" rx="3" class="d-box-v"/>
+    <text x="268" y="201" class="m-txt" font-size="12" text-anchor="middle">电桥</text>
+    <line x1="220" y1="196" x2="38" y2="196" class="d-fb"/>
+    <line x1="38" y1="196" x2="38" y2="104" class="d-fb" marker-end="url(#ar8v)"/>
+    <text x="120" y="218" class="m-sub" font-size="11.5" text-anchor="middle">位置反馈（外回路）</text>
+
+    <circle cx="283" cy="90" r="3.5" class="d-tap"/>
+    <line x1="283" y1="90" x2="283" y2="150" class="d-fb"/>
+    <line x1="283" y1="150" x2="230" y2="150" class="d-fb"/>
+    <rect x="150" y="134" width="80" height="32" rx="3" class="d-box-v"/>
+    <text x="190" y="155" class="m-txt" font-size="12" text-anchor="middle">测速机</text>
+    <line x1="150" y1="150" x2="86" y2="150" class="d-fb"/>
+    <line x1="86" y1="150" x2="86" y2="103" class="d-fb" marker-end="url(#ar8v)"/>
+    <text x="380" y="166" class="m-sub" font-size="11.5" text-anchor="middle">测速反馈（内回路）</text>
+  </svg>
+  <figcaption><b>函数记录仪方框图：一个系统，两个回路。</b>外回路（紫色）由电桥测量笔位移构成，负责<strong>准</strong>；内回路（紫色）由测速机测量电动机转速构成，负责<strong>快</strong>。<em>需要「记得准、跟得快」时，就往里加局部反馈来改善动态特性</em>。这个「多回路」思想在本节例 2 里会以另一种方式出现——加的不是反馈，而是一条前馈。</figcaption>
+</figure>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 两个旧例各留下一样「遗产」</span>
+  <ul class="tight">
+    <li><strong>炉温系统</strong>：给出标准骨架，给定 → 比较 → 放大 → 电机 → 减速 → 执行 → 被控对象 → 反馈回比较。</li>
+    <li><strong>函数记录仪</strong>：给出多回路思想，要「准」和「快」就加局部反馈（测速反馈）。</li>
+  </ul>
+  <p>老师强调：方框图比工作原理图更清楚地反映各元部件间的<strong>信号流动关系</strong>；只有画出它，才能把每个元部件输入输出的数学关系填进方框，进而建立数学模型、用于分析与校正。</p>
+</div>
+
+<h2 id="s7">三、例1 · 火炮方位角控制系统</h2>
+
+<p>火炮装在转盘上，转盘由<strong>伞形齿轮</strong>带动；电动机接在齿轮减速器的主动轴上，另有<strong>瞄准器</strong>。要求很明确：<strong>火炮的方位角跟着瞄准器的方位角走</strong>。</p>
+
+<p>工作过程这样闭环：瞄准器给定方位角后，只要火炮方位角与它有偏差，就得到<strong>偏差电压</strong>；经<strong>相敏整流器 → 校正装置 → 功率放大</strong>加在电动机上，电动机驱动减速器、拉着火炮向瞄准方向靠拢；直到两角一致、偏差为零，火炮在新位置达到平衡。核心器件是<strong>自整角机</strong>。</p>
+
+<h3 id="s8">3.1 自整角机：把两个角度「接」成一路电信号</h3>
+
+<figure class="fig">
+  <svg viewBox="0 20 640 180" role="img" aria-label="自整角机结构示意：左侧自整角发送机的转子随瞄准器转动，右侧自整角接收机的转子随火炮转动，两机的三相定子绕组用三根导线相连，发送机转子通交流电产生的交变磁场经三相绕组传递到接收机，两机转子方向之差即为失调角">
+    <defs>
+      <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+    </defs>
+
+    <circle cx="130" cy="110" r="66" class="m-panel"/>
+    <circle cx="510" cy="110" r="66" class="m-panel"/>
+    <line x1="130" y1="110" x2="130" y2="50" class="d-acc" marker-end="url(#ar2a)"/>
+    <line x1="510" y1="110" x2="540" y2="58" class="d-acc" marker-end="url(#ar2a)"/>
+    <text x="130" y="152" class="m-sub" font-size="10" text-anchor="middle">定子（三相）</text>
+    <text x="510" y="152" class="m-sub" font-size="10" text-anchor="middle">定子（三相）</text>
+
+    <line x1="196" y1="92" x2="444" y2="92" class="d-line" marker-end="url(#ar2)"/>
+    <line x1="196" y1="110" x2="444" y2="110" class="d-line" marker-end="url(#ar2)"/>
+    <line x1="196" y1="128" x2="444" y2="128" class="d-line" marker-end="url(#ar2)"/>
+    <text x="320" y="150" class="m-sub" font-size="10.5" text-anchor="middle">三相定子绕组经三根线相连（可拉得很长）</text>
+
+    <path d="M510,70 A40,40 0 0 1 530,75" class="m-thin" fill="none"/>
+    <text x="524" y="66" class="m-math" font-size="11.5">θ</text>
+
+    <text x="130" y="38" class="m-sub" font-size="11" text-anchor="middle">发送机 · 转子随瞄准器</text>
+    <text x="510" y="38" class="m-sub" font-size="11" text-anchor="middle">接收机 · 转子随火炮</text>
+    <text x="130" y="190" class="m-txt" font-size="11.5" text-anchor="middle">自整角发送机</text>
+    <text x="510" y="190" class="m-txt" font-size="11.5" text-anchor="middle">自整角接收机</text>
+  </svg>
+  <figcaption><b>自整角机把两个机械角度「接」成一路电信号。</b>发送机转子跟着瞄准器转，接收机转子跟着火炮转，两机的三相定子绕组用三根线连在一起。两转子方向一致时输出为零；方向不同时，接收机输出一个与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span> 成正比的电压（θ 即两方向之差，叫<em>失调角</em>）。<em>三根线可任意拉长</em>，所以瞄准器与火炮可以隔得很远——这正是它在火炮群、雷达里大量使用的原因。</figcaption>
+</figure>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 读懂自整角机之前，先接受三件小事实</span>
+  <ul class="tight">
+    <li><strong>绕组通交流电会产生来回交变的磁场</strong>，方向与该绕组的绕制方向一致。</li>
+    <li><strong>三相绕组在空间互差 120°</strong>，这就是「三相」的本来含义。</li>
+    <li><strong>变化的磁场能在别的绕组里感应出电势</strong>（电磁感应）——有感应电势，才可能有输出电压。</li>
+  </ul>
+  <p>接受这三件事，下面「角度变电压」的过程就只是把它们串起来。更深的电机学推导不属于本课程。</p>
+</div>
+
+<h3 id="s9">3.2 角度是怎么变成电压的</h3>
+
+<ol class="steps">
+  <li><span class="sh">发送机转子通交流电。</span>转子绕组产生方向来回交变的<b>交变磁场</b>。</li>
+  <li><span class="sh">三相定子被感应。</span>磁场照到三组定子绕组上，各绕组中感应出交变电流——只有<strong>与绕组同向的投影分量</strong>起作用，垂直分量不起作用。</li>
+  <li><span class="sh">磁场被「搬」到接收机。</span>发送机三相定子经三根线接接收机三相定子，于是发送机里的磁场规律<strong>原封不动</strong>地出现在接收机里。</li>
+  <li><span class="sh">接收机里做一次角度比较。</span>接收机转子与火炮同轴。两方向<strong>一致</strong>时，搬来的磁场与转子绕组<strong>垂直</strong>，不产生感应电势，故输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi><mo>=</mo><mn>0</mn></math></span>。</li>
+  <li><span class="sh">出现失调角就输出偏差。</span>两方向差一个<strong>失调角 θ</strong>，磁场多出一个与转子绕组同向的分量，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi><mo>≠</mo><mn>0</mn></math></span>。</li>
+</ol>
+
+<figure class="fig">
+  <svg viewBox="0 40 640 195" role="img" aria-label="自整角机把失调角变成电压的原理：左图画出交变磁场矢量分解，垂直绕组的分量不产生输出、沿绕组方向的投影分量产生输出；右图画输出电压 e 与失调角 θ 的关系，e 正比于 sinθ，小角度时近似正比于 θ">
+    <defs>
+      <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="m-line"/>
+      </marker>
+      <marker id="ar3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar3w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-w"/>
+      </marker>
+    </defs>
+
+    <text x="60" y="64" class="m-sub" font-size="10.5">θ=0（对准）时磁场与转子绕组垂直 → e=0</text>
+    <line x1="110" y1="180" x2="300" y2="180" class="m-line"/>
+    <text x="205" y="198" class="m-sub" font-size="10.5" text-anchor="middle">接收机转子绕组轴线</text>
+
+    <line x1="200" y1="180" x2="200" y2="102" class="m-line" marker-end="url(#ar3)"/>
+    <text x="196" y="98" class="m-sub" font-size="10.5" text-anchor="end">Φcosθ（垂直，不产生 e）</text>
+    <line x1="200" y1="102" x2="254" y2="102" class="d-warn" marker-end="url(#ar3w)"/>
+    <text x="227" y="96" class="m-sub" font-size="10.5" text-anchor="middle">Φsinθ</text>
+    <line x1="200" y1="180" x2="254" y2="102" class="m-acc" marker-end="url(#ar3a)"/>
+    <text x="258" y="106" class="m-math" font-size="12">Φ</text>
+    <line x1="254" y1="102" x2="254" y2="180" class="m-thin" fill="none" stroke-dasharray="4 3"/>
+    <path d="M200,135 A45,45 0 0 1 226,143" class="m-thin" fill="none"/>
+    <text x="216" y="130" class="m-math" font-size="11">θ</text>
+
+    <line x1="400" y1="190" x2="400" y2="66" class="m-line" marker-end="url(#ar3)"/>
+    <line x1="400" y1="190" x2="610" y2="190" class="m-line" marker-end="url(#ar3)"/>
+    <text x="392" y="60" class="m-math" font-size="11.5" text-anchor="end">e</text>
+    <text x="600" y="210" class="m-math" font-size="11.5">θ</text>
+    <polyline points="400,190 435,159 470,130 505,105 540,86 575,74 610,70" class="m-acc" fill="none"/>
+    <line x1="400" y1="190" x2="505" y2="96" class="m-thin" fill="none" stroke-dasharray="4 3"/>
+    <text x="415" y="112" class="m-sub" font-size="10.5">≈θ</text>
+    <text x="405" y="58" class="m-sub" font-size="10.5">e ∝ sinθ</text>
+  </svg>
+  <figcaption><b>失调角怎么变成电压：一次矢量分解。</b>左图把搬过来的交变磁场矢量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo></math></span> 分解成两个分量——<em>垂直于转子绕组的分量不产生任何输出</em>，<em>沿转子绕组方向的分量才感应出电势</em>。右图把结论画成曲线：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span> 成正比；虚线是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 本身，可见<em>小角度时两者几乎重合</em>，这就是自整角机可近似成线性比较元件的依据。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么输出正比于 sinθ，而不是别的</span>
+  <p>两点决定性的观察：<strong>①</strong> 失调角越大，投影到「同向分量」上的长度越大，输出电压越大；<strong>②</strong> 这个投影长度正比于失调角的正弦。</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>e</mi><mspace width="0.25em"></mspace><mo>∝</mo><mspace width="0.25em"></mspace><mi mathvariant="normal">sin</mi><mo>θ</mo><mspace width="0.25em"></mspace><mo>≈</mo><mspace width="0.25em"></mspace><mo>θ</mo></math></div>
+  <p>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 较小时）实际控制中失调角不会很大，此时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 几乎一样，于是<mark>可近似认为偏差电压与失调角成正比</mark>。这一步「小角度线性化」是自整角机能当作简单比较元件的关键——只有关系线性，后面才能用线性系统的方法分析它。</p>
+</div>
+
+<div class="trap">
+  <span class="lbl">这里最容易想错的一点</span>
+  <p><span class="bad">以为「两个角度相等时输出最大」。</span>恰恰相反：<strong>对准时磁场与转子绕组垂直，输出为零</strong>；偏差越大输出才越大。所以自整角机是工作在零位附近的<strong>平衡式测量元件</strong>——靠偏离零位产生控制信号。</p>
+</div>
+
+<h3 id="s10">3.3 画出方框图</h3>
+
+<p>三问法先答清楚：<strong>被控对象＝火炮</strong>，<strong>被控量＝火炮方位角</strong>，<strong>给定量＝瞄准器方位角</strong>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q">由火炮方位角控制系统的工作原理图，画出它的方框图。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：两头先定，从被控量倒着问回去</span>
+    <p>把被控对象「火炮」摆最右，给定量「瞄准器方位角」摆最左，中间倒推补齐。</p>
+    <ol class="steps">
+      <li><span class="sh">谁直接影响火炮方位角？</span><strong>减速器</strong>——它直接带着火炮转。</li>
+      <li><span class="sh">谁控制减速器？</span><strong>电动机</strong>——它接在减速器主动轴上。</li>
+      <li><span class="sh">谁控制电动机？</span><strong>功率放大器</strong>。</li>
+      <li><span class="sh">谁控制功率放大器？</span><strong>校正装置</strong>——这是一个<mark>串联校正装置</mark>，放在前向通道上。</li>
+      <li><span class="sh">谁控制校正装置？</span><strong>相敏整流器</strong>，其输入是<strong>自整角机</strong>给出的偏差电压。</li>
+    </ol>
+    <div class="trap">
+      <span class="lbl">这一步最容易错的地方</span>
+      <p><span class="bad">把自整角机画成两个方框（发送机、接收机各一个）当成串联元件。</span>此画法里，自整角机整体扮演<strong>一个比较元件</strong>——它做的唯一一件事是把「瞄准器角度」与「火炮角度」相减，应画成<strong>比较点</strong>。老师原话：它「可以当成一个比较元件，完成大脑的功能」。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 20 640 180" role="img" aria-label="火炮方位角控制系统方框图：瞄准器方位角与火炮实际方位角在自整角机（比较元件）处相减，得到偏差电压，经相敏整流器、串联校正装置、功率放大器驱动电动机，再经减速器带动火炮；火炮方位角反馈回自整角机">
+    <defs>
+      <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-line"/>
+      </marker>
+      <marker id="ar1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar1v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <text x="10" y="64" class="m-math" font-size="12">θr</text>
+    <text x="2" y="104" class="m-sub" font-size="9.5">瞄准器给定</text>
+    <line x1="14" y1="70" x2="40" y2="70" class="d-line" marker-end="url(#ar1)"/>
+    <circle cx="56" cy="70" r="14" class="d-sum-a"/>
+    <line x1="42" y1="70" x2="70" y2="70" class="d-line"/>
+    <line x1="56" y1="56" x2="56" y2="84" class="d-line"/>
+    <text x="40" y="62" class="m-sub" font-size="11">+</text>
+    <text x="40" y="90" class="m-sub" font-size="13">−</text>
+    <text x="56" y="38" class="m-sub" font-size="10.5" text-anchor="middle">自整角机（比较元件）</text>
+
+    <line x1="70" y1="70" x2="102" y2="70" class="d-acc" marker-end="url(#ar1a)"/>
+    <text x="86" y="62" class="m-sub" font-size="10" text-anchor="middle">偏差</text>
+    <rect x="104" y="54" width="80" height="32" rx="3" class="d-box"/>
+    <text x="144" y="74" class="m-txt" font-size="11.5" text-anchor="middle">相敏整流器</text>
+    <line x1="184" y1="70" x2="200" y2="70" class="d-acc" marker-end="url(#ar1a)"/>
+    <rect x="204" y="54" width="74" height="32" rx="3" class="d-box-w"/>
+    <text x="241" y="74" class="m-txt" font-size="11.5" text-anchor="middle">校正装置</text>
+    <line x1="278" y1="70" x2="294" y2="70" class="d-acc" marker-end="url(#ar1a)"/>
+    <rect x="298" y="54" width="86" height="32" rx="3" class="d-box"/>
+    <text x="341" y="74" class="m-txt" font-size="11.5" text-anchor="middle">功率放大器</text>
+    <line x1="384" y1="70" x2="400" y2="70" class="d-acc" marker-end="url(#ar1a)"/>
+    <rect x="404" y="54" width="62" height="32" rx="3" class="d-box"/>
+    <text x="435" y="74" class="m-txt" font-size="11.5" text-anchor="middle">电动机</text>
+    <line x1="466" y1="70" x2="482" y2="70" class="d-acc" marker-end="url(#ar1a)"/>
+    <rect x="486" y="54" width="64" height="32" rx="3" class="d-box"/>
+    <text x="518" y="74" class="m-txt" font-size="11.5" text-anchor="middle">减速器</text>
+    <line x1="550" y1="70" x2="566" y2="70" class="d-acc" marker-end="url(#ar1a)"/>
+    <rect x="570" y="48" width="62" height="44" rx="3" class="d-box-a"/>
+    <text x="601" y="67" class="m-txt" font-size="11.5" text-anchor="middle">火炮</text>
+    <text x="601" y="82" class="m-sub" font-size="9.5" text-anchor="middle">被控对象</text>
+
+    <circle cx="601" cy="92" r="3.5" class="d-tap"/>
+    <line x1="601" y1="92" x2="601" y2="158" class="d-fb"/>
+    <line x1="601" y1="158" x2="56" y2="158" class="d-fb"/>
+    <line x1="56" y1="158" x2="56" y2="84" class="d-fb" marker-end="url(#ar1v)"/>
+    <text x="330" y="172" class="m-sub" font-size="10.5" text-anchor="middle">反馈：火炮方位角 θ 送回自整角机比较</text>
+  </svg>
+  <figcaption><b>火炮方位角控制系统方框图（本页中心图之一）。</b>前向通道依次是相敏整流器 → 串联校正装置 → 功率放大器 → 电动机 → 减速器，最后作用到被控对象火炮；火炮方位角再反馈回比较点。注意三点：<em>自整角机画成比较点</em>（它只负责角度相减）、<em>校正装置是串联的</em>（画在前向通道里）、<em>偏差必须带负号</em>（负反馈）。相敏整流器把自整角机输出的交流偏差电压整流成直流，同时保留偏差的方向信息。</figcaption>
+</figure>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 相敏整流器是干什么的</span>
+  <p>自整角机输出交流电压，其<strong>相位</strong>（正负方向）携带着「火炮偏向哪一边」的信息。相敏整流器把它<strong>整流成直流、同时保留偏差方向</strong>——是正是负，决定电动机往哪边转。本课程不深究其电路，只需记住它位于比较环节与放大器之间。</p>
+</div>
+
+<h3 id="s11">3.4 另一种画法与应用</h3>
+
+<p>同一系统从不同角度可画成不同的方框图。另一种画法把它拆成<strong>发送机</strong>与<strong>接收机</strong>：发送机把瞄准器转角变成电压，接收机把火炮转角也变成电压，两个电压再相减得偏差。这样接收机是<strong>测量（敏感）元件</strong>，发送机是「角度 → 电压」的变换元件。</p>
+
+<figure class="fig">
+  <svg viewBox="0 26 640 152" role="img" aria-label="自整角机的两种画法对比：左图把自整角机整体当作一个比较元件，瞄准器转角与火炮转角相减输出偏差电压；右图把它拆成发送机与接收机，发送机把瞄准器转角变成电压、接收机把火炮转角变成电压，两个电压再相减">
+    <defs>
+      <marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-line"/>
+      </marker>
+      <marker id="ar9a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar9v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <text x="24" y="42" class="m-txt" font-size="12">① 一体画法：自整角机＝一个比较元件</text>
+    <text x="24" y="82" class="m-math" font-size="12">θ_r</text>
+    <line x1="46" y1="76" x2="60" y2="76" class="d-line" marker-end="url(#ar9)"/>
+    <circle cx="76" cy="76" r="14" class="d-sum-a"/>
+    <line x1="62" y1="76" x2="90" y2="76" class="d-line"/>
+    <line x1="76" y1="62" x2="76" y2="90" class="d-line"/>
+    <text x="60" y="66" class="m-sub" font-size="12">+</text>
+    <text x="60" y="96" class="m-sub" font-size="13">−</text>
+    <line x1="90" y1="76" x2="132" y2="76" class="d-acc" marker-end="url(#ar9a)"/>
+    <text x="138" y="80" class="m-txt" font-size="12">偏差电压 e</text>
+    <line x1="76" y1="150" x2="76" y2="90" class="d-fb" marker-end="url(#ar9v)"/>
+    <text x="24" y="168" class="m-sub" font-size="11.5">火炮转角 θ 送回比较</text>
+
+    <text x="332" y="42" class="m-txt" font-size="12">② 拆开画法：发送机、接收机各一条通道</text>
+    <text x="332" y="82" class="m-math" font-size="12">θ_r</text>
+    <line x1="354" y1="76" x2="368" y2="76" class="d-line" marker-end="url(#ar9)"/>
+    <rect x="370" y="56" width="72" height="40" rx="3" class="d-box"/>
+    <text x="406" y="74" class="m-txt" font-size="12" text-anchor="middle">发送机</text>
+    <text x="406" y="89" class="m-sub" font-size="11.5" text-anchor="middle">角→电压</text>
+    <line x1="442" y1="76" x2="462" y2="76" class="d-acc" marker-end="url(#ar9a)"/>
+    <circle cx="476" cy="76" r="13" class="d-sum"/>
+    <line x1="463" y1="76" x2="489" y2="76" class="d-line"/>
+    <line x1="476" y1="63" x2="476" y2="89" class="d-line"/>
+    <text x="460" y="66" class="m-sub" font-size="12">+</text>
+    <text x="460" y="96" class="m-sub" font-size="13">−</text>
+    <line x1="489" y1="76" x2="532" y2="76" class="d-acc" marker-end="url(#ar9a)"/>
+    <text x="538" y="80" class="m-txt" font-size="12">偏差电压 e</text>
+    <text x="332" y="138" class="m-math" font-size="12">θ</text>
+    <line x1="350" y1="132" x2="368" y2="132" class="d-line" marker-end="url(#ar9)"/>
+    <rect x="370" y="112" width="72" height="40" rx="3" class="d-box-v"/>
+    <text x="406" y="130" class="m-txt" font-size="12" text-anchor="middle">接收机</text>
+    <text x="406" y="145" class="m-sub" font-size="11.5" text-anchor="middle">角→电压</text>
+    <line x1="442" y1="132" x2="476" y2="132" class="d-acc"/>
+    <line x1="476" y1="132" x2="476" y2="89" class="d-fb" marker-end="url(#ar9v)"/>
+  </svg>
+  <figcaption><b>同一台自整角机，两种画法。</b>① 整体当作<strong>比较元件</strong>（画成比较点），结构最简洁，做题默认用这种；② 拆成<strong>发送机</strong>与<strong>接收机</strong>两条「角 → 电压」通道，再送进比较点——此时接收机是测量元件。<em>两种画法都对，取决于你把「角度比较」这一步放在哪一层</em>。</figcaption>
+</figure>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · 为什么这套结构能用在「火炮群」上</span>
+  <p>自整角机之间那几根连线<strong>可以拉得很长</strong>。火炮可以放在很远的地方，瞄准器单独摆一处，一台瞄准器可同时带<strong>一个火炮群</strong>对准同一目标开火。这正是「测量元件与控制元件可分离」的工程价值——比较用的「命令」可在几十米外产生。雷达引导高炮、舰炮随动系统里都有它的影子。</p>
+</div>
+
+<h2 id="s12">四、例2 · 水温调节系统：复合控制正式登场</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=1723">28:43</a>目标很朴素：让热交换器出口<strong>实时输出固定温度</strong>（如 60 ℃）的热水，用户用水多少都保持恒定。冷水经阀门进热交换器，高压蒸汽经<strong>另一个阀门</strong>进热交换管，在管内与冷水换热。出口处装<strong>温度控制器</strong>测水温，控制器里有一个<strong>旋钮</strong>设定理想温度（像冰箱的温度调节器）；实测低于 60 ℃ 就开大蒸汽阀门，偏高就关小。</p>
+
+<figure class="fig">
+  <svg viewBox="0 30 640 200" role="img" aria-label="水温调节系统工作原理示意：冷水经流量计和冷水阀门进入热交换器，高压热蒸汽经蒸汽阀门进入热交换管与冷水换热，出口热水保持 60 度，出口处测水温送回温度控制器，冷水进口处用流量计测量冷水流量">
+    <defs>
+      <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-line"/>
+      </marker>
+      <marker id="ar4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar4v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <text x="14" y="60" class="m-sub" font-size="11">高压热蒸汽</text>
+    <line x1="58" y1="56" x2="102" y2="56" class="d-line" marker-end="url(#ar4)"/>
+    <rect x="106" y="40" width="82" height="32" rx="3" class="d-box"/>
+    <text x="147" y="60" class="m-txt" font-size="11" text-anchor="middle">蒸汽阀门</text>
+    <line x1="188" y1="56" x2="250" y2="56" class="d-line"/>
+    <line x1="250" y1="56" x2="250" y2="88" class="d-line" marker-end="url(#ar4)"/>
+
+    <text x="14" y="140" class="m-sub" font-size="11">冷水</text>
+    <line x1="58" y1="136" x2="102" y2="136" class="d-line" marker-end="url(#ar4)"/>
+    <rect x="106" y="120" width="78" height="32" rx="3" class="d-box"/>
+    <text x="145" y="140" class="m-txt" font-size="11" text-anchor="middle">流量计</text>
+    <line x1="184" y1="136" x2="210" y2="136" class="d-line" marker-end="url(#ar4)"/>
+
+    <rect x="210" y="90" width="220" height="96" rx="3" class="d-box-a"/>
+    <text x="320" y="108" class="m-txt" font-size="11.5" text-anchor="middle">热交换器</text>
+    <rect x="232" y="116" width="176" height="40" rx="2" class="m-panel-s"/>
+    <text x="320" y="141" class="m-sub" font-size="11" text-anchor="middle">热交换管</text>
+    <text x="320" y="174" class="m-sub" font-size="9.5" text-anchor="middle">（被控对象）</text>
+
+    <line x1="430" y1="138" x2="500" y2="138" class="d-acc" marker-end="url(#ar4a)"/>
+    <text x="504" y="134" class="m-txt" font-size="11">热水出口 60℃</text>
+
+    <rect x="468" y="176" width="152" height="38" rx="3" class="d-box-v"/>
+    <text x="544" y="191" class="m-txt" font-size="11.5" text-anchor="middle">温度控制器</text>
+    <text x="544" y="205" class="m-sub" font-size="9.5" text-anchor="middle">给定 60℃</text>
+    <circle cx="492" cy="138" r="3.5" class="d-tap"/>
+    <line x1="492" y1="138" x2="492" y2="176" class="d-fb" marker-end="url(#ar4v)"/>
+
+    <text x="58" y="172" class="m-sub" font-size="10.5">② 在此测冷水流量（前馈）</text>
+    <text x="250" y="216" class="m-sub" font-size="10.5">① 在此测出口水温（反馈）</text>
+  </svg>
+  <figcaption><b>水温调节系统的物理结构。</b>上支路是高压热蒸汽经阀门进热交换管，下支路是冷水经流量计、阀门进热交换器，两者换热后从出口送出 60 ℃ 热水。两个<em>测量点</em>是关键：<em>① 出口处测水温</em>（构成反馈），<em>② 冷水进口处测流量</em>（构成前馈）。<b>注意：此刻系统还只接了反馈</b>——流量计这条前馈通道是下一小节为了对付「流量骤变」才加上的。</figcaption>
+</figure>
+
+<h3 id="s13">4.1 流量一剧烈变化，温度就压不住</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=1908">31:48</a>流量比较恒定时控制效果不错；一旦出口流量<strong>剧烈变化</strong>，出口水温波动就大。老师的生活比喻：居民上班时家里没人、用水少，下班都回来一起开热水阀，流量就发生很大变化。</p>
+
+<p>流量小时，池里的水早已烧到 60 ℃，蒸汽阀门维持在不大不小的开度。用水量骤增后，热水大量流出、冷水补入；而<strong>温度计装在出口处</strong>，流出的过程中池里的水基本还是 60 ℃，它<strong>感受不到这突如其来的流量变化</strong>；等整池水变凉才反应过来，此时再开大阀门<strong>已经迟了</strong>——至少要等半池冷水先流走，新加热的水才过来。</p>
+
+<figure class="fig">
+  <svg viewBox="0 34 640 176" role="img" aria-label="流量骤增后出口水温的响应曲线：只有反馈时，水温在测量滞后下跌得很深、恢复很慢；采用复合控制（前馈加反馈）时，水温跌得浅、恢复快；虚线为设定的 60 度">
+    <defs>
+      <marker id="ar11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="m-line"/>
+      </marker>
+    </defs>
+
+    <line x1="72" y1="196" x2="612" y2="196" class="m-line" marker-end="url(#ar11)"/>
+    <line x1="72" y1="196" x2="72" y2="48" class="m-line" marker-end="url(#ar11)"/>
+    <text x="618" y="200" class="m-math" font-size="12">t</text>
+    <text x="62" y="48" class="m-math" font-size="12" text-anchor="end">T</text>
+
+    <line x1="72" y1="84" x2="612" y2="84" class="m-thin d-dash"/>
+    <text x="68" y="80" class="m-sub" font-size="11.5" text-anchor="end">60℃</text>
+
+    <line x1="196" y1="60" x2="196" y2="196" class="m-thin d-dash"/>
+    <text x="196" y="56" class="m-sub" font-size="11.5" text-anchor="middle">流量突增</text>
+
+    <path d="M84,84 L196,84 C240,84 250,156 320,156 C400,156 430,84 560,84" class="m-warn" fill="none"/>
+    <path d="M84,84 L196,84 C250,84 262,116 330,116 C400,116 420,84 505,84" class="m-acc" fill="none"/>
+
+    <text x="250" y="66" class="m-sub" font-size="11.5">复合控制：跌得浅、回得快</text>
+    <text x="300" y="178" class="m-sub" font-size="11.5">仅反馈：测量滞后 → 跌得深、回得慢</text>
+  </svg>
+  <figcaption><b>流量骤增后的出口水温响应。</b>横轴是时间、纵轴是出口水温。<em>只有反馈（琥珀色曲线）</em>：温度计在出口处、测的是「已经流出去的水」，感受不到流量突变，等整池水变凉才发现，于是<strong>跌得深、回得慢</strong>。<em>复合控制（蓝色曲线）</em>：流量计在扰动刚出现时就提前开阀加汽，所以<strong>跌得浅、回得快</strong>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么「测量滞后」会毁掉反馈的效果</span>
+  <p>反馈控制的前提是「<strong>先看见偏差，再纠正偏差</strong>」。这里的问题恰恰是<strong>测量本身慢了半拍</strong>：温度计读到的还是「过去的水温」，等它读出偏差，扰动早就作用完了——反馈回路里插入了一段<strong>大滞后</strong>。</p>
+  <p>这不是负反馈原理错了，而是这一路反馈<strong>对一个特定的干扰反应太慢</strong>。所以解决思路不该是「把反馈做得更强」，而是：<mark>能不能在扰动刚发生、还没影响到出口温度之前，就把它测出来并提前补偿？</mark>这就是前馈的动机。</p>
+</div>
+
+<h3 id="s14">4.2 加一只流量计：让补偿「提前发生」</h3>
+
+<p>问题根源是传感器装在出口处，而它要控制的正是出口水温，位置无法改。但有一件事可以利用——<strong>冷水的补充量和出口流量是相同的</strong>（流出多少水，就要补充多少冷水）。于是：虽然<strong>温度</strong>不能及时感受流量变化，但<strong>冷水进水管处的流量</strong>却能非常敏感地感受到它。</p>
+
+<p>在冷水进水管上加一只<strong>流量计</strong>：出口流量骤增、温度还没反应时，流量计已经测到，把对应的电压信号送到温度控制器的前端，<strong>先把电磁阀开大</strong>、加大蒸汽，在流量变大的这段时间里提前把热交换器的温度提上去。等水真正流到出口时，温度虽有波动，但<mark>波动已经很小了</mark>。</p>
+
+<p>照例先问「什么量按什么规律运行」：让出口水温按旋钮设定的 60 ℃ 变化。于是<strong>被控对象＝热交换器</strong>，<strong>被控量＝出口热水温度</strong>，<strong>给定量＝旋钮设定温度</strong>。倒推：阀门直接影响出口温度，温度控制器管着阀门，其输入是设定温度与温度传感器反馈电压之差，主反馈回路就此闭合。新加的支路上：<strong>冷水流量是干扰量</strong>，用流量计变换成电信号<strong>预先加到控制器前端</strong>，这就是<strong>按干扰补偿的前馈控制</strong>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 180" role="img" aria-label="水温调节系统复合控制方框图：给定 60 度与温度传感器反馈在比较点相减得到偏差，偏差与流量计送来的前馈补偿信号在第二比较点相加，经温度控制器、阀门作用到热交换器，输出出口水温；冷水流量作为干扰由流量计测出送入前馈通道">
+    <defs>
+      <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-line"/>
+      </marker>
+      <marker id="ar5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar5v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+      <marker id="ar5w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-w"/>
+      </marker>
+    </defs>
+
+    <text x="8" y="64" class="m-sub" font-size="11">60℃</text>
+    <line x1="12" y1="72" x2="38" y2="72" class="d-line" marker-end="url(#ar5)"/>
+    <circle cx="54" cy="72" r="14" class="d-sum-a"/>
+    <line x1="40" y1="72" x2="68" y2="72" class="d-line"/>
+    <line x1="54" y1="58" x2="54" y2="86" class="d-line"/>
+    <text x="38" y="64" class="m-sub" font-size="11">+</text>
+    <text x="38" y="92" class="m-sub" font-size="13">−</text>
+
+    <line x1="68" y1="72" x2="96" y2="72" class="d-acc" marker-end="url(#ar5a)"/>
+    <text x="82" y="64" class="m-sub" font-size="10" text-anchor="middle">偏差</text>
+    <circle cx="112" cy="72" r="13" class="d-sum"/>
+    <line x1="99" y1="72" x2="125" y2="72" class="d-line"/>
+    <line x1="112" y1="59" x2="112" y2="85" class="d-line"/>
+    <text x="98" y="60" class="m-sub" font-size="10">+</text>
+
+    <line x1="125" y1="72" x2="148" y2="72" class="d-acc" marker-end="url(#ar5a)"/>
+    <rect x="152" y="54" width="96" height="36" rx="3" class="d-box"/>
+    <text x="200" y="76" class="m-txt" font-size="11.5" text-anchor="middle">温度控制器</text>
+    <line x1="248" y1="72" x2="260" y2="72" class="d-acc" marker-end="url(#ar5a)"/>
+    <rect x="264" y="54" width="56" height="36" rx="3" class="d-box"/>
+    <text x="292" y="76" class="m-txt" font-size="11.5" text-anchor="middle">阀门</text>
+    <line x1="320" y1="72" x2="332" y2="72" class="d-acc" marker-end="url(#ar5a)"/>
+    <rect x="336" y="46" width="116" height="52" rx="3" class="d-box-a"/>
+    <text x="394" y="68" class="m-txt" font-size="11.5" text-anchor="middle">热交换器</text>
+    <text x="394" y="84" class="m-sub" font-size="9.5" text-anchor="middle">被控对象</text>
+
+    <line x1="452" y1="72" x2="516" y2="72" class="d-acc" marker-end="url(#ar5a)"/>
+    <text x="520" y="66" class="m-sub" font-size="10.5">出口水温 T</text>
+    <circle cx="516" cy="72" r="3.5" class="d-tap"/>
+    <line x1="516" y1="72" x2="516" y2="150" class="d-fb"/>
+    <line x1="516" y1="150" x2="54" y2="150" class="d-fb"/>
+    <line x1="54" y1="150" x2="54" y2="86" class="d-fb" marker-end="url(#ar5v)"/>
+    <rect x="300" y="134" width="130" height="32" rx="3" class="d-box-v"/>
+    <text x="365" y="155" class="m-txt" font-size="11.5" text-anchor="middle">温度传感器</text>
+
+    <rect x="420" y="10" width="168" height="30" rx="3" class="d-box-w"/>
+    <text x="504" y="30" class="m-txt" font-size="11" text-anchor="middle">冷水流量（干扰）</text>
+    <rect x="230" y="10" width="116" height="30" rx="3" class="d-box"/>
+    <text x="288" y="30" class="m-txt" font-size="11" text-anchor="middle">流量计</text>
+    <line x1="420" y1="25" x2="348" y2="25" class="d-warn" marker-end="url(#ar5w)"/>
+    <line x1="230" y1="25" x2="112" y2="25" class="d-warn"/>
+    <line x1="112" y1="25" x2="112" y2="59" class="d-warn" marker-end="url(#ar5w)"/>
+    <text x="30" y="20" class="m-sub" font-size="10.5">前馈（按干扰补偿）</text>
+    <text x="150" y="172" class="m-sub" font-size="10.5">反馈通道（测水温）</text>
+  </svg>
+  <figcaption><b>水温调节系统的复合控制方框图（本页头号中心图）。</b>下半部分紫色大回路是<mark>反馈通道</mark>：出口水温 → 温度传感器 → 与 60 ℃ 设定相减，把稳态温度精确锁住。上半部分琥珀色支路是<mark>前馈通道</mark>：冷水流量（干扰）→ 流量计 → 直接加到控制器前端（第二比较点），在扰动刚出现时就提前补偿。两条通道汇入同一条前向通道。<em>反馈管「准」，前馈管「快」</em>，二者合一正是复合控制。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么前馈能「提前」，反馈却不行</span>
+  <p>关键在<strong>测量的对象不同</strong>：<strong>反馈</strong>测的是被控量（出口水温），扰动要「走完整条通道、影响到出口」才被看见，天生滞后；<strong>前馈</strong>测的是干扰本身（冷水流量），扰动一出现就被抓到，不必等它把后果做出来。</p>
+  <p>一句话概括分工：<mark>反馈是「事后纠偏」，前馈是「事前预判」。</mark>前者通用但慢，后者快但只对「可测量、可预知的干扰」有效——这也是前馈不能单独用、必须和反馈配成复合控制的原因。</p>
+</div>
+
+<h2 id="s15">五、复合控制：本集头号考点</h2>
+
+<p>水温系统里，冷水流量是<strong>干扰量</strong>；用流量计把它测出、变换后加到控制器前端，就完成<strong>按干扰补偿</strong>。这个前馈控制与原来的反馈控制一起，构成<strong>复合控制</strong>。老师强调：<mark>「这是一个非常典型的按照干扰来补偿的前馈控制的控制策略。」</mark></p>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 复合控制的定义（建议原样记下）</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=240">04:00</a>在开环、闭环、复合三种方式里，<strong>复合控制＝前馈控制＋反馈控制</strong>，同时保留两条通道：</p>
+  <ul class="tight">
+    <li><strong>反馈通道</strong>：从被控量测出、送回输入端比较，用偏差去纠正——保证最终精度。</li>
+    <li><strong>前馈通道</strong>：把可测量的干扰（或输入）测出，经补偿装置提前注入系统——加快对扰动的响应。</li>
+  </ul>
+  <p>老师还给了结论：<strong>凡是闭环系统，核心机理都是负反馈；复合控制是在负反馈基础上再外加一路前馈补偿。</strong></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 190" role="img" aria-label="复合控制的一般结构：输入 r 与反馈在比较点相减，所得偏差再与由干扰 n 经补偿装置送来的前馈信号在第二比较点相加，经控制器作用到被控对象得到输出 y；输出经反馈环节送回第一比较点；干扰 n 同时作用于被控对象">
+    <defs>
+      <marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-line"/>
+      </marker>
+      <marker id="ar6a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar6v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+      <marker id="ar6w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-w"/>
+      </marker>
+    </defs>
+
+    <text x="14" y="70" class="m-math" font-size="12">r</text>
+    <line x1="20" y1="80" x2="44" y2="80" class="d-line" marker-end="url(#ar6)"/>
+    <circle cx="60" cy="80" r="14" class="d-sum-a"/>
+    <line x1="46" y1="80" x2="74" y2="80" class="d-line"/>
+    <line x1="60" y1="66" x2="60" y2="94" class="d-line"/>
+    <text x="44" y="72" class="m-sub" font-size="11">+</text>
+    <text x="44" y="100" class="m-sub" font-size="13">−</text>
+
+    <line x1="74" y1="80" x2="97" y2="80" class="d-acc" marker-end="url(#ar6a)"/>
+    <circle cx="112" cy="80" r="13" class="d-sum"/>
+    <line x1="99" y1="80" x2="125" y2="80" class="d-line"/>
+    <line x1="112" y1="67" x2="112" y2="93" class="d-line"/>
+    <text x="98" y="68" class="m-sub" font-size="10">+</text>
+
+    <line x1="125" y1="80" x2="144" y2="80" class="d-acc" marker-end="url(#ar6a)"/>
+    <rect x="148" y="64" width="78" height="32" rx="3" class="d-box"/>
+    <text x="187" y="84" class="m-txt" font-size="11.5" text-anchor="middle">控制器</text>
+    <line x1="226" y1="80" x2="284" y2="80" class="d-acc" marker-end="url(#ar6a)"/>
+    <rect x="288" y="64" width="96" height="32" rx="3" class="d-box-a"/>
+    <text x="336" y="84" class="m-txt" font-size="11.5" text-anchor="middle">被控对象</text>
+
+    <line x1="384" y1="80" x2="464" y2="80" class="d-acc" marker-end="url(#ar6a)"/>
+    <text x="474" y="74" class="m-math" font-size="12">y</text>
+    <circle cx="464" cy="80" r="3.5" class="d-tap"/>
+    <line x1="464" y1="80" x2="464" y2="168" class="d-fb"/>
+    <line x1="464" y1="168" x2="60" y2="168" class="d-fb"/>
+    <line x1="60" y1="168" x2="60" y2="94" class="d-fb" marker-end="url(#ar6v)"/>
+    <rect x="240" y="152" width="120" height="32" rx="3" class="d-box-v"/>
+    <text x="300" y="173" class="m-txt" font-size="11.5" text-anchor="middle">反馈环节 H</text>
+
+    <rect x="270" y="8" width="132" height="30" rx="3" class="d-box-w"/>
+    <text x="336" y="28" class="m-txt" font-size="11" text-anchor="middle">干扰 n</text>
+    <line x1="336" y1="38" x2="336" y2="62" class="d-warn" marker-end="url(#ar6w)"/>
+    <rect x="150" y="8" width="104" height="30" rx="3" class="d-box-w"/>
+    <text x="202" y="28" class="m-txt" font-size="11" text-anchor="middle">补偿装置</text>
+    <line x1="270" y1="23" x2="256" y2="23" class="d-warn"/>
+    <line x1="150" y1="23" x2="112" y2="23" class="d-warn"/>
+    <line x1="112" y1="23" x2="112" y2="67" class="d-warn" marker-end="url(#ar6w)"/>
+    <text x="30" y="20" class="m-sub" font-size="10.5">前馈通道</text>
+    <text x="130" y="180" class="m-sub" font-size="10.5">反馈通道</text>
+  </svg>
+  <figcaption><b>复合控制的抽象结构（把水温系统的器件名全部擦掉）。</b>输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 与反馈信号在第一比较点相减得偏差；偏差再与「干扰 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 经补偿装置送来」的前馈信号在第二比较点相加；合成后经控制器作用于被控对象得输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>。<em>干扰 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 一边直接作用于被控对象（危害系统的路径），一边被引出送进补偿装置（前馈对付它的路径）</em>。这张骨架适用于一切「前馈＋反馈」系统。</figcaption>
+</figure>
+
+<h3 id="s16">5.1 前馈与反馈，一次说清</h3>
+
+<div class="tbl-wrap">
+<table class="cmp">
+  <thead><tr><th>对比项</th><th>反馈控制</th><th>前馈控制</th></tr></thead>
+  <tbody>
+    <tr><td>测量对象</td><td>被控量（如出口水温）</td><td>干扰量（如冷水流量）</td></tr>
+    <tr><td>动作时机</td><td>偏差出现之后 —— <strong>事后纠偏</strong></td><td>干扰出现之时 —— <strong>事前预判</strong></td></tr>
+    <tr><td>是否构成回路</td><td>是，构成闭合回路</td><td>否，是单向的开环补偿通道</td></tr>
+    <tr><td>优点</td><td>通用，能对付一切引起偏差的因素</td><td>响应快，扰动尚未显形就补偿</td></tr>
+    <tr><td>局限</td><td>对滞后大的环节反应慢</td><td>只对「可测量」的干扰有效，单独用不保证精度</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>前馈按其信号来源又分两种：<strong>按输入补偿</strong>——前馈信号取自输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span>，先经校正装置再进主回路；<strong>按干扰补偿</strong>——把可测量的干扰 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 测出来反向注入。本节水温系统是典型的<strong>按干扰补偿</strong>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 30 640 118" role="img" aria-label="前馈补偿的两种方向对比：左图按干扰补偿，干扰 n 经补偿装置后注入控制器前端；右图按输入补偿，输入 r 经补偿装置后注入偏差通道">
+    <defs>
+      <marker id="ar12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-line"/>
+      </marker>
+      <marker id="ar12a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+      <marker id="ar12w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-w"/>
+      </marker>
+    </defs>
+
+    <text x="10" y="44" class="m-txt" font-size="12">① 按干扰补偿（本节水温系统）</text>
+    <rect x="10" y="60" width="84" height="30" rx="3" class="d-box-w"/>
+    <text x="52" y="80" class="m-txt" font-size="12" text-anchor="middle">干扰 n</text>
+    <line x1="94" y1="75" x2="120" y2="75" class="d-warn" marker-end="url(#ar12w)"/>
+    <rect x="122" y="60" width="92" height="30" rx="3" class="d-box-w"/>
+    <text x="168" y="80" class="m-txt" font-size="12" text-anchor="middle">补偿装置</text>
+    <line x1="214" y1="75" x2="240" y2="75" class="d-warn" marker-end="url(#ar12w)"/>
+    <circle cx="252" cy="75" r="4" class="d-tap"/>
+    <text x="262" y="79" class="m-sub" font-size="11.5">控制器前端</text>
+    <text x="10" y="118" class="m-sub" font-size="11.5">信号取自干扰 n，在扰动影响出口之前补偿</text>
+
+    <text x="336" y="44" class="m-txt" font-size="12">② 按输入补偿</text>
+    <rect x="330" y="60" width="84" height="30" rx="3" class="d-box"/>
+    <text x="372" y="80" class="m-txt" font-size="12" text-anchor="middle">输入 r</text>
+    <line x1="414" y1="75" x2="440" y2="75" class="d-acc" marker-end="url(#ar12a)"/>
+    <rect x="442" y="60" width="92" height="30" rx="3" class="d-box-w"/>
+    <text x="488" y="80" class="m-txt" font-size="12" text-anchor="middle">补偿装置</text>
+    <line x1="534" y1="75" x2="560" y2="75" class="d-acc" marker-end="url(#ar12a)"/>
+    <circle cx="572" cy="75" r="4" class="d-tap"/>
+    <text x="330" y="118" class="m-sub" font-size="11.5">信号取自输入 r，注入偏差通道</text>
+  </svg>
+  <figcaption><b>前馈的两种补偿方向，区别只在「信号取自哪里」。</b>① <strong>按干扰补偿</strong>：信号来自可测量的干扰（如冷水流量），注入控制器前端，在扰动危害被控量之前抵消——水温系统就是这类。② <strong>按输入补偿</strong>：信号来自输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span>，先经补偿装置再叠加到偏差通道上，补偿输入变化的滞后。判断一个前馈属于哪类，<em>只看它的信号从哪里取</em>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么前馈不能单独使用</span>
+  <p>前馈是<strong>开环</strong>的：它测的是干扰，不是被控量。它只能对「事先知道规律、又能测到的那个干扰」做补偿；如果补偿量算得不准，或者出现别的没测的干扰，前馈自己<strong>发现不了、也纠正不了</strong>——因为它根本没有把被控量送回来比较。</p>
+  <p>反过来，反馈虽慢，但它盯着被控量本身，任何原因造成的偏差它都管。所以两者必须组合：<mark>反馈负责「最后一定要准」，前馈负责「尽量不要慢」</mark>。这就是复合控制同时保留两条通道的根本理由。</p>
+</div>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 关于复合控制，答题要抓住三个点</span>
+  <ol class="tight">
+    <li><strong>定义要准确</strong>：复合控制＝前馈控制＋反馈控制，而非「两种反馈相加」。</li>
+    <li><strong>分清前馈的两种补偿方向</strong>：<strong>按输入补偿</strong>（信号取自输入）、<strong>按干扰补偿</strong>（信号取自可测干扰）。水温系统属后者。</li>
+    <li><strong>能在方框图上指认</strong>：前馈通道一定<strong>不构成回路</strong>，且信号来自「干扰」或「输入」。判断一个系统是不是复合控制，就看它是否<strong>同时存在一条反馈回路和一条前馈补偿通道</strong>。</li>
+  </ol>
+  <p>复合控制的定量设计（按不变性原理求补偿装置）属于第 5 章，本页只需把结构认全、把定义背准。</p>
+</div>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · 前馈—反馈在工程里的常见身影</span>
+  <p>「按干扰补偿」在工业控制里非常普遍：锅炉汽包水位用蒸汽流量做前馈、汽轮机用负荷指令做前馈、精馏塔用进料流量做前馈……共同点是：<strong>总有一个「又大又快」的可测干扰需要被提前抵消</strong>。凡遇到「某个扰动量能测、又来得猛」的场合，工程师往往就在反馈回路之外再挂一条前馈。你学到的不只是一个水温系统，而是一类反复出现的控制套路。</p>
+</div>
+
+<h2 id="s17">六、小结与衔接</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=3&amp;t=2368">39:28</a>这节课把第一章的示例部分收尾。老师预告：休息之后接着讲<strong>自动控制系统的分类</strong>、<strong>对控制系统的基本要求</strong>、<strong>本课程的研究内容</strong>（即 <a href="../P004-系统分类与性能要求/index.html">系统分类与性能要求</a>）。就本页而言，请把下面这条链牢牢记住——它贯穿后面每一章。</p>
+
+<div class="chain">
+  <span class="n"><b>现实系统</b> 火炮 / 水温</span><span class="ar">→</span>
+  <span class="n"><b>控制目标</b> 什么量跟踪什么量</span><span class="ar">→</span>
+  <span class="n"><b>三问法</b> 对象 / 被控量 / 给定量</span><span class="ar">→</span>
+  <span class="n"><b>从后往前</b> 谁在影响它</span><span class="ar">→</span>
+  <span class="n"><b>方框图</b> 反馈 + 前馈</span><span class="ar">→</span>
+  <span class="n"><b>复合控制</b> 前馈 + 反馈</span>
+</div>
+
+<p>两个新系统各留一个记忆抓手：<strong>火炮系统</strong>记自整角机——「角度比较器」，对准时输出为零、失调时输出正比于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>；<strong>水温系统</strong>记流量计——它把「又快又猛」的冷水流量干扰提前量出来，在出口温度还没变凉之前就动手。合起来正好回答：<mark>一个只会「事后纠偏」的反馈系统，如何靠一路前馈获得「提前量」。</mark></p>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>工作原理图</b> 装置</span><span class="ar">→</span>
+    <span class="n"><b>三问</b> 对象 / 被控量 / 给定量</span><span class="ar">→</span>
+    <span class="n"><b>从后往前</b> 谁在影响它</span><span class="ar">→</span>
+    <span class="n"><b>方框图</b> 方框 + 信号 + 比较点</span><span class="ar">→</span>
+    <span class="n"><b>复合控制</b> 反馈 + 前馈</span>
+  </div>
+
+  <h3>两个系统</h3>
+  <ul class="tight">
+    <li><strong>火炮方位角系统</strong>：被控对象＝火炮，被控量＝火炮方位角，给定量＝瞄准器方位角；核心器件<mark>自整角机</mark>，画成<strong>比较元件</strong>；输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi><mspace width="0.25em"></mspace><mo>∝</mo><mspace width="0.25em"></mspace><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，小角度近似 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∝</mo><mspace width="0.25em"></mspace><mo>θ</mo></math></span>。</li>
+    <li><strong>水温调节系统</strong>：被控对象＝热交换器，被控量＝出口水温，给定量＝旋钮设定温度；温度控制器测出口水温（<strong>反馈</strong>），流量计测冷水流量（<strong>前馈</strong>）。</li>
+  </ul>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li><strong>复合控制＝前馈控制＋反馈控制</strong>，本集头号考点。</li>
+    <li>前馈按来源分两种：<strong>按输入补偿</strong>、<strong>按干扰补偿</strong>；水温系统属后者。</li>
+    <li>前馈通道<strong>不构成回路</strong>（开环补偿），反馈通道<strong>构成回路</strong>。</li>
+    <li>画图口诀：<mark>两头先定，从后往前推</mark>。</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>把自整角机画成两个串联方框 —— 当比较元件用时它应是<strong>一个比较点</strong>。</li>
+    <li>以为「两角相等时自整角机输出最大」—— 恰恰相反，<strong>对准时输出为零</strong>，靠偏离零位工作。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P001-自动控制的一般概念（上）/index.html">自动控制的一般概念（上）</a> 自动控制的定义与三种控制方式</li>
+      <li><a href="../P002-自动控制的一般概念（下）/index.html">自动控制的一般概念（下）</a> 负反馈原理、系统组成、校正方式</li>
+      <li><span class="cur">电磁感应与交流电（基础物理）</span></li>
+      <li><span class="cur">热传递与热交换（基础物理）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P004-系统分类与性能要求/index.html">系统分类与性能要求</a> 系统分类与对控制系统的基本要求</li>
+      <li><a href="../P005-控制系统的数学模型（上）/index.html">控制系统的数学模型（上）</a> 控制系统的数学模型：微分方程</li>
+      <li><a href="../P012-结构图及其等效变换（上）/index.html">结构图及其等效变换（上）</a> 结构图及其等效变换</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>前馈 vs 反馈：测干扰还是测被控量；事前预判还是事后纠偏</li>
+      <li>按输入补偿 vs 按干扰补偿：前馈信号来自输入还是来自干扰</li>
+      <li>自整角机「当比较元件」画一点 vs「拆成发送机/接收机」画两框</li>
+      <li>开环 vs 闭环 vs 复合：有没有反馈回路、有没有前馈通道</li>
+    </ul>
+  </div>
+</div>
+  <footer class="doc-foot"><span>卢京潮《自动控制原理》· 西北工业大学 · 第 3 讲</span><a href="../P002-自动控制的一般概念（下）/index.html">← P002</a><a href="../index.html">全部目录</a><a href="../P004-系统分类与性能要求/index.html">P004 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、本节课的任务与「方框图」</a>
+    <a class="sub" href="#s2">1.1 三种控制方式与负反馈</a>
+    <a class="sub" href="#s3">1.2 系统由哪些环节拼成</a>
+    <a href="#s4">二、复习两个旧例：由工作原理图到方框图</a>
+    <a class="sub" href="#s5">2.1 炉温控制系统：从被控量倒着问回去</a>
+    <a class="sub" href="#s6">2.2 函数记录仪：双回路的系统</a>
+    <a href="#s7">三、例1 · 火炮方位角控制系统</a>
+    <a class="sub" href="#s8">3.1 自整角机：把两个角度「接」成一路电信号</a>
+    <a class="sub" href="#s9">3.2 角度是怎么变成电压的</a>
+    <a class="sub" href="#s10">3.3 画出方框图</a>
+    <a class="sub" href="#s11">3.4 另一种画法与应用</a>
+    <a href="#s12">四、例2 · 水温调节系统：复合控制正式登场</a>
+    <a class="sub" href="#s13">4.1 流量一剧烈变化，温度就压不住</a>
+    <a class="sub" href="#s14">4.2 加一只流量计：让补偿「提前发生」</a>
+    <a href="#s15">五、复合控制：本集头号考点</a>
+    <a class="sub" href="#s16">5.1 前馈与反馈，一次说清</a>
+    <a href="#s17">六、小结与衔接</a>
+  </aside>
+</div>
+</body>
+</html>

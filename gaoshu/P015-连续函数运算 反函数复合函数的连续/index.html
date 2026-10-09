@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>连续函数的运算 · 反函数与复合函数的连续性 · 高等数学笔记</title>
+<meta name="description" content="这一节存在感很低——自己看也能做题。但它给了三句话：连续函数四则运算后仍连续；单调连续函数的反函数仍连续；复合函数的极限可以「写进里面去」。最后一句话正是后面所有等价无穷小替换题的底层依据：求 limesinx（x→0）时，直接把「x→0 让 sinx→0」代进去得到 e0=1，用的就是它。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 1 章  函数与极限</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 15 讲</div>
+    <h1 class="title"><span class="pnum">P015</span>连续函数的运算 · 反函数与复合函数的连续性</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这一节存在感很低——自己看也能做题。但它给了三句话：<strong>连续函数四则运算后仍连续；单调连续函数的反函数仍连续；复合函数的极限可以「写进里面去」</strong>。最后一句话正是后面所有等价无穷小替换题的底层依据：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span>）时，直接把「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></math></span>」代进去得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mn>0</mn></msup><mo>=</mo><mn>1</mn></math></span>，用的就是它。</p></div>
+    <div class="meta"><span>时长 29 分</span><span class="w" title="考试权重">●●●○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=0">00:00</a><span class="vv"><b>和差积商</b>：两个在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 连续的函数，加减乘除（除时分母不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）后仍连续。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>/</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 举例。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=92">01:32</a><span class="vv"><b>反函数的连续性</b>：单调且连续 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 反函数也单调且连续；注意反函数的「区间」是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的值域区间。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=309">05:09</a><span class="vv"><b>反函数图形</b>：关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 对称，原来单调增，反函数也单调增。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=345">05:45</a><span class="vv"><b>复合函数连续性</b>（定理三、四）：老师建议可略读，但「极限写进里面」的思想是关键。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=397">06:37</a><span class="vv"><b>核心例子</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mn>0</mn></msup><mo>=</mo><mn>1</mn></math></span>，把外层极限代进内层。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=509">08:29</a><span class="vv"><b>初等函数连续性</b>：基本初等函数、初等函数都在定义域内连续。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=545">09:05</a><span class="vv"><b>例 1</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span>，并得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=686">11:26</a><span class="vv"><b>例 2</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>，并得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=928">15:28</a><span class="vv"><b>例 3</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mo>α</mo></math></span>，这是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mi>n</mi></mrow></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mfrac><mrow><mi>x</mi></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 的推广。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1338">22:18</a><span class="vv"><b>例 4</b>：整体等价替换 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>e</mi><mrow><mn>3</mn><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>/</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mn>6</mn></msup></math></span>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1695">28:15</a><span class="vv"><b>幂指函数</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span>）不是初等函数，要化成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></span> 再代极限。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">开篇：这节可以「稀里糊涂」过</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=0">00:00</a>老师开场就直言，这一节「存在感非常非常低」——考试做题时你哪怕没专门看它，也很少出大问题。所以这节课的讲法很特别：多数结论<strong>一笔带过</strong>，真正的重点是最后那几个极限计算，它们其实就是前面刚补充过的<strong>等价无穷小替换公式</strong>的推导现场。我们照着课堂顺序走，但把重心放在「为什么能直接把极限代进去」这一件事上。</p>
+
+<p>第一块内容是<strong>连续函数的四则运算</strong>。结论很简单：如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi></math></span> 都在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处连续，那么它们的和、差、积、商在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处仍然连续，唯一的附加条件是<strong>做除法时分母不能等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>。</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=42">00:42</a>视频原话（大意）</span>
+  <p><q>我们说如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 和这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处是连续的，那么它相加相减相乘跟相除仍然也是连续的，要求他这个除的时候这个分母啊不能等于零。那仍然是连续的。我们就一笔带过了，就这么着，对吧？</q></p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=0">00:00</a>这个结论为什么「显然」到可以跳过</span>
+  <p>它其实是<a href="../P013-连续/index.html">连续</a>连续定义的直接推论。函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 连续，等价于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>。而极限有四则运算法则：和的极限等于极限的和。于是</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mo>(</mo><mi>f</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>g</mi><mo>)</mo><mo>=</mo><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>±</mo><mspace width="0.25em"></mspace><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><mi>g</mi><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>±</mo><mspace width="0.25em"></mspace><mi>g</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mo>(</mo><mi>f</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>g</mi><mo>)</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></div>
+  <p>这就说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>g</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 连续。乘积、商（分母不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）同理。所以严格说它不是新定理，而是「极限四则运算 + 连续定义」的打包结论——老师跳得快，是因为它的证明你早就会了。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=42">00:42</a>老师顺手举了两个例子。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>，它是两个连续函数相除，只要在<strong>定义域内</strong>（即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>≠</mo><mn>0</mn></math></span>）就连续。有同学问：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 不是有定义域限制吗？老师答得很干脆：<span class="t">「在它的定义域内不就完了吗？」</span>连续性永远只在定义域内讨论。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 也一样，在它的定义域内连续。</p>
+
+<h2 id="s2">反函数的连续性：当心「区间」说的是谁</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=92">01:32</a>第二个定理：如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在某个区间上<strong>单调</strong>（增也行、减也行）<strong>并且连续</strong>，那么它的反函数在相应的区间里也是单调并且连续的。</p>
+
+<div class="blk def">
+  <span class="lbl">定理 · 反函数的连续性</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>I</mi></math></span> 上单调且连续，则其反函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>y</mi><mo>)</mo></math></span> 在对应的区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>I</mi><mo>)</mo></math></span> 上也是单调且连续的。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=148">02:28</a>老师在这里特别提醒了一个容易绕晕的点：<strong>反函数的「区间」别看错了</strong>。原函数的自变量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，它有一个变化区间；反函数的自变量其实是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，所以定理里说的那个区间，是<strong>原函数值域</strong>的变化区间，不是原定义域。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=192">03:12</a>为什么要求「单调」</span>
+  <p>因为不是任何函数都有反函数。老师用图形说明了：如果原图是「一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对应两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」的那样一条曲线，求它的反函数（关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 对称）后，就变成「一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对应两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>」——这<strong>不是函数</strong>了。只有原来单调（增或减），对称过去才仍然是单调的、才仍是一个函数。所以「单调」这个条件不是在凑结论，而是<strong>反函数存在的前提</strong>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="反函数关于 y=x 对称，单调连续则反函数也单调连续">
+    <line x1="50" y1="215" x2="600" y2="215" class="m-thin" stroke-width="1.3"></line>
+    <line x1="90" y1="25" x2="90" y2="238" class="m-thin" stroke-width="1.3"></line>
+    <line x1="90" y1="215" x2="285" y2="20" class="m-line" stroke-width="1" stroke-dasharray="6 5"></line>
+    <polyline points="90.0,215.0 99.5,172.5 109.0,154.9 118.5,141.4 128.0,130.0 137.5,120.0 147.0,110.9 156.5,102.6 166.0,94.8 175.5,87.5 185.0,80.6 194.5,74.1 204.0,67.8 213.5,61.8 223.0,56.0 232.5,50.5 242.0,45.1 251.5,39.8 261.0,34.8 270.5,29.8 280.0,25.0" fill="none" class="m-acc" stroke-width="2"></polyline>
+    <polyline points="90.0,215.0 132.5,205.5 150.1,196.0 163.6,186.5 175.0,177.0 185.0,167.5 194.1,158.0 202.4,148.5 210.2,139.0 217.5,129.5 224.4,120.0 230.9,110.5 237.2,101.0 243.2,91.5 249.0,82.0 254.5,72.5 259.9,63.0 265.2,53.5 270.2,44.0 275.2,34.5 280.0,25.0" fill="none" class="m-good" stroke-width="2"></polyline>
+    <text x="588" y="230" class="m-sub" font-size="11.5">x</text>
+    <text x="70" y="36" class="m-sub" font-size="11.5">y</text>
+    <text x="146" y="22" class="m-acc" font-size="12">y = f(x) 单调增</text>
+    <text x="200" y="176" class="m-good" font-size="12">x = f⁻¹(y) 单调增</text>
+    <text x="196" y="126" class="m-sub" font-size="11.5">y = x</text>
+  </svg>
+  <figcaption><b>反函数就是把图「翻」到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 的另一侧。</b>原函数是单调增的连续曲线（蓝），翻过去得到的反函数（绿）也是单调增、并且连续。关键点：翻过去之后横轴读的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴的值，所以反函数「所在的区间」是原函数的<em>值域区间</em>，不是原定义域。<strong>原来连续、单调，翻面后照样连续、单调——这就是反函数连续性。</strong></figcaption>
+</figure>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=309">05:09</a>课上给的例子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>]</mo></math></span> 上单调增且连续，它的反函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 就在对应的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 上单调增且连续。老师强调：这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的自变量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>，它单调增、连续就够了，理解一下即可。</p>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=309">05:09</a>别被符号带偏</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 虽然都叫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，但<strong>角色不同</strong>：一个在原函数是函数值，一个在反函数是自变量。写清楚「谁是谁的变化区间」就不会乱。</p>
+</div>
+
+<h2 id="s3">复合函数的连续性：可以「把极限写进里面」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=345">05:45</a>接下来是定理三、定理四（复合函数的连续性）。老师坦言自己看得仔细，但判断这两定理<strong>做题时很少直接用，建议可以不看</strong>。不过他马上补了一句：这两个定理背后的<strong>思想</strong>必须懂，因为它解释了你平时为什么能「无感」地把极限代进去。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=397">06:37</a>核心例子：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></span>。很多同学会想：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>0</mn><mo>=</mo><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mn>0</mn></msup><mo>=</mo><mn>1</mn></math></span>。老师指出——这一步之所以合法，靠的正是<strong>复合函数的连续性</strong>。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=455">07:35</a>「极限写进里面」到底发生了什么</span>
+  <p>形式上，外层的极限符号「挂」在最外面：
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></div>
+  根据复合函数连续性，这个极限可以<strong>先算内层函数</strong>的极限，把它当作外层函数的自变量取值，再代到外层里去：内层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span>），于是原式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><msup><mi>e</mi><mrow><mn>0</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span>。它用到的，是外层函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>u</mi></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mn>0</mn></math></span> 处的连续性。</p>
+  <p>所以你平时写的「直接代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mn>0</mn></msup><mo>=</mo><mn>1</mn></math></span>」<span class="t">不是省略，而是复合函数连续性在兜底</span>。老师说自己写的时候也「一直挂在外头、没真挪进去」，那样「不是特别规范，但也还行」——因为结论恰好一样。</p>
+</div>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=477">07:57</a>视频原话（大意）</span>
+  <p><q>求复合函数的极限，你这个极限写在外面，其实下一步，按照定理三、四，这个极限是写到了里边这个函数里头——先求里边这个函数的极限，它的极限值做成了所谓的那个自变量，然后又带到了外边这个函数里头去。它其实是用到了外边的这个函数在这个点它的连续性。</q></p>
+</div>
+
+<h2 id="s4">初等函数的连续性：一句「定义域内连续」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=509">08:29</a>第三个结论把前面打包：</p>
+
+<div class="blk def">
+  <span class="lbl">定理 · 初等函数的连续性</span>
+  <p><strong>基本初等函数</strong>在其定义域内连续；由基本初等函数经过<strong>有限次</strong>四则运算与复合得到的<strong>初等函数</strong>，在其定义域内也连续。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=509">08:29</a>老师特意敲了三遍「<strong>有定义域的要求了</strong>」：连续只在定义域内有意义。基本初等函数（幂函数、指数、对数、三角、反三角）在定义域内连续；初等函数（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>)</mo></math></span>）在定义域内也连续。这几条结论「咱也不啰嗦了，一笔带过」。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=509">08:29</a>为什么这条结论这么「省事」却很重要</span>
+  <p>它意味着：只要一个函数是初等函数、且点落在定义域内，你<strong>直接代入</strong>求极限就一定合法，不用再翻定义。整本高数里你算极限，绝大多数时候都是在初等函数上「代值」。这条定理就是你敢这么干的底气。它「存在感低」，恰恰因为它已经悄悄融进了你每一次代值。</p>
+</div>
+
+<h2 id="s5">重点：四个极限计算（等价无穷小的来源）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=545">09:05</a>老师说上面那些都可以略读，<strong>下面这几个计算才是重点</strong>。它们本质上是把前面补充过的等价无穷小替换公式，用复合函数连续性重新推导一遍。我们一道一道看老师怎么「绕」出来的。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=545">09:05</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>x</mi></math></span> 收进对数，再动用复合连续性 + 第二重要极限</span>
+    <p>先把分母的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 用对数性质收进里面：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mi>x</mi></mrow></msup><mo>)</mo></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=642">10:42</a>现在外层是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>，里层是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mi>x</mi></mrow></msup></math></span>。由<strong>复合函数连续性</strong>，极限可以写进里面：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mi>x</mi></mrow></msup><mo>)</mo><mo>=</mo><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mi>x</mi></mrow></msup><mo>)</mo></math></div>
+    <p>而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mi>x</mi></mrow></msup><mo>=</mo><mi>e</mi></math></span> 正是<strong>第二重要极限</strong>。于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mspace width="0.25em"></mspace><mi>e</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=686">11:26</a>把底换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span> 就是特例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi mathvariant="normal">log</mi><mi>e</mi></msub><mspace width="0.25em"></mspace><mi>e</mi><mo>=</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>。这正好说明</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="0.25em"></mspace><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>(</mo><mi>x</mi><mo>→</mo><mn>0</mn><mo>)</mo></math></div>
+    <p>——这就是前面等价无穷小表里那一条。老师点评：教材这里「非常严格，因为是用复合函数的连续性得到的」，但讲课更喜欢用总结好的表。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=686">11:26</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></math></span> 换元，把式子翻成例 1 的倒数</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=751">12:31</a>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>x</mi></msup><mo>=</mo><mi>t</mi><mo>+</mo><mn>1</mn></math></span>，取对数得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>)</mo></math></span>。当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>x</mi></msup><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mn>0</mn></msup><mo>=</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>。原式变成</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>t</mi></mrow><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>)</mo></mrow></mfrac></math></div>
+    <p>这正是例 1 结果的<strong>倒数</strong>：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>t</mi></mrow><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>)</mo></mrow><mrow><mi>t</mi></mrow></mfrac></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>/</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></div>
+    <p>所以</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=854">14:14</a>两个特例立刻出来：</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mi>e</mi></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>e</mi><mo>=</mo><mn>1</mn></math></span>，即 <mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></mark>；</li>
+      <li>一般地 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span>）。</li>
+    </ul>
+    <div class="note">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=928">15:28</a>记法</span>
+      <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span> 挪到分母上，式子就变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>，一眼就是「等价无穷小」的样子。这条后面会反复用到。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=928">15:28</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mtext> 为任意实数</mtext></math></span>）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：分子分母同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup></math></span>，拆成两个已知极限</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1013">16:53</a>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mn>0</mn></math></span>。把分子分母同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup></math></span>（即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></math></span>）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>(</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn><mo>)</mo><mo>⋅</mo><mo>α</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi><mo>⋅</mo><mo>α</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow></mfrac></math></div>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 提出来，并拆成两块的相乘：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>=</mo><mo>α</mo><mo>⋅</mo><mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1151">19:11</a>第一块里令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>=</mo><mi>t</mi><mo>+</mo><mn>1</mn></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi>t</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span>。当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mn>0</mn></math></span>，第一块变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>t</mi></mrow><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>)</mo></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>（例 1 的倒数）。第二块 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>（例 1）。所以</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mo>α</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>=</mo><mo>α</mo></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1212">20:12</a>于是得到推广的等价无穷小：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="0.25em"></mspace><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>(</mo><mi>x</mi><mo>→</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mo>α</mo><mtext> 为任意实数</mtext><mo>)</mo></math></div>
+    <p>老师专门把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>,</mo><mfrac><mn>1</mn><mn>3</mn></mfrac></math></span> 拎出来说：</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow></msqrt><mo>−</mo><mn>1</mn><mo>=</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>；</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot><mo>−</mo><mn>1</mn><mo>=</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mfrac><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>。</li>
+    </ul>
+    <div class="why">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1212">20:12</a>为什么它比「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 次根下」那条更香</span>
+      <p>之前教材里有个「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>+</mo><mi>x</mi></mrow><mrow><mi>n</mi></mrow></mroot><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mfrac><mrow><mi>x</mi></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>」，那里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 是正整数；而例 3 的结论里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 是任意<strong>实数</strong>，所以那条只是它的特例。一句话记住 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，所有开方、幂次的等价无穷小就全包了。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1338">22:18</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>e</mi><mrow><mfrac><mrow><mn>3</mn><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></mrow></msup></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先取对数把指数拿下来，再整体等价替换</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1428">23:48</a>老师先把指数用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span> 拆开（其实是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>⋯</mo><mo>)</mo></mrow></msup></math></span> 本身），外层是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msup></math></span>，由复合连续性，只需算指数里的极限：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>3</mn><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div>
+    <p>这里用前面补充的<strong>整体替换</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span>），直接整体代换：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>3</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mn>6</mn><mo>=</mo><mn>6</mn></math></div>
+    <p>所以原极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><msup><mi>e</mi><mn>6</mn></msup></math></span>。</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>e</mi><mrow><mfrac><mrow><mn>3</mn><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mn>6</mn></mrow></msup></math></div>
+    <div class="trap">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1428">23:48</a>这一步最容易「想太多」</span>
+      <p><span class="bad">错误做法：</span>非要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span> 和分数分开、或者先算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mn>3</mn><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo></mrow></msup></math></span> 再算别的。老师明确说做题时<strong>一般直接整体替换到这一步，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 消掉就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn></math></span></strong>，不用绕。等价无穷小替换本来就允许「分子分母整体换」，别把它拆碎了。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s6">一个藏得深的坑：幂指函数不是初等函数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1695">28:15</a>最后一个例子最有教学价值。老师先抛了个简单情形热身：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1516">25:16</a>视频原话（大意）</span>
+  <p><q>比方说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 是多少？你直接做——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 那它不就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>1</mn><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 吗？这有什么好说的。但问题是：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 你到底按幂函数算还是按指数函数算？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span> 是幂函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>2</mn><mi>x</mi></msup></math></span> 是指数函数，它俩都是基本初等函数；可 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span> 底和指数都变，它<strong>不是初等函数</strong>，这种叫幂指函数。</q></p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1635">27:15</a>既然不是初等函数，就不能直接套「初等函数在定义域内连续、代入即可」。正确做法是把它<strong>化回初等函数</strong>：利用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msup><mi>e</mi><mrow><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi></mrow></msup></math></span>，</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></div>
+
+<p>这样外层是指数函数（连续），里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是初等函数（连续）。于是极限可以放心代进去：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><mn>2</mn><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mn>2</mn><mo>⋅</mo><mn>1</mn><mo>⋅</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mn>1</mn></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mn>0</mn></mrow></msup><mo>=</mo><mn>1</mn></math></div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1695">28:15</a>幂指函数到底能不能「直接朝里带」</span>
+  <p>老师最后给了一句总结：<span class="t">「如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mspace width="0.25em"></mspace><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mspace width="0.25em"></mspace><mi>b</mi></math></span>，幂指函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><msup><mo>)</mo><mrow><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></msup></math></span> 也可以直接朝里带，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>b</mi></msup></math></span>。」</span>原因是——它<strong>等价于先化成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></msup></math></span></strong>，而指数和乘积、对数在极限下都合法。所以你平时看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span>）直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>1</mn><mn>2</mn></msup><mo>=</mo><mn>1</mn></math></span>，结论是对的，只是严格说背后有一次「取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi mathvariant="normal">ln</mi></mrow></msup></math></span>」的转换。记住这个转换，遇到底和指数都含变量时就不会慌。</p>
+</div>
+
+<h2 id="s7">老师的两句「大实话」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=5">00:05</a>这节课里老师有几句大白话，把「为什么这节可以略读」说得透透的。第一句关于定位：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=5">00:05</a>视频原话（大意）</span>
+  <p><q>这一节的存在感是非常非常低的。就这一节呢你如果自己不看啊，考试做题的时候稀里糊涂做啊也不会出太大的问题。第一个内容是连续函数的和差积商的连续性，我们就一笔带过吧。说如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处是连续的，那么它相加相减相乘跟相除仍然也是连续的——要求他这个除的时候这个分母啊不能等于零。</q></p>
+</div>
+
+<p>第二句关于定理三、四（复合函数连续性）：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=345">05:45</a>视频原话（大意）</span>
+  <p><q>下边这两个定理啊都是复合函数的连续性，定理三和定理四。我看了老半天，我是看的很仔细了，因为这两个定理啊其实很少用。建议大家可以不看啊——有没有发现我们在上课的时候还是比较有重点的？就是我们做题的时候用的比较详细，我们会给大家补很多东西。</q></p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么「一笔带过」反而是负责任的讲法</span>
+  <p>因为这一节的结论大多是「前面已经证过」或「后面直接代值就行」的打包项：四则运算连续性是极限四则法则的推论；初等函数连续性让你敢于直接代入；而复合函数连续性，你平时做题时已经「无感地」把极限代进去了。老师的重点放在最后那四个极限计算上——它们不是新定义，而是把前面补充过的等价无穷小替换公式<strong>现场推导一遍</strong>。所以这一页你真正要背的，是那四个极限的结果，以及「幂指函数要先化 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>v</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi></mrow></msup></math></span>」这一招。</p>
+</div>
+
+<h2 id="s8">把四个等价无穷小串成一张网</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=15&amp;t=1212">20:12</a>四个例题算完，其实得到的是同一张网上的四个节点。它们有一个共同结构：<strong>「某个含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的式子，减去它的「主部」，再除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，极限是一个常数」</strong>。这个常数，正是该式子作为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数的「一阶系数」。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>极限</th><th>结论</th><th>等价无穷小</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>e</mi><mrow><mn>3</mn><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>/</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></mrow><mrow></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mn>6</mn></msup></math></span></td><td>整体替换 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>∼</mo><mn>2</mn><mi>x</mi><mo>,</mo><mspace width="1em"></mspace><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>记忆窍门：它们都能从两个最基础的等价无穷小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 出发，通过换元、复合、取对数「变」出来。所以你与其背四个，不如只死记 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 这两条，其余当场推导——这正是老师「补充了很多东西」时希望你能跟上的节奏。</p>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>四则</b> 连续函数加减乘除仍连续</span><span class="ar">→</span>
+    <span class="n"><b>反函数</b> 单调连续 ⇒ 反函数也连续</span><span class="ar">→</span>
+    <span class="n"><b>复合</b> 极限可写进里面</span><span class="ar">→</span>
+    <span class="n"><b>初等函数</b> 定义域内皆连续</span>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>复合函数连续性 = <strong>「极限写进里面」</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mo largeop="true" movablelimits="true">lim</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></span></li>
+    <li>初等函数（含基本初等）在<strong>定义域内</strong>连续 ⇒ 可直接代值求极限</li>
+    <li>反函数的「区间」是<strong>值域区间</strong>，不是原定义域</li>
+  </ul>
+
+  <h3>四个极限（等价无穷小的来源）</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span>，特例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>，特例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>x</mi></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mo>α</mo></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mo>α</mo></msup><mo>−</mo><mn>1</mn><mo>∼</mo><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mtext> 为任意实数</mtext></math></span>）</li>
+    <li>幂指函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><msup><mo>)</mo><mrow><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></msup></math></span>：先化 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>v</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi></mrow></msup></math></span> 再代，或直接「朝里带」得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mi>b</mi></msup></math></span></li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>连续性<strong>只在定义域内</strong>谈；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在各自定义域内才连续</li>
+    <li><strong>幂指函数不是初等函数</strong>（底和指数都含变量），要先化 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>v</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi></mrow></msup></math></span> 再代</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P013-连续/index.html">连续</a> 连续的定义（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>）</li>
+      <li><a href="../P010-极限运算法则/index.html">极限运算法则</a> 极限四则运算法则</li>
+      <li><a href="../P011-极限存在准则第一第二重要极限/index.html">极限存在准则第一第二重要极限</a> 第二重要极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mi>x</mi></mrow></msup><mo>=</mo><mi>e</mi></math></span></li>
+      <li><a href="../P012-无穷小的比较 等价无穷小替换/index.html">无穷小的比较 等价无穷小替换</a> 等价无穷小替换（本页是它们的推导来源）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P016-闭区间连续函数的性质/index.html">闭区间连续函数的性质</a> 闭区间上连续函数的性质（最值、介值、零点）</li>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数的定义（下一讲进入第 2 章重头戏）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「极限写进里面」成立靠<strong>外层函数在该点连续</strong>，不是无条件的</li>
+      <li>反函数连续性的区间是<strong>值域区间</strong>，别和原定义域搞混</li>
+      <li>幂指函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><msup><mo>)</mo><mrow><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></msup></math></span> 底指数都变 ⇒ 不是初等函数，要化 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>v</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi></mrow></msup></math></span></li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 15 讲</span><a href="../P014-间断点/index.html">← P014</a><a href="../index.html">全部目录</a><a href="../P016-闭区间连续函数的性质/index.html">P016 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">开篇：这节可以「稀里糊涂」过</a>
+    <a href="#s2">反函数的连续性：当心「区间」说的是谁</a>
+    <a href="#s3">复合函数的连续性：可以「把极限写进里面」</a>
+    <a href="#s4">初等函数的连续性：一句「定义域内连续」</a>
+    <a href="#s5">重点：四个极限计算（等价无穷小的来源）</a>
+    <a href="#s6">一个藏得深的坑：幂指函数不是初等函数</a>
+    <a href="#s7">老师的两句「大实话」</a>
+    <a href="#s8">把四个等价无穷小串成一张网</a>
+  </aside>
+</div>
+</body>
+</html>

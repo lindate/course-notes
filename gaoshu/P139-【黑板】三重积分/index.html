@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】三重积分 · 高等数学笔记</title>
+<meta name="description" content="三重积分只有两个动作：把 Ω 的上下限写出来，和挑一种切法。这一页是黑板精讲，正课的定义一个字不重复（老师说「看完定义你会发现跟二重积分差不太多，对做题实打实没有作用」），只讲三件事：投影法该怎么「照」、截面法该怎么「切」、球面坐标该怎么「扫」。最需要练成条件反射的是——看到立体先判断截面会不会随 ">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 139 讲</div>
+    <h1 class="title"><span class="pnum">P139</span>【黑板】三重积分</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>三重积分只有两个动作：<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 的上下限写出来</strong>，和<strong>挑一种切法</strong>。这一页是黑板精讲，正课的定义一个字不重复（老师说「看完定义你会发现跟二重积分差不太多，对做题实打实没有作用」），只讲三件事：<mark>投影法该怎么「照」、截面法该怎么「切」、球面坐标该怎么「扫」</mark>。最需要练成条件反射的是——看到立体先判断<strong>截面会不会随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 变</strong>：不变，截面法最舒服；会变，就得把截面半径老老实实写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 的函数（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>z</mi></mrow></msqrt></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>）。</p></div>
+    <div class="meta"><span>时长 1h29m</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=71">01:11</a><span class="vv">一重、二重、三重打通：<b>对区域上每一点赋函数值，再全部加起来</b>。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=368">06:08</a><span class="vv">「我没让你求体积」——积分区域<strong>本身就是那个实心立体</strong>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=492">08:12</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span>：横着切、竖着切、平着切。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=605">10:05</a><span class="vv"><b>投影法</b>：站在投影面上拿手电朝上照，看穿过的是哪两个面。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=758">12:38</a><span class="vv">「先一后二」这名字老师<strong>不喜欢</strong>，记「投影法」就够了。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1145">19:05</a><span class="vv">例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 的三棱锥，投影里那条斜线<strong>一秒就能写出来</strong>（代 z=0）。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1472">24:32</a><span class="vv"><b>截面法</b>：像切鸡蛋一样，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>2</mn></msub></math></span> 一路切上去。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1982">33:02</a><span class="vv">三棱锥的截面<strong>会变</strong>：「这两个点是一吗？得加件衣服呗」。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2230">37:10</a><span class="vv">椭球上积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span>：截面是椭圆，面积含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2843">47:23</a><span class="vv"><b>柱面坐标就是极坐标</b>；抛物面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>4</mn></math></span> 两法都试一遍。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=3237">53:57</a><span class="vv">截面法的半径是 <b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>z</mi></mrow></msqrt></math></span> 不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span></b>——「对截面法有一丁点概念就不会弄错」。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=3588">59:48</a><span class="vv"><b>球面坐标</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 距离、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴夹角、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴转角；因子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4235">1:10:35</a><span class="vv">「小机器人」扫描顺序固定：<b>先 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>、再 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>、最后 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span></b>。</span></li>
+    <li><span class="no">15</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=5205">1:26:45</a><span class="vv">书例：球面过原点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 上限是 <b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>a</mi><mi mathvariant="normal">cos</mi><mo>φ</mo></math></span></b>——本节唯一的难点。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、三重积分是什么：一句话讲完</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=0">00:00</a>这节课的开场很反常。老师说三重积分的定义「我不想讲了」，理由是「你看完这个定义会发现和一重积分、二重积分其实差不太多，对咱实打实的做题没有什么作用」。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=71">01:11</a>他改讲一个更划算的东西——<strong>把三种积分打通</strong>，办法是把图「压扁」：</p>
+
+<ul class="tight">
+  <li><strong>定积分</strong>：脑海里那张画面是二维的，但定积分本身是一维——压扁后只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上一段线段，<strong>段上每个点对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span></strong>。</li>
+  <li><strong>二重积分</strong>：压扁后剩平面区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span>，<strong>区域上每个点对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span></strong>。</li>
+  <li><strong>三重积分</strong>：不用再压。它的积分区域「就是一个实心的立体」，<strong>每个点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></math></span></strong>。</li>
+</ul>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=368">06:08</a>「老师，你讲二重积分的时候不是说求体积吗？」</span>
+  <p>这是当场就有同学问出来的疑惑，也是本节最容易懵的地方：二重积分的几何意义是「曲顶柱体的体积」，那三重积分的积分区域怎么又是一个立体？两个图长得太像。</p>
+  <p>老师的回答很干脆：「<q>我们这里不是求体积，我哪说求体积了？三重积分的积分区域就是一个立体的区域，是个实心的图——<strong>我没让你求体积</strong>。</q>」</p>
+  <p>区别在于谁在「带函数值」：<mark>二重积分里立体是被积函数「造」出来的，三重积分里立体本身就是积分的落脚点。</mark>被积函数呢？<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=406">06:46</a>「那就看具体的题目咯」——一般没有实际意义；<em>唯一有意义的情形是它代表密度</em>，此时积分结果就是不均匀立体的质量。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=492">08:12</a>体积元素 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span> 写成什么，取决于怎么切。按垂直于三条坐标轴的方向切，小块是小长方体，三条边长是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span>。老师把三个微元排了队：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 是长度的微元，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo></math></span> 是面积的微元，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span> 是体积的微元」——升一维就多一个微分。</p>
+
+<h2 id="s2">二、投影法（先一后二）：拿手电朝上照</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=605">10:05</a>老师把方法的思想讲得很具象，因为「你如果死记的话是记不住的」：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=605">10:05</a>老师的原话</span>
+  <p><q>假设你是个人，你站在这个投影之上，你拿着手电筒朝上去照一下。然后你是个小人儿，从这个投影那个地方走，走的过程中你不停地拿着手电朝上照——照的过程中你看一看，上面的函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>2</mn></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，下面的函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>1</mn></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>。</q></p>
+</div>
+
+<p>完整动作是：把立体朝某个坐标面（最常用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面）投影得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub></math></span>，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub></math></span> 上任站一个位置朝上照，<strong>光柱穿进去碰到的面是下表面、穿出去碰到的面是上表面</strong>，这两个函数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 的下限与上限。</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mi>D</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub></mrow></munder><mrow><mo stretchy="true">[</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><msub><mi>z</mi><mn>1</mn></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow><mrow><msub><mi>z</mi><mn>2</mn></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=758">12:38</a>为什么叫「先一后二」，老师又为什么不爱叫它</span>
+  <p>写成累次积分以后，<strong>内层是一个一元积分</strong>（对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>），<strong>外层是一个二重积分</strong>，所以有的书叫它「先一后二」。老师说他记不牢这个名字，并且明确表示不欣赏：「一会儿还有个先二后一，先一后二先二后一你根本就搞不清楚。」</p>
+  <p>他建议<mark>记「投影法」</mark>——「投影」两个字直接告诉你动作是什么。同理另一个叫「截面法」，因为它的动作是切片。</p>
+  <p>由此得一条方法论：<strong>先把方法想成一个动作，再回头记它的名字与积分顺序</strong>，顺序就不用背。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 296" role="img" aria-label="左边是投影法，从投影面上的点朝上照出一道竖直光柱，穿入点和穿出点给出z的上下限；右边是截面法，沿z方向把立体切成一片片薄片">
+    <text x="30" y="22" class="m-txt" font-size="12">投影法：竖直光柱，照出上下两个面</text>
+    <text x="360" y="22" class="m-txt" font-size="12">截面法：水平薄片，一片片摞起来</text>
+    <line x1="316" y1="34" x2="316" y2="278" class="m-thin" stroke-width="1" stroke-dasharray="4 4"></line>
+
+    <ellipse cx="160" cy="232" rx="102" ry="24" class="m-area"></ellipse>
+    <ellipse cx="160" cy="232" rx="102" ry="24" fill="none" class="m-acc" stroke-width="1.6"></ellipse>
+    <ellipse cx="160" cy="114" rx="56" ry="15" class="m-bg-a"></ellipse>
+    <ellipse cx="160" cy="114" rx="56" ry="15" fill="none" class="m-acc" stroke-width="1.5"></ellipse>
+    <line x1="58" y1="232" x2="104" y2="114" class="m-acc" stroke-width="1.5"></line>
+    <line x1="262" y1="232" x2="216" y2="114" class="m-acc" stroke-width="1.5"></line>
+    <line x1="160" y1="246" x2="160" y2="102" class="m-warn" stroke-width="1.4" stroke-dasharray="5 3"></line>
+    <polygon points="160,94 156,106 164,106" class="m-fill-w"></polygon>
+    <circle cx="160" cy="232" r="4" class="m-fill-w"></circle>
+    <circle cx="160" cy="114" r="4" class="m-fill-a"></circle>
+    <text x="42" y="212" class="m-sub" font-size="11.5">D xy（投影）</text>
+    <text x="192" y="102" class="m-sub" font-size="11.5">上表面 z = z₂</text>
+    <text x="192" y="256" class="m-sub" font-size="11.5">下表面 z = z₁</text>
+    <text x="46" y="274" class="m-good" font-size="11.5">小人站在投影上，手电朝上照</text>
+    <text x="46" y="290" class="m-math" font-size="11.5">先对 z 积一次，再算二重积分</text>
+
+    <ellipse cx="484" cy="232" rx="102" ry="24" class="m-area"></ellipse>
+    <line x1="382" y1="232" x2="586" y2="232" class="m-acc" stroke-width="1.5"></line>
+    <ellipse cx="484" cy="114" rx="56" ry="15" class="m-bg-a"></ellipse>
+    <ellipse cx="484" cy="114" rx="56" ry="15" fill="none" class="m-acc" stroke-width="1.5"></ellipse>
+    <line x1="382" y1="232" x2="428" y2="114" class="m-acc" stroke-width="1.4"></line>
+    <line x1="586" y1="232" x2="540" y2="114" class="m-acc" stroke-width="1.4"></line>
+    <ellipse cx="484" cy="196" rx="88" ry="21" fill="none" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></ellipse>
+    <ellipse cx="484" cy="162" rx="75" ry="18" fill="none" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></ellipse>
+    <ellipse cx="484" cy="130" rx="63" ry="16" fill="none" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></ellipse>
+    <line x1="484" y1="252" x2="484" y2="102" class="m-warn" stroke-width="1.4" stroke-dasharray="5 3"></line>
+    <polygon points="484,94 480,106 488,106" class="m-fill-w"></polygon>
+    <text x="508" y="150" class="m-good" font-size="11.5">D z</text>
+    <text x="356" y="274" class="m-sub" font-size="11.5">截面一般与 z 有关，切一刀换一个形状</text>
+    <text x="356" y="290" class="m-math" font-size="11.5">∫ dz ∬ dx dy：先算截面上的二重积分</text>
+  </svg>
+  <figcaption><b>两种方法的分界，就在「光柱是竖的还是一片一片的」。</b>左图：投影法把立体压到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub></math></span>，再从投影里每一点发一道竖直光柱，<em>穿入点给下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mn>1</mn></msub></math></span>、穿出点给上限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mn>2</mn></msub></math></span></em>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是「被积变量」。右图：截面法沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 方向横着切片，<strong>每一片自己是一个平面区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>z</mi></msub></math></span></strong>，在这一片上做二重积分；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 在这里是「扫描参数」。<mark>同一个立体、同一个积分，两套看点，结果必然相同。</mark></figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1145">19:05</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 由平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 与三个坐标面围成。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：投影是三角形，难点只在「把投影的边写对」</span>
+    <p>先算截距：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。上表面是斜面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>−</mo><mn>2</mn><mi>y</mi></math></span>，下表面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>，于是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mi>D</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub></mrow></munder><mi>x</mi><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>−</mo><mn>2</mn><mi>y</mi><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+    <div class="why">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1329">22:09</a>投影里那条斜线，为什么能「一秒写出来」</span>
+      <p>老师先问全班：「这条直线是个啥？你能不能一秒钟说出来？」——说不出来。但他一秒钟能，因为这条斜线正是<mark>斜面与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面的交线</mark>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 代进斜面方程即得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>+</mo><mn>0</mn><mo>=</mo><mn>1</mn></math></span>。</p>
+      <p>所以他直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>=</mo><mn>1</mn></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。「我一秒钟能说出来，你 get 到我的点了没有？」</p>
+      <p>这条技巧在整个重积分部分通用：<strong>投影区域的边界就是曲面与投影面的交线，用联立消元得到</strong>，别靠看图猜。</p>
+    </div>
+    <p>积分限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo><mo>/</mo><mn>2</mn></mrow></munderover><mi>x</mi><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>−</mo><mn>2</mn><mi>y</mi><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mi>x</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>4</mn></mrow></mfrac><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn><mn>8</mn></mrow></mfrac></math></div>
+  </div>
+</div>
+
+<h2 id="s3">三、截面法（先二后一）：像切鸡蛋一样</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1472">24:32</a>老师说截面法这个名字「比较有意义」，因为动作就是切；书上画了一个蛋，「画的其实还挺有道理的」。做法：设立体夹在平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>c</mi><mn>1</mn></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>c</mi><mn>2</mn></msub></math></span> 之间，用平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub></math></span> 去截它，截出来的平面图形记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>z</mi></msub></math></span>，则</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><msub><mi>c</mi><mn>1</mn></msub></mrow><mrow><msub><mi>c</mi><mn>2</mn></msub></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mi>D</mi><mi>z</mi></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1544">25:44</a>有一个必须留意的地方：<strong>截面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>z</mi></msub></math></span> 一般与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 有关</strong>。「为什么要写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>z</mi></msub></math></span> 呢？因为这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 朝上不停地取，你会看到它的截面会因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 的变化而发生变化。」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1612">26:52</a>另外，截面<strong>不一定非得水平切</strong>——「也可以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从几到几、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 从几到几做截面」，朝哪切取决于哪个方向切出来的截面最好算。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 214" role="img" aria-label="左边是立方体或圆柱，切成几片后每片形状大小都一样；右边是三棱锥，越往上截面越小">
+    <text x="30" y="22" class="m-txt" font-size="12">截面不变：面积是常数</text>
+    <text x="372" y="22" class="m-txt" font-size="12">截面会变：面积含 z</text>
+    <line x1="330" y1="34" x2="330" y2="200" class="m-thin" stroke-width="1" stroke-dasharray="4 4"></line>
+
+    <rect x="56" y="48" width="128" height="132" class="m-area"></rect>
+    <rect x="56" y="48" width="128" height="132" fill="none" class="m-acc" stroke-width="1.6"></rect>
+    <line x1="56" y1="81" x2="184" y2="81" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></line>
+    <line x1="56" y1="114" x2="184" y2="114" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></line>
+    <line x1="56" y1="147" x2="184" y2="147" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></line>
+    <text x="62" y="70" class="m-sub" font-size="11.5">z = z₃</text>
+    <text x="62" y="103" class="m-sub" font-size="11.5">z = z₂</text>
+    <text x="62" y="136" class="m-sub" font-size="11.5">z = z₁</text>
+    <text x="56" y="200" class="m-sub" font-size="11.5">立方体、圆柱：每片都一样，面积是常数</text>
+
+    <polygon points="392,182 552,182 392,22" class="m-area"></polygon>
+    <polygon points="392,182 552,182 392,22" fill="none" class="m-acc" stroke-width="1.6"></polygon>
+    <polygon points="392,182 496,182 392,78" fill="none" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></polygon>
+    <polygon points="392,182 440,182 392,134" fill="none" class="m-good" stroke-width="1.4" stroke-dasharray="5 3"></polygon>
+    <text x="500" y="176" class="m-acc" font-size="11.5">x + y = 1 − z</text>
+    <text x="398" y="52" class="m-sub" font-size="11.5">越往上越小</text>
+    <text x="360" y="200" class="m-sub" font-size="11.5">三棱锥：截面是 x + y ≤ 1 − z，面积随 z 变</text>
+  </svg>
+  <figcaption><b>「截面会不会变」是这一节的分水岭。</b>左边立方体（或圆柱）：不管 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 取多少，切出来都是同一个图形，<em>面积是常数</em>——内层二重积分算完就是个数字，直接乘高度。右边三棱锥（由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 与三个坐标面围成）：最底下截面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≤</mo><mn>1</mn></math></span>，往上走到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 处缩成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≤</mo><mn>1</mn><mo>−</mo><mi>z</mi></math></span>，<mark>两腰长度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>z</mi></math></span>、不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></mark>。「这两个点是一吗？不是，得加件衣服。」这正是截面法最容易看走眼的地方。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1841">30:41</a>用截面法计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 与三个坐标面围成。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：套路不变，但这次截面会变——全部难度都在这儿</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1841">30:41</a>老师提醒「这个题用截面法有相当的风险」：从下往上切，截面一直在变。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</p>
+    <div class="trap">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=1911">31:51</a>这里最容易看错的一步</span>
+      <p>同学很容易顺手把截面的两个端点标成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。老师说：「<span class="bad">这两个地方能是一吗？得加件衣服呗，就这一个错误就是致命的。</span>」</p>
+      <p>正确做法：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 已经取定，把它当成常数代进平面方程</strong>，剩下的关系就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>z</mi></math></span>。所以截面三角形的两个腰长都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>z</mi></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>z</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>z</mi><mo>−</mo><mi>x</mi></math></span>：</p>
+      <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>z</mi></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>z</mi><mo>−</mo><mi>x</mi></mrow></munderover><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>z</mi><msup><mo>)</mo><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>6</mn></mrow></mfrac><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mn>4</mn></mrow></mfrac></math></div>
+      <p>结果对不对？<strong>最快的自检是把同一道题改用投影法再做一遍</strong>（投影是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≤</mo><mn>1</mn></math></span>、光柱从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 照到斜面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>−</mo><mi>y</mi></math></span>），照样得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mn>4</mn></mrow></mfrac></math></span>。两法给出同一个数，说明截面的边界写对了。<mark>自检的正确姿势是「同一道题、两种方法，比答案」，而不是拿两道不同的题互相对照。</mark></p>
+    </div>
+    <p><strong>要点</strong>：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2054">34:14</a>更省事的检查是代入端点——把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 代进去该得到完整的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≤</mo><mn>1</mn></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 代进去该缩成一点；两头对得上，中间就错不了。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2230">37:10</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 是椭球 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>a</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>+</mo><mfrac><mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>b</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>+</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>≤</mo><mn>1</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：截面是椭圆，先算椭圆面积，再对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 积</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>c</mi></math></span> 扫到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span>。取定一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，截面是椭圆；因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是<strong>固定值</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 就是常数，挪到右边：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>a</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>+</mo><mfrac><mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>b</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2479">41:19</a>把右边这堆常数除到分母上、再「把平方朝外提」变成根号，就得到标准椭圆方程，半轴是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><msqrt><mrow><mn>1</mn><mo>−</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></mrow></msqrt></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi><msqrt><mrow><mn>1</mn><mo>−</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></mrow></msqrt></math></span>。用椭圆面积公式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><mi>A</mi><mi>B</mi></math></span>（老师说是高中就记过的）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mi>D</mi><mi>z</mi></msub></mrow></munder><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mo>π</mo><mspace width="0.25em"></mspace><mi>a</mi><mi>b</mi><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2625">43:45</a>又因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求积分时「这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 可是个常数」，可以提到内层积分号外面，于是三重积分降成一次一元积分：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mi>c</mi></mrow><mrow><mi>c</mi></mrow></munderover><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mi>S</mi><mo>(</mo><mi>z</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><mo>π</mo><mspace width="0.25em"></mspace><mi>a</mi><mi>b</mi><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mi>c</mi></mrow><mrow><mi>c</mi></mrow></munderover><mrow><mo stretchy="true">(</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>4</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><mo>π</mo><mspace width="0.25em"></mspace><mi>a</mi><mi>b</mi><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>2</mn><msup><mi>c</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><mn>2</mn><msup><mi>c</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>5</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>1</mn><mn>5</mn></mrow></mfrac><mo>π</mo><mspace width="0.25em"></mspace><mi>a</mi><mi>b</mi><msup><mi>c</mi><mrow><mn>3</mn></mrow></msup></math></div>
+    <p><strong>要点</strong>：<mark>只要能写出截面面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>z</mi><mo>)</mo></math></span>，三重积分立刻降成一元积分</mark>。半轴带根号不要紧——算面积时两个根号相乘，正好抵消成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>c</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>。</p>
+  </div>
+</div>
+
+<h2 id="s4">四、两种方法怎么选</h2>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>比较项</th><th>投影法（先一后二）</th><th>截面法（先二后一）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>动作</td><td>把立体压到坐标面上，从投影里发竖直光柱</td><td>沿某个轴切片，每一片自己是一个平面区域</td></tr>
+      <tr><td>积分顺序</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∬</mo><mrow><mo stretchy="true">[</mo><mo largeop="true" movablelimits="true">∫</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>：内一元、外二重</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo largeop="true" movablelimits="true">∬</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>：内二重、外一元</td></tr>
+      <tr><td>上下限怎么定</td><td>光柱的<strong>穿入面、穿出面</strong>（下表面、上表面）</td><td>立体在扫描方向上的<strong>最底、最顶</strong></td></tr>
+      <tr><td>何时首选</td><td>投影是圆、三角形等规则图形，且上下表面容易写</td><td>截面形状规则、<strong>面积随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 变化的规律简单</strong></td></tr>
+      <tr><td>最容易错</td><td>投影边界写错（它其实是交线，代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 就能得到）</td><td>忘了截面与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 有关，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>z</mi></math></span> 写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2843">47:23</a>老师的取向很清楚：<strong>优先投影法</strong>，它「一般来说相对简单一些」；截面法遇到会变的截面「有相当的风险」。但也别把话说死——椭球和旋转抛物面用截面法明显更省事。<mark>方法不是规定，是选择。</mark></p>
+
+<h2 id="s5">五、柱面坐标：其实就是极坐标</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2698">44:58</a>课本在两种方法之后还插了一节「柱面坐标」。老师直接说：「这个柱坐标，我一般<strong>不把它当成一个单独的方法</strong>去讲。你在用投影法或者截面法做题的时候，如果它有合适的极坐标，那它就是极坐标——<strong>柱坐标就是极坐标</strong>，不用单独去记。」</p>
+
+<p>它确实只是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上的极坐标搬到三维：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>r</mi><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>r</mi><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi></math></span> 不变，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span>——那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 和极坐标里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 是同一个东西。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=2765">46:05</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 由旋转抛物面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 与平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>4</mn></math></span> 围成。</span></p>
+  <div class="sol">
+    <span class="lbl">投影法：投影是圆，剩下的交给极坐标</span>
+    <p>抛物面与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>4</mn></math></span> 相交于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>4</mn></math></span>，投影是半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 的圆；下面碰到抛物面、上面碰到平面：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mi>D</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>1</mn><mn>6</mn><mo>−</mo><msup><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn><mo>π</mo></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn></mrow></munderover><mrow><mo stretchy="true">(</mo><mn>1</mn><mn>6</mn><mo>−</mo><msup><mi>r</mi><mrow><mn>4</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>r</mi></math></div>
+    <p>（投影是圆 → 换极坐标，<mark>别忘了多一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span></mark>。）算下去得</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mo>π</mo><msubsup><mrow><mo stretchy="true">[</mo><mn>8</mn><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mfrac><mrow><msup><mi>r</mi><mrow><mn>6</mn></mrow></msup></mrow><mrow><mn>6</mn></mrow></mfrac><mo stretchy="true">]</mo></mrow><mrow><mn>0</mn></mrow><mrow><mn>2</mn></mrow></msubsup><mo>=</mo><mo>π</mo><mrow><mo stretchy="true">(</mo><mn>3</mn><mn>2</mn><mo>−</mo><mfrac><mrow><mn>3</mn><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mn>6</mn><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo></math></div>
+    <span class="lbl">截面法：同一道题，换成切片</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=3180">53:00</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn></math></span>。取定一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，截面是圆盘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mi>z</mi></math></span>，<strong>半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>z</mi></mrow></msqrt></math></span></strong>。被积函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是常数，提出去：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>4</mn></mrow></munderover><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mi>D</mi><mi>z</mi></msub></mrow></munder><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>4</mn></mrow></munderover><mi>z</mi><mo>⋅</mo><mo>π</mo><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><mfrac><mrow><mn>6</mn><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo></math></div>
+    <div class="trap">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=3237">53:57</a>这道题唯一会错的地方</span>
+      <p>关键是「截面圆盘的面积」。很多同学会顺手写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>π</mo></math></span>（把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>4</mn></math></span> 时的半径当成所有截面的半径）——老师说：<q>你只要对截面法稍微有一丁点的概念，你就不会把它误以为是二。</q></p>
+      <p><span class="bad">正确做法：</span>由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mi>z</mi></math></span> 得截面半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>z</mi></mrow></msqrt></math></span>，面积是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mo>(</mo><msqrt><mrow><mi>z</mi></mrow></msqrt><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><mo>π</mo><mspace width="0.25em"></mspace><mi>z</mi></math></span>，<strong>不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>π</mo></math></span>、也不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span></strong>。自检很直接：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>4</mn></math></span> 代进去应是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>π</mo></math></span>（半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 的圆），把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>→</mo><mn>0</mn></math></span> 代进去应趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；两头都对得上就错不了。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s6">六、球面坐标：三个参数与那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span></h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=3588">59:48</a>球面坐标「是完全不一样的一个东西」，值得单独学。空间里的点改用三个参数描述：</p>
+
+<dl class="kv">
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span>（老师也写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span>）</dt>
+  <dd>点到<strong>原点</strong>的距离，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo><mo>≥</mo><mn>0</mn></math></span>。它是极坐标里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 的升维版。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span></dt>
+  <dd>由原点指向该点的射线与 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴正半轴</strong>的夹角，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>≤</mo><mo>φ</mo><mo>≤</mo><mo>π</mo></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=3692">1:01:32</a>老师用胳膊比划：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的正半轴就是我这只手」——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo><mo>=</mo><mn>0</mn></math></span> 指正上方，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><mn>0</mn></math></span> 度是水平，到脚跟那边就到底了。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span></dt>
+  <dd>把点投影到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面，由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴正半轴转到这条投影射线的角度，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>≤</mo><mo>θ</mo><mo>≤</mo><mn>2</mn><mo>π</mo></math></span>。<strong>它和极坐标里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 完全是同一个角。</strong></dd>
+</dl>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=3848">1:04:08</a>换算关系建议<strong>现场推一遍</strong>，比死背可靠：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 是斜边、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 的邻边正好是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mo>ρ</mo><mi mathvariant="normal">cos</mi><mo>φ</mo></math></span>；水平分量等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>，再往 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 上投即可。</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><mo>ρ</mo><mi mathvariant="normal">cos</mi><mo>φ</mo></math></div>
+
+<p>顺手还得两个常用的二级结论：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mo>φ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup></math></span>。体积元素则是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mi>f</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo><mo>'</mo></mrow></munder><mi>f</mi><mrow><mo stretchy="true">(</mo><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>,</mo><mspace width="1em"></mspace><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>,</mo><mspace width="1em"></mspace><mo>ρ</mo><mi mathvariant="normal">cos</mi><mo>φ</mo><mo stretchy="true">)</mo></mrow><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>ρ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>φ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4695">1:18:15</a>关于那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>，老师说「是需要证的，但是咱就不证了」——原理和极坐标那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 同源：把小块看成长方体，三条边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>ρ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>φ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></span>，相乘即得。第三条边带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>，因为沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 方向走的是<b>纬圈</b>，而<b>纬圈半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span></b>。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4235">1:10:35</a>为什么定范围的顺序是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span>，而且不能乱</span>
+  <p>老师把这一步编成一个动作：<strong>想象自己坐在原点上，是个小机器人</strong>。</p>
+  <ol class="steps">
+    <li><span class="sh">先平扫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>。</span>「从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴的正方向开始转」——「为了把立体里边的每一个点都扫一遍」；整个半球体是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>。</li>
+    <li><span class="sh">再上下扫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>。</span>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo><mo>=</mo><mn>0</mn></math></span> 朝下走」，一直走到「转不动了」为止；半球体是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>（「这不是个半球体吗」）。</li>
+    <li><span class="sh">最后伸手量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span>。</span>「在转的过程中，这个点的距离从零开始，最远距离是几？」半球体就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</li>
+  </ol>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4295">1:11:35</a>老师形容这个过程是「边转边给你扇扇子」——先绕圈、再抬头低头、最后伸手。<mark>顺序固定：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 定了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 才能定，两者都定了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 的上限才有意义。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 264" role="img" aria-label="左边是球面坐标三个参数的几何意义，右边是圆锥面把phi的上限卡在一个定值上">
+    <text x="30" y="22" class="m-txt" font-size="12">三个参数：ρ 是距离、φ 与 z 轴夹角、θ 绕 z 轴的转角</text>
+    <text x="376" y="22" class="m-txt" font-size="12">锥面决定 φ 的上限</text>
+    <line x1="336" y1="38" x2="336" y2="250" class="m-thin" stroke-width="1" stroke-dasharray="4 4"></line>
+
+    <line x1="104" y1="218" x2="104" y2="52" class="m-line" stroke-width="1.4"></line>
+    <polygon points="104,44 100,56 108,56" class="m-fill"></polygon>
+    <line x1="104" y1="218" x2="248" y2="218" class="m-line" stroke-width="1.4"></line>
+    <polygon points="256,218 246,214 246,222" class="m-fill"></polygon>
+    <line x1="104" y1="218" x2="62" y2="196" class="m-line" stroke-width="1.4"></line>
+    <text x="254" y="232" class="m-sub" font-size="11.5">x</text>
+    <text x="92" y="48" class="m-sub" font-size="11.5">z</text>
+    <text x="48" y="194" class="m-sub" font-size="11.5">y</text>
+    <text x="86" y="236" class="m-sub" font-size="11.5">O</text>
+
+    <line x1="104" y1="218" x2="222" y2="86" class="m-acc" stroke-width="1.8"></line>
+    <circle cx="222" cy="86" r="3.8" class="m-fill-a"></circle>
+    <text x="228" y="80" class="m-sub" font-size="11.5">P</text>
+    <line x1="222" y1="86" x2="222" y2="218" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="222" y1="86" x2="176" y2="194" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="104" y1="218" x2="176" y2="194" class="m-thin" stroke-width="1.1" stroke-dasharray="3 3"></line>
+    <path d="M 104 158 A 60 60 0 0 1 142 132" fill="none" class="m-warn" stroke-width="1.4"></path>
+    <text x="122" y="150" class="m-warn" font-size="11.5">φ</text>
+    <path d="M 158 218 A 54 54 0 0 0 149 202" fill="none" class="m-good" stroke-width="1.4"></path>
+    <text x="162" y="212" class="m-good" font-size="11.5">θ</text>
+    <text x="140" y="164" class="m-acc" font-size="11.5">ρ</text>
+    <text x="228" y="200" class="m-sub" font-size="11.5">ρ sin φ</text>
+    <text x="150" y="246" class="m-math" font-size="11.5">dV = ρ² sin φ dρ dφ dθ</text>
+
+    <line x1="392" y1="218" x2="392" y2="52" class="m-line" stroke-width="1.4"></line>
+    <polygon points="392,44 388,56 396,56" class="m-fill"></polygon>
+    <line x1="392" y1="218" x2="600" y2="218" class="m-line" stroke-width="1.4"></line>
+    <polygon points="608,218 598,214 598,222" class="m-fill"></polygon>
+    <path d="M 392 218 L 500 218 L 392 110 Z" class="m-area"></path>
+    <circle cx="470" cy="140" r="86" class="m-box-a"></circle>
+    <line x1="392" y1="218" x2="470" y2="54" class="m-acc" stroke-width="1.5" stroke-dasharray="5 3"></line>
+    <line x1="392" y1="218" x2="548" y2="140" class="m-good" stroke-width="1.6"></line>
+    <text x="540" y="136" class="m-good" font-size="11.5">球面</text>
+    <text x="410" y="152" class="m-acc" font-size="11.5">锥面 z = √3·√(x²+y²)</text>
+    <text x="398" y="242" class="m-warn" font-size="11.5">半顶角 30° ⇒ φ 只从 0 到 π/6</text>
+    <text x="398" y="258" class="m-sub" font-size="11.5">θ 照旧 0 到 2π；ρ 从 0 到 1</text>
+  </svg>
+  <figcaption><b>三个参数的几何意义与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 的定法。</b>左边：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 到原点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi></math></span> 的距离是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span>；射线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mi>P</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴正半轴的夹角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上的投影与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴的夹角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>。水平分量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span> 既等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的距离，也是沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 方向转动时的<em>纬圈半径</em>——这就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span> 里冒出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span> 的原因。右边：立体被圆锥面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 截住，这个式子的几何含义是「半顶角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mn>0</mn></math></span> 度」，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 的上限被卡在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>6</mn></mrow></mfrac></math></span>。<b>球面坐标最讨人喜欢的一点正是：几何信息（半径、半顶角）直接变成上下限，不用解方程。</b></figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 6</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4070">1:07:50</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 是上半球体 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>≥</mo><mn>0</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：练一遍「小机器人」的三步扫描</span>
+    <p>范围：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>（平扫一圈），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>（扫到赤道就停，下面空的），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。被积函数用二级结论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>=</mo><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup></math></span>，体积元素是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn><mo>π</mo></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mo>π</mo><mo>/</mo><mn>2</mn></mrow></munderover><mi mathvariant="normal">sin</mi><mo>φ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>φ</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><msup><mo>ρ</mo><mrow><mn>4</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>ρ</mo><mo>=</mo><mn>2</mn><mo>π</mo><mo>⋅</mo><mn>1</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>5</mn></mrow></mfrac></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>5</mn></mrow></mfrac><mo>π</mo></math></div>
+    <p><strong>要点</strong>：能「各自算再相乘」的前提是<mark>三个积分限都是常数</mark>（在球面坐标里区域是个「长方体」），且被积函数能拆成三个单变量因子的乘积。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4502">1:15:02</a>漏掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span> 是本节最常见的失分点——老师自己也说「有时候是故意的，有这次是真的忘了」。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 7</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4455">1:14:15</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><msup><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 由球面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 与圆锥面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>3</mn><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow></math></span> 围成（取锥面上方那块）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 的上限要自己算出来，这是本题唯一的新东西</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 照旧 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 的上界由锥面给出：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mo>φ</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>3</mn></mrow></msqrt></mrow></mfrac></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>6</mn></mrow></mfrac></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=4765">1:19:25</a>老师是「站在原点上」量出来的：「转到这儿就转不动了，底下是空的。」</p>
+    <p>被积函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup><mo>=</mo><mo>(</mo><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup><mo>=</mo><msup><mo>ρ</mo><mrow><mn>3</mn></mrow></msup></math></span>，再乘体积元素里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>，合起来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>5</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><msup><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msqrt><mrow><mn>3</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>6</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>6</mn></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>2</mn><mo>−</mo><msqrt><mrow><mn>3</mn></mrow></msqrt><mo stretchy="true">)</mo></mrow></math></div>
+    <p><strong>要点</strong>：<mark>「球体被圆锥截」是球面坐标最典型的信号。</mark>锥面在球面坐标里就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 等于常数」：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>k</mi><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo><mo>=</mo><mi mathvariant="normal">arctan</mi><mfrac><mrow><mn>1</mn></mrow><mrow><mi>k</mi></mrow></mfrac></math></span>，这个角不必靠图猜。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 8</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=5205">1:26:45</a>（课本例题）球面过原点、半径为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>，用半顶角为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 的圆锥面去截它，求锥面内那一块立体的体积。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：本节唯一的难点——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 的上限随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 变</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=5061">1:24:21</a>老师特意提醒别把图画错：「你不要以为他这个球心是在原点，不是，他的球心是在上面。」球心在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上、球面过原点，沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 方向的直径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>a</mi></math></span>。</p>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 仍是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>。难在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span>：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=5205">1:26:45</a>看一个过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的截面，球过原点、直径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>a</mi></math></span>，<strong>取任意一条与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 角的射线，「直径所对的圆周角是直角」，它与球面的交点到原点的距离就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>a</mi><mi mathvariant="normal">cos</mi><mo>φ</mo></math></span></strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 角的邻边）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>ρ</mo><mo>∈</mo><mrow><mo stretchy="true">[</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mi>a</mi><mi mathvariant="normal">cos</mi><mo>φ</mo><mo stretchy="true">]</mo></mrow></math></div>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn><mo>π</mo></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mo>α</mo></mrow></munderover><mi mathvariant="normal">sin</mi><mo>φ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>φ</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn><mi>a</mi><mi mathvariant="normal">cos</mi><mo>φ</mo></mrow></munderover><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>ρ</mo><mo>=</mo><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mo>α</mo></mrow></munderover><mfrac><mrow><mn>8</mn><msup><mi>a</mi><mrow><mn>3</mn></mrow></msup><msup><mi mathvariant="normal">cos</mi><mrow><mn>3</mn></mrow></msup><mo>φ</mo></mrow><mrow><mn>3</mn></mrow></mfrac><mi mathvariant="normal">sin</mi><mo>φ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>φ</mo></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=139&amp;t=5309">1:28:29</a>注意<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 在这里不能提前算</strong>——内层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 的上限带着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 你能提前先求吗？<span class="bad">不能</span>，因为后头有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>。」积分得</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mn>3</mn></mrow></msup><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>4</mn></mrow></msup><mo>α</mo><mo stretchy="true">)</mo></mrow></math></div>
+    <p><strong>要点</strong>：验证一次极端情形——当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>→</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>→</mo><mn>0</mn></math></span>，公式给出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mn>3</mn></mrow></msup></math></span>，正好是半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 的整个球的体积。<mark>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 上限带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 的积分必须放到最后」</mark>，这是本节最后一条硬规矩。</p>
+  </div>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>三重积分只有两步：<strong>写上下限</strong>、<strong>挑切法</strong>。切法一变，微元就跟着变。</p>
+
+  <h3>四个微元</h3>
+  <ul class="tight">
+    <li>直角坐标：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span></li>
+    <li>柱面坐标：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>r</mi><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span>（就是极坐标那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span>）</li>
+    <li>球面坐标：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>ρ</mo><mrow><mrow><mi>d</mi></mrow></mrow><mo>φ</mo><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></span></li>
+    <li>平面极坐标：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo><mo>=</mo><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>r</mi><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></span>（对照用，见 <a href="../P138-【黑板】二重积分{极坐标}/index.html">【黑板】二重积分{极坐标}</a>）</li>
+  </ul>
+
+  <h3>两套切法</h3>
+  <ul class="tight">
+    <li><strong>投影法</strong>：投影 → 手电朝上照 → 下表面、上表面就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 的上下限 → 剩下的是二重积分（投影是圆就换极坐标）。</li>
+    <li><strong>截面法</strong>：定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 的范围 → 取一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 看截面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>z</mi></msub></math></span>（<mark>一般与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 有关</mark>）→ 先算截面上的二重积分 → 再对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 积。</li>
+    <li><strong>球面坐标</strong>：小机器人先平扫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>、再上下扫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>、最后伸手量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span>；上限随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 变时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 不能提前积掉。</li>
+  </ul>
+
+  <h3>选型判据（背这一条）</h3>
+  <div class="chain">
+    <span class="n"><b>看截面</b> 会不会随 z 变</span><span class="ar">→</span>
+    <span class="n"><b>不变</b> 截面法最舒服</span><span class="ar">→</span>
+    <span class="n"><b>会变</b> 投影法优先</span><span class="ar">→</span>
+    <span class="n"><b>球或锥</b> 直接上球面坐标</span>
+  </div>
+
+  <h3>四个坑</h3>
+  <ol class="tight">
+    <li><strong>截面半径当成常数。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mi>z</mi></math></span> 的半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>z</mi></mrow></msqrt></math></span>，不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>、也不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>。</li>
+    <li><strong>忘了截面与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 有关。</strong>三棱锥的截面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≤</mo><mn>1</mn><mo>−</mo><mi>z</mi></math></span>，「得加件衣服」。</li>
+    <li><strong>漏掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>。</strong>那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span> 来自纬圈半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo><mi mathvariant="normal">sin</mi><mo>φ</mo></math></span>。</li>
+    <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 上限含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 时提前把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 积掉。</strong>例 8 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>a</mi><mi mathvariant="normal">cos</mi><mo>φ</mo></math></span> 一旦代入，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 必须留到最后。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P087-二重积分的定义与性质/index.html">二重积分的定义与性质</a> 二重积分的定义与性质（分割、求和、取极限）</li>
+      <li><a href="../P138-【黑板】二重积分{极坐标}/index.html">【黑板】二重积分{极坐标}</a> 【黑板】二重积分{极坐标}（偏心圆、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo><mo>=</mo><mi>r</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>r</mi><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></span>、扫描法）</li>
+      <li><a href="../P091-三重积分/index.html">三重积分</a> 三重积分（正课版：三套坐标与两种方法的完整推导）</li>
+      <li><span class="cur">面积公式：圆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>R</mi><mrow><mn>2</mn></mrow></msup></math></span>、椭圆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><mi>A</mi><mi>B</mi></math></span></span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P140-【黑板】多重积分的应用/index.html">【黑板】多重积分的应用</a> 【黑板】多重积分的应用（曲面面积、质心、转动惯量）</li>
+      <li><a href="../P095-对面积的曲面积分/index.html">对面积的曲面积分</a> 对面积的曲面积分</li>
+      <li><a href="../P098-高斯公式与斯托克斯公式/index.html">高斯公式与斯托克斯公式</a> 高斯公式（把三重积分与闭曲面上的积分连起来）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「先一后二」＝投影法，「先二后一」＝截面法；记不牢就记「投影 / 截面」</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ρ</mo></math></span> 是到<strong>原点</strong>的距离，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 是到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的距离，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mo>ρ</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span></li>
+      <li>柱面坐标不是新方法，「就是极坐标」</li>
+      <li>三重积分的积分区域<strong>本身就是立体</strong>，不是「求曲顶柱体的体积」</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 139 讲</span><a href="../P138-【黑板】二重积分{极坐标}/index.html">← P138</a><a href="../index.html">全部目录</a><a href="../P140-【黑板】多重积分的应用/index.html">P140 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、三重积分是什么：一句话讲完</a>
+    <a href="#s2">二、投影法（先一后二）：拿手电朝上照</a>
+    <a href="#s3">三、截面法（先二后一）：像切鸡蛋一样</a>
+    <a href="#s4">四、两种方法怎么选</a>
+    <a href="#s5">五、柱面坐标：其实就是极坐标</a>
+    <a href="#s6">六、球面坐标：三个参数与那个 ρ2sinφ</a>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>结构图等效变换（下）：两道复杂题，把方法练到手上 · 自动控制原理笔记</title>
+<meta name="description" content="上一集发齐了串联、并联、反馈三种联结与比较点、引出点移动的&quot;零件&quot;；本集用两道复杂例题把它们真正拼成一套可执行的操作流程——先扫描、先消局部反馈、实在卡住才动用&quot;比较点与引出点互换&quot;这张杀手锏。配 5 张方框图，逐步演示每一步的动机与陷阱。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   自动控制原理笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+/* ==========================================================================
+   ↓↓↓ 以下为【自动控制原理】系列专用组件 ↓↓↓
+   与上方通用骨架并存：通用骨架管「怎么排版」，本节管「自控怎么表达」。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   17. 内容角色标记
+   本系列硬性要求区分四类内容来源，视觉上必须一眼可辨：
+     视频核心 core（靛蓝）· 前置补课 pre（紫）· 考研补充 exam（琥珀）· 知识拓展 ext（灰）
+   -------------------------------------------------------------------------- */
+.blk.core { border-left-color: var(--accent); background: var(--accent-bg); }
+.blk.core .lbl { color: var(--accent-ink); }
+.blk.pre  { border-left-color: var(--violet); background: var(--violet-bg); }
+.blk.pre  .lbl { color: var(--violet); }
+.blk.exam { border-left-color: var(--warn);   background: var(--warn-bg); }
+.blk.exam .lbl { color: var(--warn); }
+.blk.ext  { border-left-color: var(--ink-4);  background: var(--paper-2); }
+.blk.ext  .lbl { color: var(--ink-3); }
+
+/* 行内角色徽章：小圆点 + 文字，颜色即语义 */
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: .38em;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.role::before {
+  content: "";
+  width: .44em; height: .44em;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.role.r-core { color: var(--accent); }
+.role.r-pre  { color: var(--violet); }
+.role.r-exam { color: var(--warn); }
+.role.r-ext  { color: var(--ink-3); }
+
+/* 页首角色图例 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.5rem;
+  margin: 1.2rem 0 0;
+  padding: .8rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: .78rem;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.legend .role { font-size: .78rem; }
+
+/* --------------------------------------------------------------------------
+   18. 方框图组件
+   控制系统方框图的五大要素：方框 · 信号线 · 比较点 · 引出点 · 负号。
+   颜色一律走 class —— SVG 表示属性里不能写 var()。
+   -------------------------------------------------------------------------- */
+/* 方框：看得见摸得着的元部件 */
+figure.fig svg .d-box   { fill: var(--paper);     stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-box-a { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.4; }
+figure.fig svg .d-box-v { fill: var(--violet-bg); stroke: var(--violet); stroke-width: 1.4; }
+figure.fig svg .d-box-w { fill: var(--warn-bg);   stroke: var(--warn);   stroke-width: 1.4; }
+
+/* 信号线 */
+figure.fig svg .d-line  { stroke: var(--ink-2);  stroke-width: 1.3; fill: none; }
+figure.fig svg .d-thin  { stroke: var(--line-2); stroke-width: 1.1; fill: none; }
+figure.fig svg .d-acc   { stroke: var(--accent); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-fb    { stroke: var(--violet); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-warn  { stroke: var(--warn);   stroke-width: 1.6; fill: none; }
+figure.fig svg .d-dash  { stroke-dasharray: 5 4; }
+
+/* 比较点 / 引出点 / 箭头 */
+figure.fig svg .d-sum   { fill: var(--paper); stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-sum-a { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+figure.fig svg .d-tap   { fill: var(--ink-2); stroke: none; }
+figure.fig svg .d-arrow   { fill: var(--ink-2);  stroke: none; }
+figure.fig svg .d-arrow-a { fill: var(--accent); stroke: none; }
+figure.fig svg .d-arrow-v { fill: var(--violet); stroke: none; }
+figure.fig svg .d-arrow-w { fill: var(--warn);   stroke: none; }
+
+/* 区域底色（把前向通道 / 反馈通道整片标出来） */
+figure.fig svg .d-band   { fill: var(--accent-bg); stroke: none; opacity: .55; }
+figure.fig svg .d-band-v { fill: var(--violet-bg); stroke: none; opacity: .55; }
+
+/* 窄屏微调 */
+@media (max-width: 46rem) {
+  .legend { gap: .35rem .95rem; font-size: .74rem; }
+  .legend .role { font-size: .74rem; }
+}
+
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  控制系统的数学模型</b><span class="sep">·</span>卢京潮《自动控制原理》· 西北工业大学<span class="sep">·</span>第 13 讲</div>
+    <h1 class="title"><span class="pnum">P013</span>结构图等效变换（下）：两道复杂题，把方法练到手上</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>上一集发齐了<strong>串联、并联、反馈</strong>三种联结与<strong>比较点、引出点移动</strong>的"零件"；本集用两道复杂例题把它们真正拼成一套<strong>可执行的操作流程</strong>——先扫描、先消局部反馈、实在卡住才动用<strong>"比较点与引出点互换"这张杀手锏</strong>。配 5 张方框图，逐步演示每一步的动机与陷阱。</p></div>
+    <div class="meta"><span>时长 24m14s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=22">00:22</a><span class="vv"><b>开场</b>：这集要把等效变换练到"不留遗漏"。</span></li>
+    <li class="sep"><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=67">01:07</a><span class="vv"><b>扫描法</b>：从头标出引出点 / 比较点，只有相邻处能动。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=112">01:52</a><span class="vv"><b>纪律</b>：先消局部反馈，别急着扔"杀手锏"。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=158">02:38</a><span class="vv"><b>例题一</b>：比较点后移，暴露出一个局部反馈。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=203">03:23</a><span class="vv"><b>补偿</b>：少乘了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub></math></span>，要变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>1</mn></msub><msub><mi>G</mi><mn>1</mn></msub></math></span>，负号跟着搬。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=339">05:39</a><span class="vv"><b>"橡皮筋"直觉</b>：连线可以任意拉伸。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=384">06:24</a><span class="vv"><b>再扫描</b>：两个比较点并到一起，一次反馈。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=574">09:34</a><span class="vv"><b>例题二</b>：两次换位都失败 —— "扭成麻花"。</span></li>
+    <li class="sep"><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=620">10:20</a><span class="vv"><b>先消小回路</b>：等效为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mo>(</mo><mn>1</mn><mo>+</mo><msub><mi>H</mi><mn>1</mn></msub><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=710">11:50</a><span class="vv"><b>卡住</b>：被引出线隔开，只能动杀手锏。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=758">12:38</a><span class="vv"><b>杀手锏</b>：比较点与引出点互换。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=805">13:25</a><span class="vv"><b>互换的补偿</b>：引出的信号少减一项，外面再减一下。</span></li>
+    <li class="sep"><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1307">21:47</a><span class="vv"><b>收口</b>：第二章的三个基本技能。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1354">22:34</a><span class="vv"><b>辨析</b>：梅森公式与等效化简为什么都要会。</span></li>
+  </ol>
+</div>
+
+<div class="legend">
+  <span class="role r-core">视频核心</span> 老师课上实际讲授的内容（本页正文默认即为此类）
+  <span class="role r-pre">前置补课</span> 为听懂本课而补的基础
+  <span class="role r-exam">考研补充</span> 对做题有用、课上未展开
+  <span class="role r-ext">知识拓展</span> 有价值但当前非必须
+</div>
+
+<h2 id="s1">一、本集要解决的那个"下手"问题</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=22">00:22</a>上一集（<a href="../P012-结构图及其等效变换（上）/index.html">结构图及其等效变换（上）</a>）把结构图等效变换的"零件"发齐了：串联、并联、反馈三种基本联结怎么合并，比较点、引出点怎么前后移动。但真正拿到一张复杂结构图，你面对的往往不是"一道题"，而是一堆彼此勾连的回路——<strong>知道规则，却不知道从哪里下第一刀</strong>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=22">00:22</a>本集就是来补上这一段的。老师的做法很简单也很实在：不新增理论，而是用两道相对复杂的题，把已经学过的方法<mark>从头到尾、一步不落地走一遍</mark>。他开场就说清楚了目标——「把这个结构图等效变换这个方法彻底掌握到位，中间不要留下什么遗漏的地方，以免到时候碰到一些你处理不了的事情或者出错」。所以本页的每一段，你都要能回答一个问题：<strong>这一步为什么不那样做、而要这样做？</strong></p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=22">00:22</a>贯穿全集的只有一件事：<strong>如何在尽量少改动的前提下，把一张复杂结构图一步步化成一个方框</strong>。两大例题讲完，老师又把话题拉回第二章的整体，点明结构图等效化简在"求系统传递函数"这条主线里的位置——那是本页最后一节的内容。</p>
+
+<h2 id="s2">二、例题里反复用到的那条公式：反馈联结的等效</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=203">03:23</a>老师在化简的每一步几乎都要用到同一个动作——"把一个小回路收成一个方框"。这个动作的依据，就是反馈联结的等效传递函数。它虽然是上一集的规则，但本集的例题全建立在它之上，所以先把这条公式钉死，后面才走得动。</p>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 复域与传递函数（只为看懂本集）</span>
+  <p>结构图里每个方框写的都是<strong>传递函数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，定义是"输出的拉氏变换 ÷ 输入的拉氏变换"（零初始条件下）。换句话说，<em>方框不关心内部是什么电路、什么电机，只回答一个比例问题：给它一个输入信号，它给出什么输出信号</em>。</p>
+  <p>为什么一定要先做拉氏变换？因为对微分方程做拉氏变换，能把"求导"变成"乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>"，于是<strong>微分方程变成代数方程</strong>，方框之间就能像数一样相乘、相除、相加减——这正是结构图"可以等效变换"的根本原因。拉氏变换是第 2 章的第一个技能，第 3 章时域分析、第 6 章根轨迹、第 7 章频域分析都还要继续用它。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=203">03:23</a>现在看一个最基本的局部回路：前向通道是一个方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，从输出端引出一条反馈通道，经过方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 送回输入端，在比较点处<strong>相减</strong>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 200" role="img" aria-label="反馈联结等效变换前后对照：左图为原结构图，输入R(s)经比较点后进入前向方框G(s)得到输出C(s)，输出经引出点、反馈方框H(s)送回比较点相减；右图为等效结果，同一个反馈回路被合并成一个方框G/（1+GH），输入输出关系不变">
+    <defs>
+      <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar1v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <!-- 左：原结构图 -->
+    <text x="157" y="28" class="m-sub" font-size="11.5" text-anchor="middle">原结构图 · 一个反馈回路</text>
+    <text x="16" y="113" class="m-math" font-size="12">R(s)</text>
+    <line x1="48" y1="108" x2="60" y2="108" class="d-line" marker-end="url(#ar1)"/>
+    <circle cx="74" cy="108" r="13" class="d-sum"/>
+    <line x1="61" y1="108" x2="87" y2="108" class="d-line"/>
+    <line x1="74" y1="95" x2="74" y2="121" class="d-line"/>
+    <text x="58" y="100" class="m-sub" font-size="12">+</text>
+    <text x="55" y="127" class="m-sub" font-size="13">−</text>
+    <line x1="87" y1="108" x2="118" y2="108" class="d-line" marker-end="url(#ar1)"/>
+    <rect x="120" y="92" width="64" height="32" rx="3" class="d-box"/>
+    <text x="152" y="113" class="m-math" font-size="12" text-anchor="middle">G(s)</text>
+    <line x1="184" y1="108" x2="228" y2="108" class="d-line" marker-end="url(#ar1)"/>
+    <text x="234" y="113" class="m-math" font-size="12">C(s)</text>
+    <circle cx="206" cy="108" r="3.5" class="d-tap"/>
+    <line x1="206" y1="108" x2="206" y2="168" class="d-fb"/>
+    <line x1="206" y1="168" x2="176" y2="168" class="d-fb"/>
+    <rect x="120" y="152" width="56" height="32" rx="3" class="d-box-v"/>
+    <text x="148" y="173" class="m-math" font-size="12" text-anchor="middle">H(s)</text>
+    <line x1="120" y1="168" x2="74" y2="168" class="d-fb"/>
+    <line x1="74" y1="168" x2="74" y2="121" class="d-fb" marker-end="url(#ar1v)"/>
+    <text x="196" y="150" class="m-sub" font-size="10.5">反馈通道</text>
+
+    <line x1="320" y1="20" x2="320" y2="180" class="d-thin d-dash"/>
+
+    <!-- 右：等效方框 -->
+    <text x="480" y="28" class="m-sub" font-size="11.5" text-anchor="middle">等效方框</text>
+    <text x="334" y="113" class="m-math" font-size="12">R(s)</text>
+    <line x1="366" y1="108" x2="398" y2="108" class="d-line" marker-end="url(#ar1)"/>
+    <rect x="400" y="90" width="188" height="36" rx="3" class="d-box-a"/>
+    <text x="494" y="113" class="m-math" font-size="12" text-anchor="middle">G(s) / (1 + G(s)H(s))</text>
+    <line x1="588" y1="108" x2="618" y2="108" class="d-line" marker-end="url(#ar1)"/>
+    <text x="628" y="113" class="m-math" font-size="12" text-anchor="end">C(s)</text>
+    <text x="480" y="164" class="m-sub" font-size="11.5" text-anchor="middle">负反馈：分母 1 + GH；正反馈：分母 1 − GH</text>
+  </svg>
+  <figcaption><b>整圈收成一个方框，这就是化简的"基本招式"。</b>左边那一圈首尾相接、且在比较点处相减，是一个<em>负反馈联结</em>；右边用一个方框代替它，输入输出关系完全不变。要练成的眼睛是：<mark>在一张乱图里一眼认出"哪里是一个完整的回路"</mark>——判据是"这条线绕一圈又回到了起点，而且接到了比较点的一个极上"。认出来，就能把它收掉。</figcaption>
+</figure>
+
+<div class="blk def">
+  <span class="lbl">反馈联结的等效传递函数</span>
+  <p>设输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>、输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，前向通道 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，反馈通道 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。负反馈（比较点处相减）：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mn>1</mn><mo>+</mo><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mi>H</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac></math></div>
+  <p>正反馈（比较点处相加）时分母变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mi>H</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mn>1</mn><mo>−</mo><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mi>H</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac></math></div>
+  <p>合并记忆：<mark>分母 = 1 ± "前向 × 反馈"，负反馈取"+"、正反馈取"−"</mark>。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么负反馈的分母是 "<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi></math></span>" 而不是 "<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>G</mi><mi>H</mi></math></span>"</span>
+  <p>箭头是负反馈：输出经 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi></math></span> 回到比较点时被<strong>减去</strong>。所以比较点输出（误差）是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi><mo>=</mo><mi>R</mi><mo>−</mo><mi>H</mi><mi>C</mi></math></span>，而前向通道给出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mi>G</mi><mi>E</mi></math></span>。两式联立：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mi>G</mi><mo>(</mo><mi>R</mi><mo>−</mo><mi>H</mi><mi>C</mi><mo>)</mo></math></span>，展开 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mi>G</mi><mi>R</mi><mo>−</mo><mi>G</mi><mi>H</mi><mi>C</mi></math></span>；把含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 的项移到左边，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi><mo>)</mo><mo>=</mo><mi>G</mi><mi>R</mi></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>/</mo><mi>R</mi><mo>=</mo><mi>G</mi><mo>/</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi><mo>)</mo></math></span>。<strong>"减"写进方程，移项后就变成了"加"</strong>。很多同学把式子背反，就是没亲手走一遍这个移项。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=203">03:23</a>这条公式的用途是"<strong>反向</strong>"的：例题里你始终在做一件事——<mark>在一张图里认出一个形如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>/</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi><mo>)</mo></math></span> 的小回路，然后把整块替换成一个方框，图立刻变简单</mark>。所以扫描时要训练的那双眼睛，就是"这一圈是不是首尾相接、有没有极性符号"。</p>
+
+<div class="note">
+  <span class="lbl">符号约定（易错）</span>
+  <p>方框里的传递函数本身<strong>不带极性</strong>；极性只由<strong>比较点旁边的 + / − 号</strong>决定。老师反复提醒的"符号带上不要丢""该带的都带上"，说的正是这件事：<em>你搬动比较点、搬动支路时，那个 + 或 − 是跟着这次变换走的，不能因为搬图而消失</em>。</p>
+</div>
+
+<h2 id="s3">三、拿到结构图先"扫描"，再决定从哪儿下手</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=67">01:07</a>老师在两道例题的开头都做同一个动作：<strong>用手指从图的入口一路扫到出口，把沿途的"引出点"和"比较点"依次点出来</strong>。他把这叫"窍门儿"。为什么先扫描？因为结构图的<em>可操作处</em>不是随机的，而是由这些点的<strong>相邻关系</strong>决定的。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=67">01:07</a>扫描完，你手里就得到一串"点的序列"，例如"引出点、比较点、比较点、引出点、比较点、引出点、引出点"。<mark>只有两种地方可以立刻动手：相邻的两个点前后调换。</mark>除此之外其它地方先别碰——一上手就乱挪，只会把图越挪越乱。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 210" role="img" aria-label="结构图等效化简的操作顺序流程图：先扫描标出引出点与比较点，再做相邻点前后调换的小动作，然后消局部反馈，再合并串联并联反馈，最终得到单一方框；若中途卡住，则动用比较点与引出点互换的杀手锏并做补偿">
+    <defs>
+      <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar5w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-w"/>
+      </marker>
+    </defs>
+
+    <text x="320" y="26" class="m-sub" font-size="11.5" text-anchor="middle">结构图等效化简：老师的操作顺序（先小动作，后杀手锏）</text>
+
+    <rect x="12" y="60" width="110" height="56" rx="3" class="d-box"/>
+    <text x="67" y="84" class="m-txt" font-size="11.5" text-anchor="middle">① 先扫描</text>
+    <text x="67" y="100" class="m-sub" font-size="10.5" text-anchor="middle">标出引出点·比较点</text>
+
+    <rect x="135" y="60" width="110" height="56" rx="3" class="d-box"/>
+    <text x="190" y="84" class="m-txt" font-size="11.5" text-anchor="middle">② 小动作</text>
+    <text x="190" y="100" class="m-sub" font-size="10.5" text-anchor="middle">相邻点前后调换</text>
+
+    <rect x="258" y="60" width="110" height="56" rx="3" class="d-box"/>
+    <text x="313" y="84" class="m-txt" font-size="11.5" text-anchor="middle">③ 消局部反馈</text>
+    <text x="313" y="100" class="m-sub" font-size="10.5" text-anchor="middle">能消就消</text>
+
+    <rect x="381" y="60" width="110" height="56" rx="3" class="d-box"/>
+    <text x="436" y="84" class="m-txt" font-size="11.5" text-anchor="middle">④ 合并联结</text>
+    <text x="436" y="100" class="m-sub" font-size="10.5" text-anchor="middle">串联·并联·反馈</text>
+
+    <rect x="504" y="60" width="110" height="56" rx="3" class="d-box-a"/>
+    <text x="559" y="84" class="m-txt" font-size="11.5" text-anchor="middle">⑤ 单一方框</text>
+    <text x="559" y="100" class="m-sub" font-size="10.5" text-anchor="middle">传递函数到手</text>
+
+    <line x1="122" y1="88" x2="135" y2="88" class="d-line" marker-end="url(#ar5)"/>
+    <line x1="245" y1="88" x2="258" y2="88" class="d-line" marker-end="url(#ar5)"/>
+    <line x1="368" y1="88" x2="381" y2="88" class="d-line" marker-end="url(#ar5)"/>
+    <line x1="491" y1="88" x2="504" y2="88" class="d-line" marker-end="url(#ar5)"/>
+
+    <rect x="318" y="140" width="236" height="46" rx="3" class="d-box-w" stroke-dasharray="5 4"/>
+    <text x="436" y="162" class="m-txt" font-size="11.5" text-anchor="middle">卡住 → 动用杀手锏</text>
+    <text x="436" y="178" class="m-sub" font-size="10.5" text-anchor="middle">比较点 ⇄ 引出点互换（必须补偿）</text>
+    <line x1="436" y1="140" x2="436" y2="118" class="d-warn" marker-end="url(#ar5w)"/>
+  </svg>
+  <figcaption><b>把乱图化成方框，有一张固定的"操作顺序表"。</b>前四步都是<em>便宜、局部、可逆</em>的动作，尽量先把它们做尽；只有当图上出现<mark>"点被另一条引出线隔开、怎么也跨不过去"</mark>的死结时，才动用最后那张底牌——把比较点与引出点互换。图的妙处在于顺序：<em>先做小动作，让死结暴露并缩小，再对最小的死结对症下药</em>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么"先扫描"能让你不乱</span>
+  <p>结构图等效变换的自由度很大：同一张图能化出很多条路径。自由度大，意味着<strong>选择多、也容易迷路</strong>。老师的两个约束正是在砍自由度：<br>
+  ① <strong>先做"前后调换"这种小动作</strong>——它局部、可逆、不容易错；<br>
+  ② <strong>"先消局部反馈，能消就消"</strong>——每消掉一个回路，图就少一层复杂，问题<em>单调地变简单</em>。<br>
+  把这两条当纪律执行，你就不需要在脑子里同时记住整张图，只需要盯住眼前那一个小回路。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=112">01:52</a>具体怎么"消局部反馈"？第一步往往是把一个比较点<strong>往后移</strong>（或者把一个引出点<strong>往前移</strong>），让原本藏在图里的那一圈暴露出"一条前向 + 一条反馈"的形状，这一圈才<mark>首尾相接、可以被等效成一个方框</mark>。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=158">02:38</a>老师在例子里就是这么做的：「把它拿到这边来，这不就是一个局部反馈吗？可以消掉。能消就消，消到最后越来越简单。」</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=112">01:52</a>然后他引出本集的"底牌"——<strong>把比较点和引出点互相换位</strong>。他说得很生动：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=112">01:52</a>老师原话</span>
+  <q>这个比较点和引出点互相换位啊，这个杀手锏扔出去杀伤力是比较大，但是你用不好，反过来会把你自己伤到。</q>
+</div>
+
+<div class="why">
+  <span class="lbl">"杀手锏"为什么威力大、又为什么危险</span>
+  <p><strong>威力大</strong>：比较点与引出点的互换，能一次性改变整张图的"骨架"，把那种"线都缠在一起、挪哪儿都别扭"的死结解开，别的招都做不到。<br>
+  <strong>危险</strong>：这一步<mark>不是无损的</mark>——被跨过去的那条支路会"少乘一点东西"或"少减一点东西"，必须在外面对着补回来（见下一节的补偿规则）。补漏一处，整张图的传递函数就错了，而且错得<em>不容易被发现</em>，因为图看上去"化简完了、挺干净"。所以老师把它留到<strong>实在解不开的时候才用</strong>，并要求做作业时专门练这一步。</p>
+</div>
+
+<h2 id="s4">四、移动一点要"补偿"：例题里最容易错的一步</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=158">02:38</a>例题里最密集的错误都发生在同一个地方：<strong>把一个比较点或引出点移过一个方框的时候</strong>。老师在例子里反复说到"少乘"两个字——「你如果直接拿过来不行吧，少乘它了，要多乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub></math></span>」。这句话就是本集的核心易错点。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 185" role="img" aria-label="比较点后移的补偿对照图：左图为移动前，输入X与反馈Y在比较点相减后经方框G得到输出Z；右图为把比较点后移到G之后，此时Y支路必须补乘一个G再进比较点，输出Z才与原来相同">
+    <defs>
+      <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+
+    <text x="155" y="26" class="m-sub" font-size="11.5" text-anchor="middle">① 移动前</text>
+    <text x="16" y="67" class="m-math" font-size="12">X</text>
+    <line x1="30" y1="62" x2="58" y2="62" class="d-line" marker-end="url(#ar2)"/>
+    <circle cx="72" cy="62" r="13" class="d-sum"/>
+    <line x1="59" y1="62" x2="85" y2="62" class="d-line"/>
+    <line x1="72" y1="49" x2="72" y2="75" class="d-line"/>
+    <text x="56" y="54" class="m-sub" font-size="12">+</text>
+    <text x="53" y="81" class="m-sub" font-size="13">−</text>
+    <line x1="85" y1="62" x2="100" y2="62" class="d-line" marker-end="url(#ar2)"/>
+    <rect x="102" y="46" width="52" height="32" rx="3" class="d-box"/>
+    <text x="128" y="67" class="m-math" font-size="12" text-anchor="middle">G</text>
+    <line x1="154" y1="62" x2="186" y2="62" class="d-line" marker-end="url(#ar2)"/>
+    <text x="192" y="67" class="m-math" font-size="12">Z</text>
+    <text x="72" y="126" class="m-math" font-size="12" text-anchor="middle">Y</text>
+    <line x1="72" y1="116" x2="72" y2="75" class="d-line" marker-end="url(#ar2)"/>
+
+    <text x="480" y="26" class="m-sub" font-size="11.5" text-anchor="middle">② 比较点后移（等效）</text>
+    <text x="334" y="67" class="m-math" font-size="12">X</text>
+    <line x1="348" y1="62" x2="404" y2="62" class="d-line" marker-end="url(#ar2)"/>
+    <rect x="406" y="46" width="52" height="32" rx="3" class="d-box"/>
+    <text x="432" y="67" class="m-math" font-size="12" text-anchor="middle">G</text>
+    <line x1="458" y1="62" x2="470" y2="62" class="d-line" marker-end="url(#ar2)"/>
+    <circle cx="484" cy="62" r="13" class="d-sum"/>
+    <line x1="471" y1="62" x2="497" y2="62" class="d-line"/>
+    <line x1="484" y1="49" x2="484" y2="75" class="d-line"/>
+    <text x="468" y="54" class="m-sub" font-size="12">+</text>
+    <text x="465" y="81" class="m-sub" font-size="13">−</text>
+    <line x1="497" y1="62" x2="530" y2="62" class="d-line" marker-end="url(#ar2)"/>
+    <text x="536" y="67" class="m-math" font-size="12">Z</text>
+    <text x="484" y="172" class="m-math" font-size="12" text-anchor="middle">Y</text>
+    <line x1="484" y1="162" x2="484" y2="150" class="d-line"/>
+    <rect x="458" y="118" width="52" height="32" rx="3" class="d-box-v"/>
+    <text x="484" y="139" class="m-math" font-size="12" text-anchor="middle">G</text>
+    <line x1="484" y1="118" x2="484" y2="77" class="d-line" marker-end="url(#ar2v)"/>
+
+    <text x="320" y="180" class="m-sub" font-size="11.5" text-anchor="middle">跨过 G 的那条支路（这里是 Y）必须补乘 G，Z 才与原来相同</text>
+  </svg>
+  <figcaption><b>"挪图"是有代价的：跨过谁，就要补上谁。</b>左图里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 是不经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 的；把比较点后移到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 这条支路若原样进入，就<em>只减掉了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span>、没减掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>Y</mi></math></span></em>，输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi></math></span> 就变了。所以右图给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 补了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 方框。<mark>补偿的目的只有一个：守住"每个信号点的信号值都不变"。</mark></figcaption>
+</figure>
+
+<div class="blk def">
+  <span class="lbl">移动的补偿规则（一句话版）</span>
+  <p>把一个<strong>比较点</strong>或<strong>引出点</strong>移过一个方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 时：<mark>凡是"跨过了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>"的那条支路，必须补上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>（乘或除），以使变换前后各点信号完全一致。</mark></p>
+  <ul class="tight">
+    <li>比较点<strong>后移</strong>跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>：从该比较点进来的<em>其它支路</em>要多乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>。</li>
+    <li>比较点<strong>前移</strong>跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>：从该比较点出去的支路要多除一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>。</li>
+    <li>引出点<strong>前移</strong>跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>：引出的那条支路要多乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>。</li>
+    <li>引出点<strong>后移</strong>跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>：引出的那条支路要多除一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>。</li>
+  </ul>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么必须补偿——"等效"的判据到底是什么</span>
+  <p>"等效变换"的唯一判据：<strong>变换前后，图上每一个信号点的信号值都不能变</strong>。移动点会改变某一小段线的所在地；只要这段线原来"包含"某次乘法而新位置不包含，就必须把这次乘法补到别处去。<br>
+  用上面那张图看：移动前 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi><mo>=</mo><mi>X</mi><mo>−</mo><mi>Y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi><mo>=</mo><mi>G</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>E</mi></math></span>；把比较点后移到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 之后，主通道变成先乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，此时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 若原样进入，结果与原来不同，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 必须<strong>先过一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></strong> 再进比较点。<mark>补偿，就是为了守住"每个点信号不变"这条底线。</mark></p>
+</div>
+
+<div class="trap">
+  <span class="lbl">例一里真实踩的坑</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=203">03:23</a>老师把一个比较点后移，顺手把一条反馈支路也搬了过来。这一步如果不管补偿，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>1</mn></msub></math></span> 那条支路就"少乘了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub></math></span>"。他当场纠正：<mark>这个地方要变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>1</mn></msub><mo>⋅</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>1</mn></msub></math></span></mark>，并且"那个负号要拖到这个地方来，符号带上不要丢"。<br>
+  <strong>做题时的动作分解</strong>：搬点之前先问一句"这条线原来经过哪些方框？"→ 搬完之后逐条核对"它现在还经过那些方框吗？"→ 缺哪个补哪个、多哪个去哪个；<em>极性符号再单独检查一遍</em>。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=339">05:39</a>有一个让这步变简单的直觉，老师给了个很妙的说法：</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=339">05:39</a>老师原话</span>
+  <q>在化简的过程当中，你可以认为这个连线是一个可以任意拉伸的橡皮筋，你怎么拉都没关系。</q>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=339">05:39</a>"橡皮筋"说的正是<strong>信号线本身不携带信息、只有传递函数才携带信息</strong>：把一条线拉长、拐弯、绕到图外，都不会改变信号值；真正要小心的是线<em>经过（或不再经过）哪个方框</em>。所以化简时可以放心大胆地重画连线，把注意力全部集中在"方框和比较点的位置关系"上。</p>
+
+<h2 id="s5">五、例题一：把"扫描—消回路—再扫描"走三遍</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例一</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=22">00:22</a>系统结构图较复杂，要求化简为单一方框。老师示范：不给具体数值，只看结构怎样一步步瘦下去。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：不追求"一步到位"，只追求"每步都合法、且更简单"</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=22">00:22</a>第一件事是扫描：从头到尾把点标出来，找到"相邻可调换"的地方。老师发现起初只有两处可以动手——两个比较点可以前后调换，另外两个点也可以。</p>
+    <ol class="steps">
+      <li><span class="sh">先动一处：把比较点后移，暴露出一个局部反馈。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=158">02:38</a>「把它拿到这边来……这不就是局部反馈吗？可以消掉。」关键不在移动本身，而在移动之后<strong>认出了那个首尾相接的回路</strong>。</li>
+      <li><span class="sh">消掉这个局部反馈——但要先补偿。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=203">03:23</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>1</mn></msub></math></span> 支路换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>1</mn></msub><msub><mi>G</mi><mn>1</mn></msub></math></span>，负号跟着搬。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=248">04:08</a>然后用反馈等效把这一圈收成一个方框（分子是前向通道传递函数，分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo></math></span> 前向×反馈）。</li>
+      <li><span class="sh">再扫描一遍。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=248">04:08</a>图变短了，"两个比较点挪到一块了"。同类点挨在一起，就有了新的操作空间——「或者说你把它拿到这儿来，这不又是一个局部反馈吗？」</li>
+      <li><span class="sh">把两个比较点并到一起。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=384">06:24</a>它们的负反馈方向一致，于是"合到一起，一次反馈"完成；<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=384">06:24</a>合并时注意：引出点前移要乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>3</mn></msub></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>2</mn></msub></math></span> 那条支路该带的符号一并带上。</li>
+      <li><span class="sh">到最后只剩串联、并联、反馈三种联结，逐个合并。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=482">08:02</a>老师把两条负反馈通道"合到一起"（并联），再与主通道相乘（串联），<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=529">08:49</a>细心化简，最后得到一个方框。</li>
+    </ol>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=482">08:02</a>这里出现了一个很容易混的点，老师专门强调：<strong>并联是并联，反馈是反馈，两回事。</strong>两条支路<em>并排</em>叠加叫并联（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>2</mn></msub></math></span>）；一条支路<em>绕着主通道首尾相接</em>叫反馈（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>/</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi><mo>)</mo></math></span>）。判断依据是"有没有构成闭合回路"，不是"看起来像不像"。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 190" role="img" aria-label="局部负反馈回路等效为一个方框：左图前向通道增益为1，输入X经比较点后直接到输出Y，Y经反馈方框H1送回比较点相减；右图整圈等效成一个方框，传递函数为1除以（1加H1）">
+    <defs>
+      <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar3v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+
+    <text x="155" y="26" class="m-sub" font-size="11.5" text-anchor="middle">原：一个局部负反馈回路</text>
+    <text x="16" y="97" class="m-math" font-size="12">X</text>
+    <line x1="30" y1="92" x2="58" y2="92" class="d-line" marker-end="url(#ar3)"/>
+    <circle cx="72" cy="92" r="13" class="d-sum"/>
+    <line x1="59" y1="92" x2="85" y2="92" class="d-line"/>
+    <line x1="72" y1="79" x2="72" y2="105" class="d-line"/>
+    <text x="56" y="84" class="m-sub" font-size="12">+</text>
+    <text x="53" y="111" class="m-sub" font-size="13">−</text>
+    <line x1="85" y1="92" x2="196" y2="92" class="d-line" marker-end="url(#ar3)"/>
+    <text x="120" y="82" class="m-sub" font-size="11" text-anchor="middle">1</text>
+    <circle cx="180" cy="92" r="3.5" class="d-tap"/>
+    <text x="202" y="97" class="m-math" font-size="12">Y</text>
+    <line x1="180" y1="92" x2="180" y2="150" class="d-fb"/>
+    <line x1="180" y1="150" x2="166" y2="150" class="d-fb"/>
+    <rect x="110" y="134" width="56" height="32" rx="3" class="d-box-v"/>
+    <text x="138" y="155" class="m-math" font-size="12" text-anchor="middle">H1</text>
+    <line x1="110" y1="150" x2="72" y2="150" class="d-fb"/>
+    <line x1="72" y1="150" x2="72" y2="105" class="d-fb" marker-end="url(#ar3v)"/>
+    <text x="204" y="150" class="m-sub" font-size="10.5">反馈 H1</text>
+
+    <text x="480" y="26" class="m-sub" font-size="11.5" text-anchor="middle">等效：一个方框</text>
+    <text x="334" y="97" class="m-math" font-size="12">X</text>
+    <line x1="348" y1="92" x2="408" y2="92" class="d-line" marker-end="url(#ar3)"/>
+    <rect x="412" y="74" width="180" height="36" rx="3" class="d-box-a"/>
+    <text x="502" y="97" class="m-math" font-size="12" text-anchor="middle">1 / (1 + H1)</text>
+    <line x1="592" y1="92" x2="616" y2="92" class="d-line" marker-end="url(#ar3)"/>
+    <text x="626" y="97" class="m-math" font-size="12" text-anchor="end">Y</text>
+    <text x="480" y="162" class="m-sub" font-size="11" text-anchor="middle">前向通道为 1，故分母是 1 + H1</text>
+  </svg>
+  <figcaption><b>前向通道恰好是"1"时，回路的等效就是一个"<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mo>(</mo><mn>1</mn><mo>+</mo><msub><mi>H</mi><mn>1</mn></msub><mo>)</mo></math></span>"。</b>这是例题二里被老师称为"小回路"的那种结构。别看它小，它出现的频率最高：<mark>认出来就整块替换掉，图立刻短一截</mark>，后面的麻烦也就少一层。记法：前向为 1 时，等效方框就是"分子 1、分母 1 加反馈"。</figcaption>
+</figure>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 等效化简"六条规则"速查表</span>
+  <p>老师课上用例子示范了这些动作，这里把它们整理成可背的清单。答题写到一半卡住时，逐条对照：</p>
+  <div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>操作</th><th>结果</th><th>补偿（跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 的支路）</th></tr></thead>
+    <tbody>
+      <tr><td>串联合并</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><msub><mi>G</mi><mn>2</mn></msub></math></span></td><td>—</td></tr>
+      <tr><td>并联合并</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>2</mn></msub></math></span></td><td>—</td></tr>
+      <tr><td>反馈合并</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>/</mo><mo>(</mo><mn>1</mn><mo>±</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi><mo>)</mo></math></span></td><td>—</td></tr>
+      <tr><td>比较点后移</td><td>移过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></td><td>进该点的其它支路 <b>× <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></b></td></tr>
+      <tr><td>比较点前移</td><td>移过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></td><td>出该点的支路 <b>÷ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></b></td></tr>
+      <tr><td>引出点前移</td><td>移过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></td><td>引出的支路 <b>× <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></b></td></tr>
+      <tr><td>引出点后移</td><td>移过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></td><td>引出的支路 <b>÷ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></b></td></tr>
+      <tr><td>比较点 ⇄ 引出点互换</td><td>结构大改</td><td>被跨越的支路按上述规则补</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>记忆抓手：<mark>"后移多乘、前移多除"</mark>；比较点看<em>进入</em>的支路，引出点看<em>引出</em>的支路。</p>
+</div>
+
+<h2 id="s6">六、例题二：卡住了，就用"最后一招"</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例二</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=574">09:34</a>看起来不太难、做起来不容易的一张图。老师示范：当常规招数全部失效时，怎样动用底牌，并守住等效性。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先把能消的消掉，把难题逼到最小范围，再动底牌</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=574">09:34</a>扫描后发现，图里有两处"似乎可以换位"。老师逐一验证：换第一处——「换完以后这地方就扭成麻花了，反倒更麻烦」；换第二处——「一换以后这里边又搅得更难看了」。<strong>两次都因为"越换越乱"而放弃</strong>。这个"试了不行就退回来"的动作本身就说明：<em>杀手锏不能无脑用</em>。</p>
+    <ol class="steps">
+      <li><span class="sh">先消那个"小回路"。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=620">10:20</a>结构里有一小圈反馈，前向通道是 1、反馈是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>1</mn></msub></math></span>，等效传递函数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mo>(</mo><mn>1</mn><mo>+</mo><msub><mi>H</mi><mn>1</mn></msub><mo>)</mo></math></span>——老师念成"一比一加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>H</mi><mn>1</mn></msub></math></span>"。把它换成一个方框塞回原处，图立刻短一截。</li>
+      <li><span class="sh">再扫描，还是卡住。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=665">11:05</a>剩下两个比较点想往前移，但前面隔着一道<strong>引出线</strong>——「这地方用一个引出线把它隔开了，你要跨它的话就不是那么简单的了」。注意：如果没有这道引出线，点是可以随便跨的；有引出线隔开，跨过去就会<em>连带改变引出信号</em>，必须动底牌。</li>
+      <li><span class="sh">果断动用最后一招：比较点与引出点互换。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=710">11:50</a>「在没有办法的时候，你千万不要忘了最后那一手……不用不解决问题。」老师选的落点，恰恰是图上"最麻烦、最让人难受"的那个地方。</li>
+      <li><span class="sh">换完之后立刻补偿。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=805">13:25</a>这是本集最危险的地方：「原本这两路信号人家都是这个信号减这个信号得来的，你如果直接把它跨过来，那么跨出去的信号就只有它、没有减了。」于是必须<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=851">14:11</a>「在它的外面把这个信号再减一下」——把丢掉的那一次减法，补到引出线的新位置上。</li>
+      <li><span class="sh">收尾：又是并联、反馈、串联的组合。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=941">15:41</a>比较点后移要乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>3</mn></msub></math></span>，负号跟着搬；<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=988">16:28</a>两条支路并联相加；<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1079">17:59</a>再用反馈等效、分子分母同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><msub><mi>H</mi><mn>1</mn></msub><mo>)</mo></math></span> 把分式收拾干净，<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1216">20:16</a>最后化成一个方框。</li>
+    </ol>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 230" role="img" aria-label="比较点与引出点互换的补偿示意图：左图引出点在比较点之后，引出信号S等于A减B；右图把引出点前移到比较点之前，此时引出的信号只有A，必须在引出支路上另加一个比较点减去B，才能重新得到S等于A减B">
+    <defs>
+      <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+
+    <text x="155" y="26" class="m-sub" font-size="11.5" text-anchor="middle">原：引出点在比较点之后</text>
+    <text x="16" y="71" class="m-math" font-size="12">A</text>
+    <line x1="30" y1="66" x2="76" y2="66" class="d-line" marker-end="url(#ar4)"/>
+    <circle cx="92" cy="66" r="13" class="d-sum"/>
+    <line x1="79" y1="66" x2="105" y2="66" class="d-line"/>
+    <line x1="92" y1="53" x2="92" y2="79" class="d-line"/>
+    <text x="76" y="58" class="m-sub" font-size="12">+</text>
+    <text x="73" y="85" class="m-sub" font-size="13">−</text>
+    <text x="92" y="132" class="m-math" font-size="12" text-anchor="middle">B</text>
+    <line x1="92" y1="122" x2="92" y2="79" class="d-line" marker-end="url(#ar4)"/>
+    <line x1="105" y1="66" x2="252" y2="66" class="d-line" marker-end="url(#ar4)"/>
+    <circle cx="196" cy="66" r="3.5" class="d-tap"/>
+    <text x="258" y="71" class="m-math" font-size="12">S</text>
+    <line x1="196" y1="66" x2="196" y2="104" class="d-line"/>
+    <text x="155" y="180" class="m-sub" font-size="11" text-anchor="middle">引出的就是 S = A − B</text>
+
+    <text x="480" y="26" class="m-sub" font-size="11.5" text-anchor="middle">等效：引出点前移，外面补 −B</text>
+    <text x="334" y="52" class="m-math" font-size="12">A</text>
+    <line x1="348" y1="48" x2="440" y2="48" class="d-line" marker-end="url(#ar4)"/>
+    <circle cx="446" cy="48" r="3.5" class="d-tap"/>
+    <line x1="452" y1="48" x2="590" y2="48" class="d-line" marker-end="url(#ar4)"/>
+    <text x="596" y="40" class="m-sub" font-size="10.5" text-anchor="end">继续送往原比较点</text>
+    <line x1="446" y1="48" x2="446" y2="117" class="d-line" marker-end="url(#ar4)"/>
+    <circle cx="446" cy="132" r="13" class="d-sum"/>
+    <line x1="433" y1="132" x2="459" y2="132" class="d-line"/>
+    <line x1="446" y1="119" x2="446" y2="145" class="d-line"/>
+    <text x="458" y="120" class="m-sub" font-size="12">+</text>
+    <text x="426" y="152" class="m-sub" font-size="13">−</text>
+    <text x="378" y="137" class="m-math" font-size="12">B</text>
+    <line x1="392" y1="132" x2="433" y2="132" class="d-line" marker-end="url(#ar4)"/>
+    <line x1="459" y1="132" x2="576" y2="132" class="d-line" marker-end="url(#ar4)"/>
+    <text x="582" y="137" class="m-math" font-size="12">S</text>
+    <text x="504" y="90" class="m-sub" font-size="10.5" text-anchor="middle">引出点前移后，引出的只有 A</text>
+    <text x="480" y="196" class="m-sub" font-size="11" text-anchor="middle">外面补减一个 B：(引出 A) − B 才等于原来的 S</text>
+  </svg>
+  <figcaption><b>"互换"这一步，本质是"把点搬到前面，再把丢掉的那次运算补回来"。</b>左图引出点在比较点之后，引出的信号是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>=</mo><mi>A</mi><mo>−</mo><mi>B</mi></math></span>。右图把引出点<em>前移</em>到比较点之前，此时引出的只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 被落下了；于是<mark>在引出支路上另加一个比较点，补减一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span></mark>，输出才重新等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>=</mo><mi>A</mi><mo>−</mo><mi>B</mi></math></span>。这正是老师强调的"在它的外面把这个信号再减一下"——<em>底牌不是免费的，补漏才是关键</em>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么"杀手锏"要落在最难受的地方</span>
+  <p>一个结构图里，<strong>大部分纠缠其实可以用"局部替换"解决</strong>，真正顽固的只有一两个死结。杀手锏的代价是"要补偿、易出错"，所以正确的策略是：<em>先用便宜的招把周围削干净，让死结暴露出来、范围缩到最小，最后才对它动一次大手术</em>。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=710">11:50</a>老师说"用的地方往往是最麻烦的地方，在那里用往往最有效"，就是这个意思——<strong>把昂贵的手段花在刀刃上，同时把出错面积压到最小</strong>。</p>
+</div>
+
+<div class="trap">
+  <span class="lbl">互换这一步最常翻的车</span>
+  <ul class="tight">
+    <li><strong>只搬点、不补信号</strong>：跨过比较点的支路会"少减一项"，跨过方框的支路会"少乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>"，两者都必须在外面对补。</li>
+    <li><strong>极性符号丢在半路</strong>：负号是信号的一部分，搬一次就要重新确认它落在哪儿。</li>
+    <li><strong>图变干净了就以为对了</strong>：等效的判据是"每个点信号不变"，不是"图好看"。做完要用几个特殊点<em>反查一遍</em>——顺着信号走一圈，看输出的表达式是否和原来一致。</li>
+  </ul>
+</div>
+
+<h2 id="s7">七、收口：结构图等效化简在第二章里的位置</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1307">21:47</a>两道例题讲完，老师把话题拉回第二章的整体图景：这一章的目标是<strong>为系统建立数学模型</strong>，并最终求出它的传递函数。走法是：<mark>先写元部件方程 → 得到各元部件传递函数 → 画出系统结构图 → 再求整个系统的传递函数</mark>。本集做的工作，正是这个链条里"从结构图到传递函数"的那一段。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1307">21:47</a>他明确提出：第二章要求掌握三个<strong>基本技能</strong>——</p>
+
+<div class="tbl-wrap">
+<table class="cmp">
+  <thead><tr><th>技能</th><th>用它干什么</th><th>与本节的关系</th></tr></thead>
+  <tbody>
+    <tr><td><b>① 用拉氏变换解微分方程</b></td><td>把时域的微分方程变成复域的代数方程</td><td>结构图里每个方框都建立在它之上</td></tr>
+    <tr><td><b>② 结构图等效化简</b></td><td>把复杂结构图一步步化成单一方框</td><td><b>本集主题</b>，通过作业牢固掌握</td></tr>
+    <tr><td><b>③ 梅森增益公式</b></td><td>直接对复杂结构图写出闭环传递函数</td><td>下一集讲，与②互为备选</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1354">22:34</a>老师特别解释了一个常被问到的问题：<strong>有了梅森增益公式，还要不要会等效化简？</strong>他的回答是要，而且两个都必须熟练。原话大意是：梅森公式一般写整体传递函数<em>更方便一些</em>；但进行系统分析的时候，很多时候并不是要把整个结构图的传递函数直接写出来，<mark>而是要把结构图的"局部"做变换，用来分析系统的某些性质</mark>——<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1354">22:34</a>「这个时候你就只能用结构图等效化简的方法来做了」。</p>
+
+<div class="why">
+  <span class="lbl">为什么两个方法必须都会，而不能"二选一"</span>
+  <p>两个方法的<strong>适用范围不同</strong>：<br>
+  <strong>梅森公式</strong>回答的是"整张图的输入→输出关系是什么"，一次到位，求整体传递函数它更快；<br>
+  <strong>等效化简</strong>回答的是"我能不能把这张图改成另一种结构"，它允许你在图内部<em>动局部</em>——例如把反馈点挪一挪，看系统对某个中间变量的依赖如何变化。<br>
+  后续分析里，很多问题（比如讨论某条反馈支路的影响、判断干扰从哪个口进入）<strong>要的就是"改图"，而不是"求整体式子"</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1354">22:34</a>这就是等效化简不可替代的原因。</p>
+</div>
+
+<div class="note">
+  <span class="lbl">作业要求（老师特别交代）</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1399">23:19</a>老师留的作业，主要就是训练结构图等效化简，并要求"中间的过程都要把图要画出来，不要怕麻烦"。此外还加了一道<strong>补充作业</strong>：<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1399">23:19</a>把例题二里用了"杀手锏"的那个题，<em>另换一个口</em>再实践一次互换这一步，「自己把它做一下就行」——目的就是把这张底牌真正练到手上。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=13&amp;t=1445">24:05</a>「这个事情一做，结构图化简的事情就心里有底了，以后碰到什么样复杂的问题，心里就不会慌。」</p>
+</div>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 梅森增益公式先睹为快（下一集展开）</span>
+  <p>梅森增益公式的骨架是：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>Δ</mo></mrow></mfrac><munder><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>k</mi></mrow></munder><msub><mi>P</mi><mrow><mi>k</mi></mrow></msub><msub><mo>Δ</mo><mrow><mi>k</mi></mrow></msub></math></div>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mi>k</mi></msub></math></span> 是第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 条前向通路的增益，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo></math></span> 是特征式（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo></math></span> 各回路增益之和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span> 两两互不接触回路增益乘积之和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>⋯</mo></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>Δ</mo><mi>k</mi></msub></math></span> 是去掉与第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 条前向通路接触的回路后的余子式。现在只需知道：<strong>它把"化图"变成了"找通路、找回路"</strong>，是一种更公式化的求传递函数方法。它的推导与用法在下一集，本集先把等效化简练熟，两者对照着理解会更清楚。</p>
+</div>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · 结构图与信号流图的"翻译表"</span>
+  <p>下一集的梅森公式通常画在<strong>信号流图</strong>上。结构图与信号流图是同一件事的两种画法，可以互相翻译；理解这张对照表，会让后面的内容顺很多：</p>
+  <div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>结构图元素</th><th>信号流图元素</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td>方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></td><td>有向支路（增益 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>）</td><td>一个传递关系</td></tr>
+      <tr><td>信号线 / 引出点</td><td>节点</td><td>一个信号（变量）</td></tr>
+      <tr><td>比较点（相减）</td><td>节点 + 增益 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 的支路</td><td>加减运算变成带符号的支路</td></tr>
+      <tr><td>串联 / 并联 / 反馈</td><td>支路的串 / 并 / 环</td><td>同样的联结，两种画法</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>记住一句：<mark>结构图里"点"是运算（比较、引出），信号流图里"点"是变量</mark>。这个差别是初学信号流图最容易混的地方；现在先建立印象即可，不必深究。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+  <h3>一条主线</h3>
+  <div class="chain">
+    <span class="n"><b>扫描</b> 标出引出点/比较点</span><span class="ar">→</span>
+    <span class="n"><b>小动作</b> 相邻点前后调换</span><span class="ar">→</span>
+    <span class="n"><b>消回路</b> 反馈等效</span><span class="ar">→</span>
+    <span class="n"><b>卡住</b> 动杀手锏（点互换）</span><span class="ar">→</span>
+    <span class="n"><b>收束</b> 单一方框</span>
+  </div>
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>反馈等效：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>/</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi><mo>)</mo></math></span>（负反馈取 +）。</li>
+    <li>移动补偿：后移多乘、前移多除；比较点看进入支路，引出点看引出支路。</li>
+    <li>并联 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>2</mn></msub></math></span>、串联 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><msub><mi>G</mi><mn>2</mn></msub></math></span>、反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>/</mo><mo>(</mo><mn>1</mn><mo>±</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi><mo>)</mo></math></span>——三者互不混淆。</li>
+  </ul>
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>搬点不补偿 → 少乘 / 少减，等效被破坏。</li>
+    <li>一上来就用杀手锏 → 越换越乱（"扭成麻花"），先把局部回路消干净。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><span class="cur">反馈联结等效（<a href="../P012-结构图及其等效变换（上）/index.html">结构图及其等效变换（上）</a> 已讲）</span></li>
+      <li><a href="../P010-复域数学模型（上）/index.html">复域数学模型（上）</a> 复域数学模型与传递函数</li>
+      <li><a href="../P008-拉氏反变换与传递函数（上）/index.html">拉氏反变换与传递函数（上）</a> 拉氏变换与传递函数</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li>P014 梅森增益公式与信号流图</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>串联 / 并联 / 反馈 三种联结</li>
+      <li>比较点与引出点的移动方向</li>
+    </ul>
+  </div>
+</div>
+  <footer class="doc-foot"><span>卢京潮《自动控制原理》· 西北工业大学 · 第 13 讲</span><a href="../P012-结构图及其等效变换（上）/index.html">← P012</a><a href="../index.html">全部目录</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、本集要解决的那个&quot;下手&quot;问题</a>
+    <a href="#s2">二、例题里反复用到的那条公式：反馈联结的等效</a>
+    <a href="#s3">三、拿到结构图先&quot;扫描&quot;，再决定从哪儿下手</a>
+    <a href="#s4">四、移动一点要&quot;补偿&quot;：例题里最容易错的一步</a>
+    <a href="#s5">五、例题一：把&quot;扫描—消回路—再扫描&quot;走三遍</a>
+    <a href="#s6">六、例题二：卡住了，就用&quot;最后一招&quot;</a>
+    <a href="#s7">七、收口：结构图等效化简在第二章里的位置</a>
+  </aside>
+</div>
+</body>
+</html>

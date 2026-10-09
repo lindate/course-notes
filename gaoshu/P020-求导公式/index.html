@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>求导公式 · 高等数学笔记</title>
+<meta name="description" content="本节把「能直接拿来用」的求导公式一次讲清：先是最常用的四则运算求导（加减、乘积、商、常数提出），再由此推出三角函数的导数。乘积法则是「交叉相加」，商法则是「分母平方、分子交叉相减」——谁减谁、减号方向是最容易翻车的地方。文末把16 条基本初等函数求导公式汇成一张总表，并给出「负号跟着『余』走」的统一">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  导数与微分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 20 讲</div>
+    <h1 class="title"><span class="pnum">P020</span>求导公式</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>本节把「能直接拿来用」的求导公式一次讲清：先是最常用的<strong>四则运算求导</strong>（加减、乘积、商、常数提出），再由此推出<strong>三角函数的导数</strong>。乘积法则是「交叉相加」，商法则是「分母平方、分子交叉相减」——<mark>谁减谁、减号方向</mark>是最容易翻车的地方。文末把<strong>16 条基本初等函数求导公式</strong>汇成一张总表，并给出「负号跟着『余』走」的统一记忆法。</p></div>
+    <div class="meta"><span>时长 23m53s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=0">00:00</a><span class="vv">四则运算求导公式总览：这里写的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>,</mo><mi>v</mi></math></span> 都是<strong>函数</strong>，不是常数。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=47">00:47</a><span class="vv"><b>乘积法则</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></span>：先 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 求导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 不动，加上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 不动 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 求导。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=112">01:52</a><span class="vv"><b>商法则</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>/</mo><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo>(</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>−</mo><mi>u</mi><mi>v</mi><mo>'</mo><mo>)</mo><mo>/</mo><msup><mi>v</mi><mrow><mn>2</mn></mrow></msup></math></span>：分母平方，分子是「前导后不导 减 后导前不导」。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=239">03:59</a><span class="vv"><b>常数因子</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>C</mi><mi>u</mi><mo>'</mo></math></span>（常数直接提出去）。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=279">04:39</a><span class="vv">只证了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>+</mo><mi>v</mi><mo>)</mo><mo>'</mo></math></span> 用定义，老师明确说<strong>其他证明不用看</strong>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=410">06:50</a><span class="vv">推广：三函数相乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mi>w</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo><mi>w</mi><mo>+</mo><mi>u</mi><mi>v</mi><mi>w</mi><mo>'</mo></math></span>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=481">08:01</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>/</mo><mi>v</mi><mo>)</mo><mo>'</mo></math></span> 也能转成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>⋅</mo><mo>(</mo><mn>1</mn><mo>/</mo><mi>v</mi><mo>)</mo><mo>'</mo></math></span> 用乘积法则（顺带碰到复合函数）。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=694">11:34</a><span class="vv">例1：多项式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>−</mo><mn>5</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi><mo>−</mo><mn>7</mn></math></span> 直接拆开求。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=773">12:53</a><span class="vv">例2：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span>，强调<strong>先求导再代值</strong>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=921">15:21</a><span class="vv"><b>大聪明错误</b>：先代入再求导得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——错得离谱。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1018">16:58</a><span class="vv">例3：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span> 用乘积法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo><mspace width="0.25em"></mspace><mn>2</mn><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1184">19:44</a><span class="vv">例4/5：由商法则推出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的导数，并补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1397">23:17</a><span class="vv">总结：三角求导公式都要记，全书最后有总表。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">第一组公式卡：四则运算求导法则</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=0">00:00</a>这一组是做题时用得最多的公式。先提醒一句：下面式子里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>,</mo><mi>v</mi></math></span> 写的虽然是字母，但<strong>它们都不是常数，而是函数</strong>——因为习惯就这么写，简单。四则运算一共四种，前两个你永远错不了，后两个才是重灾区。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>法则</th><th>公式</th><th>适用条件</th><th>记忆口诀</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>加减</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>'</mo></math></span></td>
+        <td>无额外条件</td>
+        <td>先加（减）后求 = 先求再加减</td>
+      </tr>
+      <tr>
+        <td>乘积</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>,</mo><mi>v</mi></math></span> 都可导</td>
+        <td>交叉相加：谁求导谁不动</td>
+      </tr>
+      <tr>
+        <td>商</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>/</mo><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mi>u</mi><mo>'</mo><mi>v</mi><mo>−</mo><mi>u</mi><mi>v</mi><mo>'</mo></mrow><mrow><msup><mi>v</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mo>≠</mo><mn>0</mn></math></span> 且可导</td>
+        <td>分母平方、分子交叉相减</td>
+      </tr>
+      <tr>
+        <td>常数因子</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>C</mi><mi>u</mi><mo>'</mo></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 是常数</td>
+        <td>常数直接朝外提</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="blk thm">
+  <span class="lbl">乘积法则 · 本课最容易错的一个</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=47">00:47</a>很多同学看到相乘，想都不想就「先求导再相乘」——<span class="bad">这是严重错误</span>。相乘求导是<strong>交叉相加</strong>：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></div>
+  <p>用老师原话验证：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，按法则是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 不动，加上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不动、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 求导」：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>x</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>'</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>x</mi><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>x</mi><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">商法则 · 减号方向是生死线</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=112">01:52</a>相除求导比相乘还难记，因为分子里是个<strong>减号</strong>：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>u</mi></mrow><mrow><mi>v</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mi>u</mi><mo>'</mo><mi>v</mi><mo>−</mo><mi>u</mi><mi>v</mi><mo>'</mo></mrow><mrow><msup><mi>v</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+  <p>老师特别强调：<strong>「它先是分母的平方，分子是『前导后不导 减 后导前不导』」</strong>。谁减谁区别老大了——记反了符号就全反。口诀：<em>分母平方，上导乘下，减下导乘上</em>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 260" role="img" aria-label="商法则减号的正确与错误对照">
+    <rect x="40" y="34" width="278" height="74" rx="8" class="m-box-g"></rect>
+    <text x="58" y="60" class="m-good" font-size="13">(u / v)' = (u' v - u v') / v²</text>
+    <text x="58" y="84" class="m-sub" font-size="11.5">正确：分子是 前导后不导 减 后导前不导</text>
+    <rect x="332" y="34" width="278" height="74" rx="8" class="m-box-a"></rect>
+    <text x="350" y="60" class="m-warn" font-size="13">(u / v)' = (u' v + u v') / v²</text>
+    <text x="350" y="84" class="m-sub" font-size="11.5">错误：把减号写成加号，符号全反</text>
+    <line x1="90" y1="120" x2="90" y2="150" class="m-good" stroke-width="2"></line>
+    <text x="60" y="170" class="m-good" font-size="12">√ 减号</text>
+    <line x1="382" y1="120" x2="382" y2="150" class="m-warn" stroke-width="2"></line>
+    <text x="350" y="170" class="m-warn" font-size="12">× 加号（错）</text>
+    <text x="220" y="208" class="m-txt" font-size="12.5">谁减谁：上导乘下 减 下导乘上</text>
+    <text x="200" y="232" class="m-sub" font-size="11.5">记反方向 = 整题符号错（考试高频丢分）</text>
+  </svg>
+  <figcaption><b>商法则是四则运算里唯一带「减号」的。</b>左边绿色框是正确公式，右边那个框是常见笔误——只差一个符号。因为分子是「前导后不导 减 后导前不导」，<strong>减号方向记反，后面整条式子符号全反</strong>。老师原话：「你记反了那符号就反了，好吧。」</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=239">03:59</a>常数因子为什么能直接提出去</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>C</mi><mi>u</mi><mo>'</mo></math></span> 看起来理所当然，但它成立的前提是 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 真是常数</strong>。课本后面补的这条公式，比如求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 提出去得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。它和乘积法则其实是一回事：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 看成「永远不变的函数」，那 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span>，乘积法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>C</mi><mo>'</mo><mi>u</mi><mo>+</mo><mi>u</mi><mo>'</mo><mi>C</mi><mo>=</mo><mn>0</mn><mo>+</mo><mi>u</mi><mo>'</mo><mi>C</mi><mo>=</mo><mi>C</mi><mi>u</mi><mo>'</mo></math></span> 立刻退化成它。所以<strong>常数提出去 = 乘积法则在「其中一个因子恒定不变」时的特例</strong>。</p>
+</div>
+
+<h2 id="s2">证明：只证一个，其余不用看</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=279">04:39</a>老师明确说：四则运算这四条的证明<strong>都不用看</strong>，书上其他证明做题也基本用不到。不过他还是当场证了最简单的加减法，让我们看看「用定义怎么证」的套路：</p>
+
+<ol class="steps">
+  <li>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 整体当成一个函数，写出它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处导数的定义：
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>'</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mo>[</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>+</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>]</mo><mo>−</mo><mo>[</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>]</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div></li>
+  <li>把分子重新分组：含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 的变化量归一堆、含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 的变化量归一堆。</li>
+  <li>拆成两个极限：
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>u</mi><mo>(</mo><mi>x</mi><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>−</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>+</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi>v</mi><mo>(</mo><mi>x</mi><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>−</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mi>u</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi>v</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></div></li>
+</ol>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=410">06:50</a>推广到三个函数也照猫画虎：相加就分别求导；<strong>三个相乘</strong>则是「每个轮流求导、其余两个不动，再加起来」：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mi>w</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mi>w</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo><mi>w</mi><mo>+</mo><mi>u</mi><mi>v</mi><mi>w</mi><mo>'</mo></math></div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=410">06:50</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>（三个因子相乘），求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三个因子，展开成三项</span>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 依次看作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>,</mo><mi>v</mi><mo>,</mo><mi>w</mi></math></span>。三个相乘的规则是<strong>每一项只让一个因子求导、另外两个原样不动</strong>，三项相加：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>'</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>x</mi><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>x</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></div>
+    <p>逐项算：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mn>1</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，代进去得</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>x</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>x</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <p>把公因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 提出来整理：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mrow><mo stretchy="true">[</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>)</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>x</mi><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo stretchy="true">]</mo></mrow></math></div>
+    <div class="trap">
+      <span class="lbl">三项，不是两项</span>
+      <p><span class="bad">按乘积法则只写两项。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo></math></span> 是两项，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mi>w</mi><mo>)</mo><mo>'</mo></math></span> 是<strong>三项</strong>——几个因子就几项。漏一项是这类题最典型的丢分点。记法像「击鼓传花」：求导的记号依次落到每个因子头上，轮到谁就只有谁变，其余两个一动不动。</p>
+    </div>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=481">08:01</a>还有一个巧妙视角：商也能写成乘积——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>u</mi></mrow><mrow><mi>v</mi></mrow></mfrac><mo>=</mo><mi>u</mi><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>v</mi></mrow></mfrac></math></span>。于是用乘积法则再配合「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>v</mi></mrow></mfrac></math></span> 看成复合函数」也能推出商法则。这里会提前碰到一点点复合函数（下节课才正式讲），但思路是通的：<strong>乘积法则是更底层的工具，商法则可由它推出。</strong></p>
+
+<h2 id="s3">第二组公式卡：基本初等函数求导（前面已学，本课用到）</h2>
+
+<p>四则运算要「套」在具体函数上，所以这些最基础的求导结果也必须熟。幂、指、对三类是前面已经学过的，这里整理成卡，并<strong>标注适用条件</strong>：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>类型</th><th>公式</th><th>适用条件</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>幂函数</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mi>a</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><mi>a</mi><msup><mi>x</mi><mrow><mi>a</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span></td><td>按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>a</mi></mrow></msup></math></span> 的定义域（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mn>1</mn><mo>/</mo><mn>3</mn></math></span> 时全体实数）</td></tr>
+      <tr><td>指数</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>,</mo><mspace width="1em"></mspace><mo>(</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>&gt;</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mi>a</mi><mo>≠</mo><mn>1</mn></math></span></td></tr>
+      <tr><td>对数</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span></td></tr>
+      <tr><td>对数（推广）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span></td></tr>
+      <tr><td>三角（已知）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mspace width="1em"></mspace><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td>全体实数</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么对数要写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span>，绝对值有什么用</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1397">23:17</a>课本和后续积分里出现的常常是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，这个绝对值<strong>不是摆设</strong>：</p>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 有定义，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 也只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 成立。</li>
+    <li>但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 也有定义。为了让导数公式在负的那一半也说得通，看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 时：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>w</mi><mo>=</mo><mo form="prefix">−</mo><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mo form="prefix">−</mo><mi>x</mi><mo>)</mo></math></span>，用复合求导
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mi mathvariant="normal">ln</mi><mo>(</mo><mo form="prefix">−</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo form="prefix">−</mo><mi>x</mi></mrow></mfrac><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></div></li>
+    <li>于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mo form="prefix">−</mo><mi>x</mi><mo>)</mo></math></span> 导数也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。<strong>合起来就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，对一切 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span> 成立。</strong></li>
+  </ul>
+  <p>绝对值的意义一句话总结：<mark>它把公式的定义域从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 扩到了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span></mark>，和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 的定义域对齐。所以积分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo form="prefix">+</mo><mi>C</mi></math></span> 才在正负两侧都正确——没有绝对值就会在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 出错。</p>
+</div>
+
+<h2 id="s4">第三组公式卡：三角函数的导数（本课由商法则推出）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1184">19:44</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的导数前面已经知道。其余四个三角函数都能写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>/</mo><mi mathvariant="normal">cos</mi></math></span> 的<strong>商</strong>，用商法则当场推出来，所以必须会推、更要会记。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 260" role="img" aria-label="六个三角函数的导数由 sin 与 cos 经商法则推出">
+    <circle cx="120" cy="70" r="34" class="m-bg-a"></circle>
+    <text x="104" y="66" class="m-txt" font-size="13">sin x</text>
+    <text x="104" y="84" class="m-sub" font-size="11.5">→ cos x</text>
+    <circle cx="120" cy="180" r="34" class="m-bg-a"></circle>
+    <text x="100" y="176" class="m-txt" font-size="13">cos x</text>
+    <text x="98" y="194" class="m-sub" font-size="11.5">→ -sin x</text>
+    <rect x="320" y="36" width="150" height="44" rx="8" class="m-box-g"></rect>
+    <text x="338" y="64" class="m-acc" font-size="12.5">tan x = sin/cos</text>
+    <rect x="320" y="96" width="150" height="44" rx="8" class="m-box-g"></rect>
+    <text x="338" y="124" class="m-acc" font-size="12.5">cot x = cos/sin</text>
+    <rect x="320" y="156" width="150" height="44" rx="8" class="m-box-g"></rect>
+    <text x="340" y="184" class="m-acc" font-size="12.5">sec x = 1/cos</text>
+    <rect x="320" y="206" width="150" height="40" rx="8" class="m-box-g"></rect>
+    <text x="340" y="232" class="m-acc" font-size="12.5">csc x = 1/sin</text>
+    <rect x="500" y="36" width="128" height="44" rx="8" class="m-panel-a"></rect>
+    <text x="516" y="64" class="m-good" font-size="12.5">sec² x</text>
+    <rect x="500" y="96" width="128" height="44" rx="8" class="m-panel-a"></rect>
+    <text x="516" y="124" class="m-good" font-size="12.5">-csc² x</text>
+    <rect x="500" y="156" width="128" height="44" rx="8" class="m-panel-a"></rect>
+    <text x="510" y="184" class="m-good" font-size="12">sec x tan x</text>
+    <rect x="500" y="206" width="128" height="40" rx="8" class="m-panel-a"></rect>
+    <text x="510" y="232" class="m-good" font-size="12">-csc x cot x</text>
+    <line x1="154" y1="58" x2="318" y2="58" class="m-line" stroke-width="1.4"></line>
+    <line x1="154" y1="192" x2="318" y2="192" class="m-line" stroke-width="1.4"></line>
+    <line x1="270" y1="135" x2="318" y2="135" class="m-line" stroke-width="1.4"></line>
+    <line x1="470" y1="58" x2="498" y2="58" class="m-acc" stroke-width="1.6"></line>
+    <line x1="470" y1="118" x2="498" y2="118" class="m-acc" stroke-width="1.6"></line>
+    <line x1="470" y1="178" x2="498" y2="178" class="m-acc" stroke-width="1.6"></line>
+    <line x1="470" y1="226" x2="498" y2="226" class="m-acc" stroke-width="1.6"></line>
+  </svg>
+  <figcaption><b>四个「非常规」三角函数都由 sin、cos 经商法则推出。</b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是商；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>」也就是商的特殊情形。箭头右边是它们的结果：<strong>注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 前面带负号</strong>——和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的正号相对。老师让把这两对「一个正、一个负」放一起记。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=773">12:53</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>+</mo><mn>4</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先符号求导，再代入数值；绝不要先代入</span>
+    <p>用加减法则，每一项分别求导：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>(</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>+</mo><mo>(</mo><mn>4</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>−</mo><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">sin</mi><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>0</mn><mo>=</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <p>注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></span> 是<strong>常数</strong>，常数求导为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。要的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 这个表达式，不是先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 换成数。</p>
+    <p>现在代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>'</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>3</mn><msup><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi mathvariant="normal">sin</mi><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>3</mn><msup><mo>π</mo><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>4</mn></mrow></mfrac><mo>−</mo><mn>4</mn></math></div>
+    <div class="trap">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=921">15:21</a>大聪明错误：先代入再求导</span>
+      <p><span class="bad">有同学想：先算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span>，再对结果求导，省事。</span>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo>π</mo><mo>/</mo><mn>2</mn></math></span> 代进去得到的是一个<strong>具体的数</strong>（常数），常数的导数当然是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。于是他写下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>。</p>
+      <p>错在哪？<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span> 的意思是「先得到导数函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo>π</mo><mo>/</mo><mn>2</mn></math></span> 代进去」</strong>，不是「先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo>π</mo><mo>/</mo><mn>2</mn></math></span> 代入函数得到常数，再求导」。后者求的是常数的导数，恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，那所有这种题答案都该是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——显然荒谬。口诀：<mark>先求导，再代值；千万别先代值再求导</mark>。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s5">例 3：乘积法则练手</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1018">16:58</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把整个括号当成一个因子，用乘积法则</span>
+    <p>这是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> ×（一个和）」的形式，按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mspace width="0.25em"></mspace><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>+</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></div>
+    <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。代入：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>+</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></div>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 提出来，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 抵消，剩下</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><mn>2</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>=</mo><mn>2</mn><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <p><strong>关键观察</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span> 内部是相加，求导时各自求、再相加；乘积法则是作用在「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 与这个整体」之间。一层一层不要乱。</p>
+  </div>
+</div>
+
+<h2 id="s6">例 4、例 5：用商法则推出三角导数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1184">19:44</a>这两道既是例题，也是把三角求导公式「推导一遍」——以后直接当结论用。</p>
+
+<p><strong>例 4：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span>。</strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 用商法则：</p>
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></mrow><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>(</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></mrow><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi><mo>+</mo><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac></math></div>
+<p>即</p>
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></div>
+<p>顺手把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 也推一遍（套路一样，注意分子的<strong>减号方向</strong>）：</p>
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></mrow><mrow><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi><mo>−</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow><mrow><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><msup><mi mathvariant="normal">csc</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></div>
+<p>最后一步用了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi><mo>=</mo><mn>1</mn></math></span>，分子凑成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>，外面落下一个<strong>负号</strong>——这就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mi mathvariant="normal">csc</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></span> 的来源。它和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></span> 恰成一对：<mark>一个带正号，一个带负号</mark>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1290">21:30</a><strong>例 5：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span>。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>，仍是商法则（分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>）：</p>
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mo>(</mo><mn>1</mn><mo>)</mo><mo>'</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></mrow><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>−</mo><mo>(</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></mrow><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div>
+<p>即</p>
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+<p>再补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>，仍是商法则（分子为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>）：</p>
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mo>(</mo><mn>1</mn><mo>)</mo><mo>'</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></mrow><mrow><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>0</mn><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div>
+<p>即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>（同样带负号）。</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1184">19:44</a>视频原话（大意）</span>
+  <p><q><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 分之一是个啥？是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi></math></span>，想起来了没有？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span> 分之一就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi></math></span> 跟 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi></math></span> 我们在高数里用得很多——包括 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi></math></span>，我都不知道你们高中竟然没有学过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi></math></span>，真的。</q></p>
+  <p>老师特意叮嘱：<strong>别因为「高中没学过」就把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 跳过</strong>。这三个在高数里（尤其是后面的积分）出现得非常频繁，它们的导数必须像 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 一样熟练。</p>
+</div>
+
+<h2 id="s7">总表：16 条基本求导公式，以及它们的来路</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1397">23:17</a>老师反复说这些公式「都要记住」，还预告全书最后会给一张总表。与其死背，不如<strong>按「来路」分组记</strong>——每一条都能从前面某一招推出来，记住来路就等于记住公式：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>函数</th><th>导数</th><th>来路 / 注意</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span>（常数）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span></td><td>定义：分子恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mo>μ</mo></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mo>μ</mo></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><mo>μ</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mo>μ</mo><mo>−</mo><mn>1</mn></mrow></msup></math></span></td><td>定义 + 二项式；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>μ</mo></math></span> 可为任意实数</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup></math></span> 的特例（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>e</mi><mo>=</mo><mn>1</mn></math></span>）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span></td><td>定义；要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>&gt;</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mi>a</mi><mo>≠</mo><mn>1</mn></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的特例</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span></td><td>定义；写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span> 都成立</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td>定义 + 重要极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td>定义；<strong>带负号</strong></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></span></td><td>商法则：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mi mathvariant="normal">csc</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></span></td><td>商法则：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>；<strong>带负号</strong></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td>商法则：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td>商法则：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>；<strong>带负号</strong></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span></td><td>反函数求导（下一节 <a href="../P021-反函数求导/index.html">反函数求导</a>）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span></td><td>反函数求导；<strong>带负号</strong></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td><td>反函数求导</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mspace width="1em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mspace width="1em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td><td>反函数求导；<strong>带负号</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>这张十六行的表可以压成一条主线索：<mark>幂 / 指 / 对靠「定义」推，三角四条靠「商法则」推，反三角四条靠「反函数求导」推</mark>。反三角那四条本节先当结论用，推导放下节；幂、指、对在 <a href="../P017-导数的定义/index.html">导数的定义</a> 已经推过。</p>
+
+<div class="blk plain">
+  <span class="lbl">推导线索 · <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span> 是怎么来的</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>x</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>∈</mo><mrow><mo stretchy="true">[</mo><mo form="prefix">−</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>,</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo stretchy="true">]</mo></mrow></math></span>。两边对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导（左边把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，用链式法则）：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>=</mo><mn>1</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></div>
+  <p>再由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>=</mo><mn>1</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mo form="prefix">±</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>。关键就在这个<strong>正负号</strong>：当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>∈</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>,</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo stretchy="true">)</mo></mrow></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>，必须取正号。于是</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></div>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 完全同理：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>x</mi></math></span>，求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>=</mo><mn>1</mn></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>∈</mo><mo>(</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>)</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>，故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>——<strong>和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 只差一个负号</strong>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 276" role="img" aria-label="16 条求导公式按推导来路分成三组：定义、商法则、反函数求导">
+    <path d="M 320 54 L 320 88 L 120 88 L 120 120" fill="none" class="m-line" stroke-width="1.4"></path>
+    <path d="M 320 54 L 320 120" fill="none" class="m-line" stroke-width="1.4"></path>
+    <path d="M 320 54 L 320 88 L 520 88 L 520 120" fill="none" class="m-line" stroke-width="1.4"></path>
+    <rect x="220" y="16" width="200" height="38" rx="8" class="m-panel-hi"></rect>
+    <text x="320" y="41" text-anchor="middle" class="m-txt" font-size="12.5">16 条基本求导公式</text>
+
+    <rect x="20" y="120" width="200" height="40" rx="8" class="m-panel-a"></rect>
+    <text x="120" y="145" text-anchor="middle" class="m-fill-a" font-size="12">由定义推出</text>
+    <rect x="220" y="120" width="200" height="40" rx="8" class="m-panel-a"></rect>
+    <text x="320" y="145" text-anchor="middle" class="m-fill-a" font-size="12">由商法则推出</text>
+    <rect x="420" y="120" width="200" height="40" rx="8" class="m-panel-a"></rect>
+    <text x="520" y="145" text-anchor="middle" class="m-fill-a" font-size="12">由反函数求导推出</text>
+
+    <path d="M 120 160 L 120 166 L 68 166 L 68 172" fill="none" class="m-thin" stroke-width="1.2"></path>
+    <path d="M 120 160 L 120 166 L 172 166 L 172 172" fill="none" class="m-thin" stroke-width="1.2"></path>
+    <path d="M 320 160 L 320 166 L 268 166 L 268 172" fill="none" class="m-thin" stroke-width="1.2"></path>
+    <path d="M 320 160 L 320 166 L 372 166 L 372 172" fill="none" class="m-thin" stroke-width="1.2"></path>
+    <path d="M 520 160 L 520 166 L 468 166 L 468 172" fill="none" class="m-thin" stroke-width="1.2"></path>
+    <path d="M 520 160 L 520 166 L 572 166 L 572 172" fill="none" class="m-thin" stroke-width="1.2"></path>
+
+    <rect x="20" y="172" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="68" y="189" text-anchor="middle" class="m-txt" font-size="11.5">C' = 0</text>
+    <rect x="124" y="172" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="172" y="189" text-anchor="middle" class="m-txt" font-size="11.5">x^μ</text>
+    <rect x="20" y="206" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="68" y="223" text-anchor="middle" class="m-txt" font-size="11.5">e^x , a^x</text>
+    <rect x="124" y="206" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="172" y="223" text-anchor="middle" class="m-txt" font-size="11.5">ln x , log_a x</text>
+
+    <rect x="220" y="172" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="268" y="189" text-anchor="middle" class="m-txt" font-size="11.5">tan x</text>
+    <rect x="324" y="172" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="372" y="189" text-anchor="middle" class="m-txt" font-size="11.5">cot x</text>
+    <rect x="220" y="206" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="268" y="223" text-anchor="middle" class="m-txt" font-size="11.5">sec x</text>
+    <rect x="324" y="206" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="372" y="223" text-anchor="middle" class="m-txt" font-size="11.5">csc x</text>
+
+    <rect x="420" y="172" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="468" y="189" text-anchor="middle" class="m-txt" font-size="11.5">arcsin x</text>
+    <rect x="524" y="172" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="572" y="189" text-anchor="middle" class="m-txt" font-size="11.5">arccos x</text>
+    <rect x="420" y="206" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="468" y="223" text-anchor="middle" class="m-txt" font-size="11.5">arctan x</text>
+    <rect x="524" y="206" width="96" height="26" rx="6" class="m-panel-s"></rect>
+    <text x="572" y="223" text-anchor="middle" class="m-txt" font-size="11.5">arccot x</text>
+
+    <text x="30" y="258" class="m-sub" font-size="11.5">幂/指/对 靠定义；三角四条靠商法则；反三角四条靠反函数求导（下一节）</text>
+  </svg>
+  <figcaption><b>十六条公式，只有三个来源。</b>左边一组由<strong>导数定义</strong>直接推出（幂、指、对，加常数）；中间一组是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>/</mo><mi mathvariant="normal">cos</mi></math></span> 的商或倒数，用<strong>商法则</strong>当场算出；右边一组靠<strong>反函数求导</strong>（下一节 <a href="../P021-反函数求导/index.html">反函数求导</a>）。这样分组之后，要背的其实只有「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>」这个底座，其余都能现推或成对记。</figcaption>
+</figure>
+
+<h2 id="s8">最容易记混的几对，和「负号」的统一解释</h2>
+
+<p>总表里最容易翻车的，是四对「长得几乎一样、只差一个负号或一个函数名」的公式。先并排看清差别，再给一个<strong>一次性记住所有负号</strong>的理由。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>容易混的一对</th><th>两条公式</th><th>差在哪</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>　与　<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span></td>
+        <td>只差一个负号；根号内是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>（不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn></math></span>）</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>　与　<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td>
+        <td>只差一个负号；分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，且<strong>没有根号</strong></td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></span>　与　<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msup><mi mathvariant="normal">csc</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi></math></span></td>
+        <td>负号 + 函数名换成它的「余」兄弟</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>　与　<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td>
+        <td>负号 + 函数名整体换成「余」兄弟</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">「余」字辈为什么统统带负号</span>
+  <p>回头看上面四对：<strong>带负号的永远是「余」字辈</strong>——余弦 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>、余切 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi></math></span>、余割 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi></math></span>、反余弦 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi></math></span>、反余切 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow></math></span>；不带负号的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>,</mo><mi mathvariant="normal">tan</mi><mo>,</mo><mi mathvariant="normal">sec</mi><mo>,</mo><mi mathvariant="normal">arcsin</mi><mo>,</mo><mi mathvariant="normal">arctan</mi></math></span>。这绝不是巧合。</p>
+  <p>「余」对应的英文前缀是 co-，本义是 <em>complementary</em>（余角）。每个余函数都能写成原函数「反着来」的样子：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mrow><mo stretchy="true">(</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>−</mo><mi>x</mi><mo stretchy="true">)</mo></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mrow><mo stretchy="true">(</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>−</mo><mi>x</mi><mo stretchy="true">)</mo></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mi mathvariant="normal">sec</mi><mrow><mo stretchy="true">(</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>−</mo><mi>x</mi><mo stretchy="true">)</mo></mrow></math></div>
+  <p>右边是复合函数，内层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>−</mo><mi>x</mi></math></span> 的导数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>，用链式法则时<strong>必然多出一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span></strong>。反三角那边同理，全是「常数减一个不带负号的函数」：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>−</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mspace width="1em"></mspace><mi>x</mi><mo>=</mo><mfrac><mo>π</mo><mn>2</mn></mfrac><mo>−</mo><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+  <p>求导时那个常数求导为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，剩下的正好是被减函数的导数取反。所以口诀只有六个字：<mark>负号跟着「余」走</mark>。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>,</mo><mi mathvariant="normal">tan</mi><mo>,</mo><mi mathvariant="normal">sec</mi><mo>,</mo><mi mathvariant="normal">arcsin</mi><mo>,</mo><mi mathvariant="normal">arctan</mi></math></span> 五条正的记牢，其余全靠「加负号」补齐——一次搞定，不会再记反。</p>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=20&amp;t=1397">23:17</a>记忆策略</span>
+  <p>六个三角导数里，<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 前面是正号，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 前面是负号</strong>——成对记。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>（正）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>（负）是底座。上面那张十六行总表就是这个套路的完整版，现在先分组成卡记牢即可。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>四则运算（最常用）</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>'</mo></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></span>（交叉相加，别写成先求再乘）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>/</mo><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo>(</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>−</mo><mi>u</mi><mi>v</mi><mo>'</mo><mo>)</mo><mo>/</mo><msup><mi>v</mi><mrow><mn>2</mn></mrow></msup></math></span>（分母平方，分子交叉<strong>相减</strong>）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>C</mi><mi>u</mi><mo>'</mo></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 是常数，直接提）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mi>w</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mi>w</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo><mi>w</mi><mo>+</mo><mi>u</mi><mi>v</mi><mi>w</mi><mo>'</mo></math></span>（<strong>三个因子就三项</strong>）</li>
+  </ul>
+
+  <h3>三角求导（成对记正负）</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mtext>正</mtext><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><msup><mi mathvariant="normal">csc</mi><mrow><mn>2</mn></mrow></msup><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mtext>负</mtext><mo>)</mo></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mtext>正</mtext><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">csc</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mtext>负</mtext><mo>)</mo></math></span></li>
+  </ul>
+
+  <h3>十六条的来路（一张网）</h3>
+  <ul class="tight">
+    <li><strong>由定义</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mo>μ</mo></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi mathvariant="normal">log</mi><mi>a</mi></msub><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></li>
+    <li><strong>由商法则</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">csc</mi></math></span></li>
+    <li><strong>由反函数求导</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow></math></span>（下一节）</li>
+  </ul>
+
+  <h3>一条万能口诀</h3>
+  <p><mark>负号跟着「余」走</mark>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>,</mo><mi mathvariant="normal">cot</mi><mo>,</mo><mi mathvariant="normal">csc</mi><mo>,</mo><mi mathvariant="normal">arccos</mi><mo>,</mo><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow></math></span> 全带负号；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>,</mo><mi mathvariant="normal">tan</mi><mo>,</mo><mi mathvariant="normal">sec</mi><mo>,</mo><mi mathvariant="normal">arcsin</mi><mo>,</mo><mi mathvariant="normal">arctan</mi></math></span> 全不带。</p>
+
+  <h3>对数别忘了绝对值</h3>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>&gt;</mo><mn>0</mn><mo>)</mo></math></span>；更完整地写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>≠</mo><mn>0</mn><mo>)</mo></math></span>，绝对值把定义域扩到正负两侧，和积分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo form="prefix">+</mo><mi>C</mi></math></span> 对齐。</p>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li>乘积别写成「先求导再相乘」；商法则<strong>减号方向</strong>记反整题错。</li>
+    <li><strong>先求导再代值</strong>，绝不能先代值再求导（那会得到常数、导数恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）。</li>
+    <li>三个因子相乘是<strong>三项</strong>，不是两项。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数的定义（差商极限）</li>
+      <li><a href="../P019-可导与连续关系/index.html">可导与连续关系</a> 可导与连续（先有导数概念，才有求导公式）</li>
+      <li><span class="cur">基本初等函数（幂、指、对、三角）的表达式与定义域</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P021-反函数求导/index.html">反函数求导</a> 反函数求导（由四则运算推出反三角、对数导数）</li>
+      <li><a href="../P022-复合函数求导/index.html">复合函数求导</a> 复合函数求导（链式法则，考试必考）</li>
+      <li><a href="../P023-基本求导法则与公式/index.html">基本求导法则与公式</a> 基本求导法则与公式（总表汇总）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>'</mo></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 是常数；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo></math></span> 里两个都是函数，不是「先求再乘」。</li>
+      <li>商法则分子是减号；乘积法则是加号——两者别串台。</li>
+      <li>三角导数里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mo>,</mo><mi mathvariant="normal">csc</mi></math></span> 带负号，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mo>,</mo><mi mathvariant="normal">sec</mi></math></span> 不带。</li>
+      <li>「余」字辈都带负号：别忘了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow></math></span>。</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 20 讲</span><a href="../P019-可导与连续关系/index.html">← P019</a><a href="../index.html">全部目录</a><a href="../P021-反函数求导/index.html">P021 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">第一组公式卡：四则运算求导法则</a>
+    <a href="#s2">证明：只证一个，其余不用看</a>
+    <a href="#s3">第二组公式卡：基本初等函数求导（前面已学，本课用到）</a>
+    <a href="#s4">第三组公式卡：三角函数的导数（本课由商法则推出）</a>
+    <a href="#s5">例 3：乘积法则练手</a>
+    <a href="#s6">例 4、例 5：用商法则推出三角导数</a>
+    <a href="#s7">总表：16 条基本求导公式，以及它们的来路</a>
+    <a href="#s8">最容易记混的几对，和「负号」的统一解释</a>
+  </aside>
+</div>
+</body>
+</html>

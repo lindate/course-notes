@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>两类曲线积分之间的联系：那条弧上的两条投影 · 高等数学笔记</title>
+<meta name="description" content="上一页的两类曲线积分各管一摊，这一页把它们焊起来：dx=cosαds、dy=cosβds——第二类积分由此可以全部改写成对弧长的积分。cosα、cosβ 不是随便的角，它们正是这一点的有向切向量的方向余弦。这一页是三页里最短的，却直接决定了 [[94]] 格林公式能不能用对。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 10 章 重积分与曲线曲面积分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 93 讲</div>
+    <h1 class="title"><span class="pnum">P093</span>两类曲线积分之间的联系：那条弧上的两条投影</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>上一页的两类曲线积分各管一摊，这一页把它们焊起来：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>——第二类积分由此可以全部改写成对弧长的积分。<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span> 不是随便的角，它们正是这一点的<strong>有向切向量</strong>的方向余弦</mark>。这一页是三页里最短的，却直接决定了 <a href="../P094-格林公式&amp;积分与路径无关条件/index.html">格林公式&amp;积分与路径无关条件</a> 格林公式能不能用对。</p></div>
+    <div class="meta"><span>时长 50m39s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=0">00:00</a><span class="vv">先复习两类积分：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 不带方向，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 带方向。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=81">01:21</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 的来历回顾：勾股定理 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>s</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=133">02:13</a><span class="vv"><b>关键提醒</b>：平方以后正负号被「藏」起来了，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 恒正、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 可负。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=170">02:50</a><span class="vv">反过来问：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 能不能用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 表示？——引入<b>方向余弦</b>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=253">04:13</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></mrow></mfrac></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 是与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴正半轴的夹角。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=327">05:27</a><span class="vv"><b>钝角情形</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 为钝角时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>&lt;</mo><mn>0</mn></math></span>，正好让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=383">06:23</a><span class="vv"><b>联系公式</b>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=454">07:34</a><span class="vv">新的困难：直线上的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 固定，<b>曲线上的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 每点都在变</b>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=532">08:52</a><span class="vv">参数方程情形（参数增大的方向）：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增大、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>&gt;</mo><mn>0</mn></math></span>，直接配。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=837">13:57</a><span class="vv">参数减小的方向：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>&gt;</mo><mi>b</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>&lt;</mo><mn>0</mn></math></span>，<b>整套公式前面加负号</b>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=1621">27:01</a><span class="vv">例 1：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，化为对弧长的曲线积分。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=1509">25:09</a><span class="vv">例 2：上半圆两种做法——参数增大与参数减小，<b>一个正号一个负号</b>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=2184">36:24</a><span class="vv">空间曲线：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo></math></span> 三个方向余弦。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=2668">44:28</a><span class="vv">例 4：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>3</mn></mrow></msup></math></span>，化为对弧长并算出结果。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">先把两类积分摆在一起看</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=0">00:00</a>上一讲的两类曲线积分，学的时候是分开学的，所以脑子里它们还是两件不相干的东西。这一讲要做的事只有一件：<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 表示出来，然后代进第二类曲线积分。</strong></p>
+
+<p>先把上一页的结论搬过来对照一下：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th></th><th>第一类（对弧长）</th><th>第二类（对坐标）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>微元</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>：一小段<strong>弧长</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>：小段在两个方向上的<strong>改变量</strong></td>
+      </tr>
+      <tr>
+        <td>符号</td>
+        <td>恒大于零</td>
+        <td>可正可负，由方向决定</td>
+      </tr>
+      <tr>
+        <td>曲线要不要标方向</td>
+        <td>不要，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>B</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>A</mi></math></span> 一样</td>
+        <td>必须标，换向变号</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>这张表里最值得盯住的是第二行：一个是「永远正」，一个是「可正可负」。它们之间的桥梁就藏在这一行里。</p>
+
+<h2 id="s2">桥梁的第一半：从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 出发的勾股定理</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=81">01:21</a>回忆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 当初是怎么定义的：把曲线切成很多小段，每一段很短，短到可以近似看成一条<strong>直线段</strong>。既然它是一条直线段，那么它的水平投影 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 和竖直投影 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 与它本身构成一个直角三角形，勾股定理给出</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi><mo>=</mo><msqrt><mrow><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></div>
+
+<p>这条式子我们的同学都很熟悉。但老师在这里停了一下，指出一个<strong>很容易被忽略的后果</strong>：</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=133">02:13</a>平方之后，「正负号」被藏起来了</span>
+  <p>式子右边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>，平方之后不论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 是正是负，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 都大于零。所以这条勾股定理<strong>只给出长度，完全丢掉了方向的信息</strong>。</p>
+  <p>它的含义是：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 必须是正的（它就是弧长、就是长度），而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 未必。老师原话是希望大家「对它的正负号先有一个<em>浅浅的意识</em>」——这个意识非常重要，因为后面做第二类曲线积分时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 的符号就是答案里那个负号的来源。</p>
+  <p>打个比方：一条从左下到右上的斜线，和一条从右下到左上的斜线，长度完全一样，勾股定理给出的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 也一样；但它们的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 一个正、一个负。<mark>勾股定理能算出「多长」，算不出「朝哪」。</mark></p>
+</div>
+
+<h2 id="s3">桥梁的另一半：方向余弦</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=170">02:50</a>现在反过来问：既然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 是斜边，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 是两条直角边，那么能不能把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> <strong>用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 表示</strong>？能——只要引入两个角。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=253">04:13</a>设这一小段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 的方向与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴正半轴的夹角为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴正半轴的夹角为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span>。在以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 为斜边的直角三角形里，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 的邻边，所以</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></mrow></mfrac><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+
+<p>同理，把这条斜边与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴方向的夹角记为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span>（它与图中的另一个角是内错角，数值相同），则</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></mrow></mfrac><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=327">05:27</a>钝角的情形：这条公式自己把符号对上了</span>
+  <p>有同学会担心：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 万一是钝角怎么办？那就正好说明这套写法是对的。</p>
+  <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 是钝角时，这个余弦是负的，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi><mo>&lt;</mo><mn>0</mn></math></span>——<strong>和我们前面说的「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 可正可负」完全吻合</strong>。也就是说，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 的符号不是另外加的规定，它<em>天然地</em>被「余弦的正负」承担了。</p>
+  <p>这就是为什么这套公式比勾股定理更好用：勾股定理丢掉了方向，而余弦把方向捡了回来。<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 是一条「带符号的勾股定理」。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 286" role="img" aria-label="左边是锐角情形下ds、dx、dy构成的直角三角形，右边是钝角情形下余弦为负所以dx为负">
+    <text x="34" y="24" class="m-txt" font-size="12">同一个小弧段：ds 是斜边，dx、dy 是两条直角边</text>
+
+    <text x="52" y="48" class="m-txt" font-size="11.5">① 锐角：dx 为正</text>
+    <line x1="80" y1="240" x2="268" y2="240" class="m-line" stroke-width="1.2"></line>
+    <polygon points="276,240 266,236 266,244" class="m-fill"></polygon>
+    <text x="278" y="246" class="m-sub" font-size="11.5">x</text>
+    <line x1="110" y1="240" x2="240" y2="150" class="m-acc" stroke-width="2.2"></line>
+    <line x1="110" y1="240" x2="240" y2="240" class="m-good" stroke-width="1.8"></line>
+    <line x1="240" y1="240" x2="240" y2="150" class="m-warn" stroke-width="1.8"></line>
+    <path d="M 152 240 A 42 42 0 0 0 145 224" fill="none" class="m-vio" stroke-width="1.4"></path>
+    <text x="156" y="234" class="m-vio" font-size="11.5">α</text>
+    <text x="182" y="186" class="m-acc" font-size="11.5">ds</text>
+    <text x="160" y="256" class="m-good" font-size="11.5">dx &gt; 0</text>
+    <text x="244" y="200" class="m-warn" font-size="11.5">dy &gt; 0</text>
+    <text x="52" y="276" class="m-sub" font-size="11.5">cos α 为正，所以 dx = cos α ds 为正</text>
+
+    <text x="344" y="48" class="m-txt" font-size="11.5">② 钝角：dx 为负</text>
+    <line x1="330" y1="240" x2="618" y2="240" class="m-line" stroke-width="1.2"></line>
+    <polygon points="626,240 616,236 616,244" class="m-fill"></polygon>
+    <text x="628" y="246" class="m-sub" font-size="11.5">x</text>
+    <line x1="530" y1="240" x2="404" y2="116" class="m-acc" stroke-width="2.2"></line>
+    <line x1="530" y1="240" x2="404" y2="240" class="m-good" stroke-width="1.8" stroke-dasharray="5 3"></line>
+    <line x1="404" y1="240" x2="404" y2="116" class="m-warn" stroke-width="1.8"></line>
+    <path d="M 490 240 A 40 40 0 0 1 502 227" fill="none" class="m-vio" stroke-width="1.4"></path>
+    <text x="486" y="228" class="m-vio" font-size="11.5">α</text>
+    <text x="452" y="166" class="m-acc" font-size="11.5">ds</text>
+    <text x="432" y="232" class="m-good" font-size="11.5">dx &lt; 0</text>
+    <text x="348" y="180" class="m-warn" font-size="11.5">dy &gt; 0</text>
+    <line x1="530" y1="240" x2="600" y2="240" class="m-thin" stroke-width="1.1" stroke-dasharray="4 3"></line>
+    <text x="344" y="276" class="m-sub" font-size="11.5">cos α 为负，所以 dx = cos α ds 为负——符号自动对上</text>
+  </svg>
+  <figcaption><b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 是「带符号的勾股定理」。</b>两幅图画的都是同一件事：把一小段弧换成直线段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>，它和两条投影 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 组成直角三角形。左图里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 朝右上方走，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 是锐角，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>&gt;</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 为正；右图里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 朝左上方走，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 变成<strong>钝角</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>&lt;</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 就成了负的。<em>这两种情形下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 都是正的，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 变号——说明「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 可正可负」这件事，完全可以由余弦的正负来承担。</em>注意右图那条虚线箭头是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴正方向：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 永远是与<strong>正半轴</strong>的夹角，不是与任意方向的夹角。</figcaption>
+</figure>
+
+<h2 id="s4">联系公式</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=383">06:23</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 代进第二类曲线积分，立刻得到本页的主公式：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mrow><mo stretchy="true">[</mo><mi>P</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><mi>Q</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+
+<p>右边是关于弧长的积分，所以：<strong>第二类曲线积分可以化为第一类；反过来也可以。</strong>两类积分从此不再割裂。</p>
+
+<p>一句话读这条公式：<mark>把「沿坐标方向的累加」换成「沿弧长的累加」，代价是每一项都要乘上它自己方向的方向余弦。</mark>直白地说，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 只取了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 方向的<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span> 那么多，剩下的分量跑到了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 里。</p>
+
+<h2 id="s5"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span> 到底是什么</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=454">07:34</a>公式写出来以后，新问题马上来了：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span> 是几？</p>
+
+<p>如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是一条<strong>直线</strong>，那 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 是固定的，一眼就能看出。但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 一般是一条<strong>曲线</strong>，这时候「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴正半轴的夹角」这句话本身就没有意义了——曲线上不同点的切线朝向不同。</p>
+
+<p>正确的理解是：<strong>在每一个点上，取这一点的有向切向量，它与坐标轴正方向的夹角就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span>。</strong>所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span> 都是<strong>关于点的函数</strong>，会随位置变化，必须放进积分号里面。</p>
+
+<div class="why">
+  <span class="lbl">为什么「方向余弦」这个名字是准确的</span>
+  <p>把曲线参数化：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>。曲线在参数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 处的切向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo><mo stretchy="true">)</mo></mrow></math></span>，它的长度（也就是速率）是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>t</mi><mo>)</mo><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>t</mi><mo>)</mo></mrow></msqrt></math></span>。</p>
+  <p>把一个向量除以自己的长度，就得到<strong>同方向的单位向量</strong>。所以这一点的有向单位切向量是</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>x</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mi>y</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+  <p>而「方向余弦」的定义就是<mark>单位向量与各坐标轴夹角的余弦，也就是它的各个分量</mark>。所以</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mi>y</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></div>
+  <p>这就把「模模糊糊的角度」变成了「可以直接算的式子」。而且注意：这个定义里用的切向量是<strong>有向</strong>的——它带着曲线前进的方向，这正是第二类曲线积分讲究方向的原因。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=532">08:52</a>推导时要小心一件事：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 是<strong>增大</strong>还是<strong>减小</strong>。设参数从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 变到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>曲线方向</th><th>参数关系</th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span> 的符号</th><th>方向余弦</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 增大的方向</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>&lt;</mo><mi>b</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>&gt;</mo><mn>0</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>（<strong>不带负号</strong>）</td>
+      </tr>
+      <tr>
+        <td>沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 减小的方向</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>&gt;</mo><mi>b</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>&lt;</mo><mn>0</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>x</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>（<strong>整体加负号</strong>）</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=837">13:57</a>第二行的负号是怎么来的？关键在于推导过程中出现了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span> 的绝对值：为了把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mrow><mrow><mi>d</mi></mrow></mrow><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 开出来，需要写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>|</mo></math></span>。参数增大时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>|</mo><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>，符号不变；参数减小时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>|</mo><mo>=</mo><mo form="prefix">−</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>，于是整个式子在前面多出一个负号。<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 是从小到大走还是从大到小走，全从这个负号体现出来。</mark></p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=1282">21:22</a>换成两种常见的函数写法，结果也顺手列在这里（老师建议<strong>不用单独记</strong>，直接套上面的总公式推）：</p>
+
+<dl class="kv">
+  <dt>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 且方向为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 增大</dt>
+  <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mi>y</mi><mo>'</mo></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span></dd>
+  <dt>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span> 且方向为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 增大</dt>
+  <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi><mo>'</mo></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span></dd>
+  <dt>方向反过来</dt>
+  <dd>两个方向余弦<strong>同时加负号</strong></dd>
+  <dt>空间曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span></dt>
+  <dd>多一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mrow><mi>z</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>z</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>，三条式子的分母相同</dd>
+</dl>
+
+<h3 id="s6">例题</h3>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=1367">22:47</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 化为对弧长的曲线积分，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是抛物线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 上沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 的一段。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先判断这是「参数增大的方向」，然后分别求两个方向余弦</span>
+    <p>这里取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 当参数。曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>2</mn><mi>x</mi></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对参数（也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 自己）求导是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。方向是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，即参数增大的方向，所以<strong>两个余弦都取正号</strong>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mo>(</mo><mn>2</mn><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mn>2</mn><mi>x</mi></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></div>
+    <p>代进联系公式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mrow><mo stretchy="true">[</mo><mfrac><mrow><mi>P</mi><mo>(</mo><mi>x</mi><mo>,</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>+</mo><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mi>Q</mi><mo>(</mo><mi>x</mi><mo>,</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+    <p><strong>要点</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span> 就是那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>。注意它与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span> 的<strong>分母完全相同</strong>——因为两条余弦来自同一个单位切向量，分母都是切向量的长度，这一点在任何曲线、任何参数下都成立。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=1509">25:09</a>对上半圆周 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span>（从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>），把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 化为对弧长的曲线积分。要求用两种参数化各做一遍。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：同一段曲线，两种参数化的「参数增减方向」恰好相反，负号也恰好相反</span>
+    <p><strong>方法一：取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数。</strong>上半圆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。<em>这是参数增大的方向</em>，所以不带负号。先求导：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>x</mi></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></div>
+    <p>于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>。所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>x</mi></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>⋅</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt><mo>=</mo><mo form="prefix">−</mo><mi>x</mi></math></div>
+    <p>注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 正好就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mrow><mo stretchy="true">(</mo><mi>P</mi><mspace width="1em"></mspace><mi>y</mi><mo>−</mo><mi>Q</mi><mspace width="1em"></mspace><mi>x</mi><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+    <p><strong>方法二：取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 为参数。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=1946">32:26</a>这里最容易错的一步是定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 的范围：起点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo><mo>=</mo><mo>π</mo></math></span>，终点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>，所以<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo></math></span> 变到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>——这是<em>参数减小</em>的方向，整套公式前面要加负号。</p>
+    <p>先算不带负号的版本：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt><mo>=</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>。加上负号：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>=</mo><mi>y</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mo form="prefix">−</mo><mi>x</mi></math></div>
+    <p>两种方法给出<strong>完全相同</strong>的结果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo><mo>=</mo><mo>(</mo><mi>y</mi><mo>,</mo><mo form="prefix">−</mo><mi>x</mi><mo>)</mo></math></span>。</p>
+    <div class="why">
+      <span class="lbl">这个「恰好」值得追问一句</span>
+      <p>为什么同一个点、同一段曲线，用两套完全不同的参数化，方向余弦算出来一模一样？因为<mark>方向余弦是几何量，它只取决于这一点上曲线的有向切向量，与你怎么参数化无关</mark>。</p>
+      <p>方法一里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span> 来自 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>，方法二里来自参数减小时的那一个负号与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span> 的抵消——两条完全不同的代数路径，通向同一个几何事实。这就是为什么结果必须是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>y</mi><mo>,</mo><mo form="prefix">−</mo><mi>x</mi><mo>)</mo></math></span>。</p>
+      <p>另一方面也要看清：<strong>换了方向，两个余弦会同时变号</strong>。如果这道题改成从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 走到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>，答案就变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mi>y</mi><mo>,</mo><mspace width="1em"></mspace><mi>x</mi><mo>)</mo></math></span>。第二类的「换向变号」在化成第一类以后依然留着印记。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=2184">36:24</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>R</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 化为对弧长的曲线积分，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 的直线段。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：空间情形只是多一条余弦，做法完全一样</span>
+    <p>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>y</mi><mo>=</mo><mi>z</mi><mo>=</mo><mi>t</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>——参数增大的方向，全取正号。三个导数都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mo>=</mo><msqrt><mn>3</mn></msqrt></math></span>，所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mn>3</mn></msqrt></mrow></mfrac></math></div>
+    <p>代入联系公式（空间版是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>）：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>R</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mfrac><mrow><mi>P</mi><mo>+</mo><mi>Q</mi><mo>+</mo><mi>R</mi></mrow><mrow><msqrt><mn>3</mn></msqrt></mrow></mfrac><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+    <p><strong>要点</strong>：直线段的三个方向余弦是<strong>常数</strong>，可以提到积分号外面去。这也顺便说明：只有直线上的方向余弦才固定，曲线上的一定随点变。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=2668">44:28</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mn>3</mn><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 化为对弧长的曲线积分并求出结果，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi><mo>:</mo><mi>x</mi><mo>=</mo><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>3</mn></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先把三个方向余弦写出来（分母是同一个根号），再代入</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>'</mo><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>2</mn><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo><mo>=</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>，所以切向量长度是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup></mrow></msqrt></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=2742">45:42</a>三个方向余弦的分母都是这个根号：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mn>2</mn><mi>t</mi></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mrow><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></div>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mn>2</mn><mi>x</mi><mo>=</mo><mn>2</mn><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>=</mo><mn>3</mn><mi>y</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span> 代进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mo>(</mo><mi>P</mi><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><mi>Q</mi><mi mathvariant="normal">cos</mi><mo>β</mo><mo>+</mo><mi>R</mi><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>，分子上出现</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mo>⋅</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>t</mi><mo>⋅</mo><mn>2</mn><mi>t</mi><mo>+</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>⋅</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup></math></div>
+    <p>它<strong>恰好等于分母的平方</strong>！于是整个被积表达式化简成</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mn>3</mn><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup></mrow></msqrt><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=2869">47:49</a>接下来老师点出了一个很实用的观察：「这玩意儿我们不会用这个东西来求，为什么呢？求的话 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi></math></span> 已经是关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的参数方程了，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 直接对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 求微分不就完了吗？」也就是说，<strong>真要算数值，不必绕道对弧长</strong>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mo stretchy="true">[</mo><mn>1</mn><mo>⋅</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>t</mi><mo>⋅</mo><mn>2</mn><mi>t</mi><mo>+</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>⋅</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>9</mn></mrow><mrow><mn>5</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>6</mn><mn>2</mn></mrow><mrow><mn>1</mn><mn>5</mn></mrow></mfrac></math></div>
+    <div class="note">
+      <span class="lbl">这道题真正要记住的是这两句</span>
+      <p>第一，<strong>化成对弧长是本节的训练目标，但不是计算的首选路径</strong>。第二类曲线积分的参数化本身就好算（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>x</mi><mo>'</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span> 一步到位），除非题目专门要求，不必绕。</p>
+      <p>第二，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>9</mn><msup><mi>t</mi><mrow><mn>4</mn></mrow></msup></mrow></msqrt><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 这个写法要能<strong>读得懂</strong>：它说的是「沿这条曲线，把切向量的长度累加起来」。之所以结果里没有根号，是因为这个特定被积函数的方向余弦分子与勾股因子刚好消掉了。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s7">这一页为什么必须放在格林公式前面</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=2957">49:17</a>这一节的内容很薄，但它承担着一个结构性的任务：<strong>它把两类曲线积分统一到同一条公式下，也让第二类曲线积分有了「几何解释」。</strong>没这一步，下一讲的格林公式就只能是一堆偏导数的机械运算。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 286" role="img" aria-label="两类曲线积分通过方向余弦互相转化，而格林公式只接受第二类曲线积分">
+    <text x="34" y="26" class="m-txt" font-size="12">位置关系：本页是两类积分之间的那座桥</text>
+
+    <rect x="36" y="42" width="232" height="82" rx="6" class="m-panel-s"></rect>
+    <text x="54" y="66" class="m-txt" font-size="12">第一类 · 对弧长</text>
+    <text x="54" y="90" class="m-math" font-size="12.5">∫_L f(x, y) ds</text>
+    <text x="54" y="112" class="m-sub" font-size="11.5">无方向 · ds 恒正</text>
+
+    <rect x="372" y="42" width="232" height="82" rx="6" class="m-panel-s"></rect>
+    <text x="390" y="66" class="m-txt" font-size="12">第二类 · 对坐标</text>
+    <text x="390" y="90" class="m-math" font-size="12.5">∫_L P dx + Q dy</text>
+    <text x="390" y="112" class="m-sub" font-size="11.5">有方向 · 换向变号</text>
+
+    <line x1="278" y1="83" x2="364" y2="83" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="272,83 284,78.5 284,87.5" class="m-fill-a"></polygon>
+    <polygon points="370,83 358,78.5 358,87.5" class="m-fill-a"></polygon>
+    <text x="282" y="106" class="m-sub" font-size="11.5">同一段弧</text>
+
+    <rect x="36" y="140" width="568" height="44" rx="6" class="m-panel-hi" stroke-width="1.6"></rect>
+    <text x="50" y="168" class="m-txt" font-size="12">dx = cos α ds，dy = cos β ds　（α、β 是这一点的有向切向量的方向角）</text>
+
+    <line x1="152" y1="126" x2="152" y2="136" class="m-acc" stroke-width="1.4"></line>
+    <polygon points="152,142 147.5,130 156.5,130" class="m-fill-a"></polygon>
+    <line x1="488" y1="126" x2="488" y2="136" class="m-acc" stroke-width="1.4"></line>
+    <polygon points="488,142 483.5,130 492.5,130" class="m-fill-a"></polygon>
+
+    <rect x="36" y="200" width="568" height="72" rx="6" class="m-panel-s"></rect>
+    <text x="50" y="222" class="m-txt" font-size="12">格林公式（P094）只有第二类能进：</text>
+    <text x="50" y="244" class="m-math" font-size="12.5">∮_L P dx + Q dy = ∬_D (∂Q/∂x − ∂P/∂y) dxdy</text>
+    <text x="50" y="264" class="m-sub" font-size="11.5">第一类没有方向，进不了这条等式。</text>
+  </svg>
+  <figcaption><b>本页在整章里的位置。</b>上面两个框是上一页那两类互相独立的积分；中间那条横带就是本页的全部内容——<em>方向余弦是双向的桥</em>，两类积分可以互化。下面那个框是下一讲的格林公式：它左边是一个<strong>闭曲线上的第二类积分</strong>，右边是一个二重积分。<b>所以格林公式只认第二类。</b>这也解释了为什么必须先学本页：把第二类改写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mo>(</mo><mi>P</mi><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><mi>Q</mi><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 之后，格林公式的几何含义（边界上的切向累加 = 区域内部的旋度累加）才看得见。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">提前看一眼：为什么格林公式偏爱第二类</span>
+  <p>格林公式说的是：<strong>区域上的二重积分 = 边界上走一圈的第二类曲线积分</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=93&amp;t=3016">50:16</a>为什么是第二类，而不是第一类？</p>
+  <p>因为「走一圈」这件事本身带方向。沿着正向（区域在左手侧）绕一圈，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 的符号在每个点、每段弧上都不同：上边一段往左走 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span>，下边一段往右走 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span>，它们的贡献不会互相抵消，而是精确地加起来等于区域上的某个量。换成第一类就写不出这种「绕行方向」的信息——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 一律为正，绕行方向的信息全丢了。</p>
+  <p>而本页的公式恰好告诉我们：这个「方向」被藏在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span> 的正负里。<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 是格林公式的入场券。</mark></p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>两类积分靠<strong>方向余弦</strong>互化：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>,</mo><mo>β</mo></math></span> 是有向切向量的方向角。</p>
+
+  <h3>核心公式</h3>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mrow><mo stretchy="true">(</mo><mi>P</mi><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><mi>Q</mi><mi mathvariant="normal">cos</mi><mo>β</mo><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></div>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>勾股</b> ds² = dx² + dy²</span><span class="ar">→</span>
+    <span class="n"><b>丢符号</b> 平方藏掉了方向</span><span class="ar">→</span>
+    <span class="n"><b>补回来</b> dx = cos α ds</span><span class="ar">→</span>
+    <span class="n"><b>代进去</b> 第二类化第一类</span>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mi>y</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>——<strong>分母相同</strong>，都是单位切向量的长度。</li>
+    <li>参数沿<strong>增大</strong>方向：不带负号；沿<strong>减小</strong>方向：整体加负号（来源是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span> 的绝对值）。</li>
+    <li>曲线上的方向余弦<strong>随点变化</strong>，只有直线段上才是常数。</li>
+    <li>空间情形：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mrow><mi>z</mi><mo>'</mo><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msqrt><mrow><mi>x</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>z</mi><msup><mo>'</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>。</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 是切向量与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴<strong>正半轴</strong>的夹角，不是与随便哪个方向的夹角；钝角时余弦为负，正好对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span>。</li>
+    <li>化成对弧长是<strong>训练目标，不是计算捷径</strong>——真要求值，用参数化算第二类积分本身最省事（例 4 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn><mn>2</mn><mo>/</mo><mn>1</mn><mn>5</mn></math></span>）。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P092-第一二曲线积分/index.html">第一二曲线积分</a> 第一类与第二类曲线积分（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>s</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、方向的差别）</li>
+      <li><a href="../P071-方向角 方向余弦 数量积 向量积/index.html">方向角 方向余弦 数量积 向量积</a> 方向角与方向余弦（单位向量的分量就是方向余弦）</li>
+      <li><span class="cur">曲线的参数方程与切向量</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P094-格林公式&amp;积分与路径无关条件/index.html">格林公式&amp;积分与路径无关条件</a> 格林公式与积分与路径无关（本页公式是它的入场券）</li>
+      <li><a href="../P097-两种曲面积分之间的联系/index.html">两种曲面积分之间的联系</a> 两种曲面积分之间的联系（同一套手法搬到曲面上）</li>
+      <li><a href="../P098-高斯公式与斯托克斯公式/index.html">高斯公式与斯托克斯公式</a> 高斯公式与斯托克斯公式</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span> 不是「曲线与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴的夹角」，而是<strong>切向量的方向余弦</strong></li>
+      <li>参数减小方向的负号，加在<strong>整套方向余弦</strong>上，不是加在某一项上</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 这一项——化成对弧长时也只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>，别把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mi mathvariant="normal">cos</mi><mo>β</mo></math></span> 混进去</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 93 讲</span><a href="../P092-第一二曲线积分/index.html">← P092</a><a href="../index.html">全部目录</a><a href="../P094-格林公式&amp;积分与路径无关条件/index.html">P094 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">先把两类积分摆在一起看</a>
+    <a href="#s2">桥梁的第一半：从 ds 出发的勾股定理</a>
+    <a href="#s3">桥梁的另一半：方向余弦</a>
+    <a href="#s4">联系公式</a>
+    <a href="#s5">cosα、cosβ 到底是什么</a>
+    <a class="sub" href="#s6">例题</a>
+    <a href="#s7">这一页为什么必须放在格林公式前面</a>
+  </aside>
+</div>
+</body>
+</html>

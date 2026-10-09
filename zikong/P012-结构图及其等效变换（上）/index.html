@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>结构图及其等效变换（上）：把复杂结构图化成一个传递函数 · 自动控制原理笔记</title>
+<meta name="description" content="这一讲把第二章的结构图补全：先说清它是从方框图或微分方程组两条路导出来的；再依次给出串联、并联、反馈三条基本联结与比较点、引出点的移动规则；最后用三道例题把它们拼成一套能上手的等效化简流程。全课只守一条底线：变前变后必须等效——该乘就乘，该除就除。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   自动控制原理笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+/* ==========================================================================
+   ↓↓↓ 以下为【自动控制原理】系列专用组件 ↓↓↓
+   与上方通用骨架并存：通用骨架管「怎么排版」，本节管「自控怎么表达」。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   17. 内容角色标记
+   本系列硬性要求区分四类内容来源，视觉上必须一眼可辨：
+     视频核心 core（靛蓝）· 前置补课 pre（紫）· 考研补充 exam（琥珀）· 知识拓展 ext（灰）
+   -------------------------------------------------------------------------- */
+.blk.core { border-left-color: var(--accent); background: var(--accent-bg); }
+.blk.core .lbl { color: var(--accent-ink); }
+.blk.pre  { border-left-color: var(--violet); background: var(--violet-bg); }
+.blk.pre  .lbl { color: var(--violet); }
+.blk.exam { border-left-color: var(--warn);   background: var(--warn-bg); }
+.blk.exam .lbl { color: var(--warn); }
+.blk.ext  { border-left-color: var(--ink-4);  background: var(--paper-2); }
+.blk.ext  .lbl { color: var(--ink-3); }
+
+/* 行内角色徽章：小圆点 + 文字，颜色即语义 */
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: .38em;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.role::before {
+  content: "";
+  width: .44em; height: .44em;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.role.r-core { color: var(--accent); }
+.role.r-pre  { color: var(--violet); }
+.role.r-exam { color: var(--warn); }
+.role.r-ext  { color: var(--ink-3); }
+
+/* 页首角色图例 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.5rem;
+  margin: 1.2rem 0 0;
+  padding: .8rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: .78rem;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.legend .role { font-size: .78rem; }
+
+/* --------------------------------------------------------------------------
+   18. 方框图组件
+   控制系统方框图的五大要素：方框 · 信号线 · 比较点 · 引出点 · 负号。
+   颜色一律走 class —— SVG 表示属性里不能写 var()。
+   -------------------------------------------------------------------------- */
+/* 方框：看得见摸得着的元部件 */
+figure.fig svg .d-box   { fill: var(--paper);     stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-box-a { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.4; }
+figure.fig svg .d-box-v { fill: var(--violet-bg); stroke: var(--violet); stroke-width: 1.4; }
+figure.fig svg .d-box-w { fill: var(--warn-bg);   stroke: var(--warn);   stroke-width: 1.4; }
+
+/* 信号线 */
+figure.fig svg .d-line  { stroke: var(--ink-2);  stroke-width: 1.3; fill: none; }
+figure.fig svg .d-thin  { stroke: var(--line-2); stroke-width: 1.1; fill: none; }
+figure.fig svg .d-acc   { stroke: var(--accent); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-fb    { stroke: var(--violet); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-warn  { stroke: var(--warn);   stroke-width: 1.6; fill: none; }
+figure.fig svg .d-dash  { stroke-dasharray: 5 4; }
+
+/* 比较点 / 引出点 / 箭头 */
+figure.fig svg .d-sum   { fill: var(--paper); stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-sum-a { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+figure.fig svg .d-tap   { fill: var(--ink-2); stroke: none; }
+figure.fig svg .d-arrow   { fill: var(--ink-2);  stroke: none; }
+figure.fig svg .d-arrow-a { fill: var(--accent); stroke: none; }
+figure.fig svg .d-arrow-v { fill: var(--violet); stroke: none; }
+figure.fig svg .d-arrow-w { fill: var(--warn);   stroke: none; }
+
+/* 区域底色（把前向通道 / 反馈通道整片标出来） */
+figure.fig svg .d-band   { fill: var(--accent-bg); stroke: none; opacity: .55; }
+figure.fig svg .d-band-v { fill: var(--violet-bg); stroke: none; opacity: .55; }
+
+/* 窄屏微调 */
+@media (max-width: 46rem) {
+  .legend { gap: .35rem .95rem; font-size: .74rem; }
+  .legend .role { font-size: .74rem; }
+}
+
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  控制系统的数学模型</b><span class="sep">·</span>卢京潮《自动控制原理》· 西北工业大学<span class="sep">·</span>第 12 讲</div>
+    <h1 class="title"><span class="pnum">P012</span>结构图及其等效变换（上）：把复杂结构图化成一个传递函数</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这一讲把第二章的<strong>结构图</strong>补全：先说清它是从<strong>方框图</strong>或<strong>微分方程组</strong>两条路导出来的；再依次给出<strong>串联、并联、反馈</strong>三条基本联结与<strong>比较点、引出点的移动规则</strong>；最后用三道例题把它们拼成一套能上手的<strong>等效化简流程</strong>。全课只守一条底线：<mark>变前变后必须等效——该乘就乘，该除就除</mark>。</p></div>
+    <div class="meta"><span>时长 47m42s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=21">00:21</a><span class="vv"><b>开场与回顾</b>：七个典型环节，任意线性系统的传递函数都能拆成它们的乘积。</span></li>
+    <li class="sep"><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=162">02:42</a><span class="vv"><b>本讲任务</b>：不管结构图多复杂，都要能求出它对应的传递函数。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=259">04:19</a><span class="vv"><b>结构图从哪来</b>：两条导出渠道。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=304">05:04</a><span class="vv"><b>例1 函数记录仪</b>：由方框图把每框名字换成传递函数。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=672">11:12</a><span class="vv"><b>变量的写法</b>：结构图上应写"像函数"。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=718">11:58</a><span class="vv"><b>例2 电枢控制直流电动机</b>：由微分方程组拼出结构图。</span></li>
+    <li class="sep"><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1138">18:58</a><span class="vv"><b>三条基本联结</b>：串联乘、并联叠加、反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>/</mo><mo>(</mo><mn>1</mn><mo>±</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1462">24:22</a><span class="vv"><b>比较点移动</b>：前移除、后移乘。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1645">27:25</a><span class="vv"><b>引出点移动</b>：前移乘、后移除（与比较点相反）。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1742">29:02</a><span class="vv"><b>同类互换</b>与"比较点↔引出点"这张险招。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1969">32:49</a><span class="vv"><b>化简实战</b>：例3、例4、例5，以及"从两头处理"的顺序。</span></li>
+  </ol>
+</div>
+
+<div class="legend">
+  <span class="role r-core">视频核心</span> 老师课上实际讲授的内容（本页正文默认即为此类）
+  <span class="role r-pre">前置补课</span> 为听懂本课而补的基础
+  <span class="role r-exam">考研补充</span> 对做题有用、课上未展开
+  <span class="role r-ext">知识拓展</span> 有价值但当前非必须
+</div>
+
+<h2 id="s1">一、这节课只办一件事：把结构图化成一个传递函数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=21">00:21</a>今天专门讲第二章第四节——<strong>控制系统的结构图及其等效变换</strong>。老师开门见山：这节课不做别的事，专门讲这一件。开场他先回头把上节收一收，因为今天要用的全部"零件"，上一节都已经备齐了。</p>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 上节留下的七个典型环节 <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=68">01:08</a></span>
+  <p>上一节（<a href="../P011-复域数学模型（下）/index.html">复域数学模型（下）</a>）把控制系统里五花八门的常用元部件抽象成<strong>七个典型环节</strong>。所谓<strong>环节</strong>，就是"<em>具有相同的数学模型、也就是相同的传递函数的那些元部件，归成的一类</em>"；再往下细分，就是这七个典型环节。它们的标准传递函数如下：</p>
+  <div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>典型环节</th><th>标准传递函数</th><th>一眼认出的特征</th></tr></thead>
+    <tbody>
+      <tr><td>比例环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span></td><td>一个常数，没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span></td></tr>
+      <tr><td>微分环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span></td><td>分子带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span></td></tr>
+      <tr><td>积分环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span></td><td>分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span></td></tr>
+      <tr><td>惯性环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span></td><td>分母一次、常数项为 1</td></tr>
+      <tr><td>振荡环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>T</mi><mn>2</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>2</mn><mo>ζ</mo><mspace width="0.25em"></mspace><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span></td><td>分母二次、带阻尼比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ζ</mo></math></span></td></tr>
+      <tr><td>一阶复合微分</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></math></span></td><td>分子一次</td></tr>
+      <tr><td>二阶复合微分</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>T</mi><mn>2</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>2</mn><mo>ζ</mo><mspace width="0.25em"></mspace><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></math></span></td><td>分子二次</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>老师反复强调一句话：<mark>任意一个复杂的线性定常系统，它的传递函数总能分解成这七个典型环节的乘积</mark>。所以以后每提到一个环节的名字，它对应的标准传递函数都要能立刻写出来。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=162">02:42</a>回顾完之后，老师把整个第二章的路线又说了一遍：从一个实际的系统出发，课堂上能拿到的往往只是一张<strong>工作原理图</strong>；最终我们要找的是它的<strong>数学模型</strong>，而且主要用的是数学模型里的<strong>传递函数</strong>这一种形式。走过去有两条路——一条走时域、一条走复域。时域那条虽然已经掌握，但"<em>消中间变量比较麻烦</em>"，一般不这么干；我们主要走复域这条路，而它的关键一步，就是今天要讲的<strong>结构图</strong>。</p>
+
+<div class="note">
+  <span class="lbl">本讲的定位 <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=162">02:42</a></span>
+  <p>老师说得很直白：在复域里建立系统数学模型，<strong>只差这一步</strong>——给你一个结构图，不管它多复杂，你都要能熟练地把它对应的传递函数找出来。做这件事有两个方法：今天先讲<strong>第一个方法：结构图等效化简</strong>（下一讲 <a href="../P013-结构图及其等效变换（下）/index.html">结构图及其等效变换（下）</a> 讲第二个方法）。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么老师宁可花一整节课去"化简一张图"，也不肯在时域里消元</span>
+  <p>因为时域消元是"一次性"的：你对着这一组方程能消出结果，但换一组方程又得从头再来，中间变量的物理意义也在消元中丢掉了。结构图不一样——它把<strong>系统里每个元件各自在干什么</strong>都原样保留在图上，化简只是把"连接方式"等价地换个画法。于是<mark>化简规则是通用的、可复用的</mark>：不管系统多复杂，用的永远是"串联、并联、反馈"这三条加上"移动点"这两条。这正是老师说的"<em>不管这个结构图多复杂，你都要能熟练地把它对应的传递函数找出来</em>"的底气。</p>
+</div>
+
+<h2 id="s2">二、结构图从哪来：两条导出渠道</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=259">04:19</a>老师把"结构图怎么导出来"归纳成两条渠道。这两条渠道对应两种不同的已知条件，做题时先看清题目给的是哪一种，思路就定了。</p>
+
+<figure class="fig">
+  <svg viewBox="0 34 640 208" role="img" aria-label="结构图的两条导出渠道：第一条由实际系统或工作原理图先画出方框图，再把每个方框里元部件的名字换成它自己的传递函数，得到结构图；第二条由描述系统的微分方程组，对每个子方程取拉氏变换得到子结构图，再把子结构图首尾相连拼成结构图；两条渠道的落点是同一个结构图，它描述了输入、输出与中间变量之间的传递关系">
+    <defs>
+      <marker id="ar0a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="320" y="52" class="m-sub" font-size="11.5" text-anchor="middle">两条渠道，落点是同一个结构图</text>
+
+    <text x="14" y="100" class="m-txt" font-size="12" text-anchor="start">①</text>
+    <rect x="30" y="74" width="148" height="44" rx="3" class="d-box"/>
+    <text x="104" y="93" class="m-txt" font-size="11" text-anchor="middle">实际系统</text>
+    <text x="104" y="109" class="m-sub" font-size="10.5" text-anchor="middle">工作原理图</text>
+    <line x1="180" y1="96" x2="212" y2="96" class="d-acc" marker-end="url(#ar0a)"/>
+    <text x="196" y="88" class="m-sub" font-size="10" text-anchor="middle">画</text>
+    <rect x="214" y="74" width="118" height="44" rx="3" class="d-box"/>
+    <text x="273" y="101" class="m-txt" font-size="11.5" text-anchor="middle">方框图</text>
+    <line x1="334" y1="96" x2="370" y2="96" class="d-acc" marker-end="url(#ar0a)"/>
+    <text x="352" y="88" class="m-sub" font-size="10" text-anchor="middle">代传函</text>
+    <rect x="372" y="74" width="122" height="44" rx="3" class="d-box-a"/>
+    <text x="433" y="101" class="m-txt" font-size="11.5" text-anchor="middle">结构图</text>
+    <text x="433" y="132" class="m-sub" font-size="10" text-anchor="middle">每框填传递函数</text>
+
+    <text x="14" y="204" class="m-txt" font-size="12" text-anchor="start">②</text>
+    <rect x="30" y="178" width="148" height="44" rx="3" class="d-box"/>
+    <text x="104" y="204" class="m-txt" font-size="11.5" text-anchor="middle">微分方程组</text>
+    <line x1="180" y1="200" x2="212" y2="200" class="d-acc" marker-end="url(#ar0a)"/>
+    <text x="196" y="192" class="m-sub" font-size="10" text-anchor="middle">拉氏</text>
+    <rect x="214" y="178" width="118" height="44" rx="3" class="d-box"/>
+    <text x="273" y="204" class="m-txt" font-size="11.5" text-anchor="middle">子结构图</text>
+    <line x1="334" y1="200" x2="370" y2="200" class="d-acc" marker-end="url(#ar0a)"/>
+    <text x="352" y="192" class="m-sub" font-size="10" text-anchor="middle">拼接</text>
+    <rect x="372" y="178" width="122" height="44" rx="3" class="d-box-a"/>
+    <text x="433" y="204" class="m-txt" font-size="11.5" text-anchor="middle">结构图</text>
+    <text x="433" y="236" class="m-sub" font-size="10" text-anchor="middle">首尾相连</text>
+
+    <rect x="518" y="74" width="110" height="148" rx="4" class="m-panel-a"/>
+    <text x="573" y="102" class="m-txt" font-size="10.5" text-anchor="middle">结构图</text>
+    <text x="573" y="122" class="m-sub" font-size="10" text-anchor="middle">输入、输出</text>
+    <text x="573" y="140" class="m-sub" font-size="10" text-anchor="middle">与中间变量</text>
+    <text x="573" y="158" class="m-sub" font-size="10" text-anchor="middle">的传递关系</text>
+    <text x="573" y="182" class="m-sub" font-size="10" text-anchor="middle">= 系统的</text>
+    <text x="573" y="200" class="m-sub" font-size="10" text-anchor="middle">数学模型</text>
+  </svg>
+  <figcaption><b>同一个结构图，两条来路。</b>渠道①是"自上而下"：先有实际系统或工作原理图，画出方框图（<em>只讲谁连着谁</em>），再把每个方框里元部件的名字换成它自己的传递函数，方框图就升级成结构图。渠道②是"自下而上"：只有描述系统的微分方程组时，<strong>不急着一一消元</strong>，而是把每个子方程分别取拉氏变换，画出它对应的子结构图，再把这些子结构图首尾相连拼起来。<mark>两条路最后拿到的结构图完全等价</mark>——它同时讲清了"信号怎么流"和"被放大或改变了多少"。</figcaption>
+</figure>
+
+<h3 id="s3">2.1 渠道①：由方框图"换名"得到结构图</h3>
+
+<p>老师说，这是最直观的一条路：先把系统的工作原理图搞清楚，画出<strong>方框图</strong>；方框图里每一个方框都对应系统中的一个确定元部件；只要把<strong>每个元部件的名字去掉、填上它自己的传递函数</strong>，这张图就从方框图过渡到了结构图。</p>
+
+<h3 id="s4">2.2 渠道②：由微分方程组"拼"出结构图</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=259">04:19</a>有些系统不见得能把方框图画出来，我们手上只有一堆从不同侧面描述它的<strong>微分方程组</strong>。老师强调：这时<strong>不直接消元变换</strong>，不走时域那条路，而是把<strong>每一个子方程分别取拉氏变换</strong>，写出它对应的<strong>子结构图</strong>；这些子结构图必然可以首尾相连，连成整个系统的结构图。</p>
+
+<h2 id="s5">三、例1 · 函数记录仪：由方框图直接"换名"成结构图</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=304">05:04</a>第一个例子就是前面讲过的<strong>函数记录仪</strong>（<a href="../P002-自动控制的一般概念（下）/index.html">自动控制的一般概念（下）</a>）。老师第一次课已经从它的工作原理画出了方框图，今天我们只做一件事：把方框图里每个元部件的名字，换成它自己的传递函数。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=304">05:04</a>已知函数记录仪的方框图（见 <a href="../P002-自动控制的一般概念（下）/index.html">自动控制的一般概念（下）</a>）：给定电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>g</mi></msub></math></span> 与反馈电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>p</mi></msub></math></span>、测速发电机电压在放大器输入端比较，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi></math></span>，经放大器、电动机、减速器、绳轮机构带动记录笔；电桥把笔的位移变成电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>p</mi></msub></math></span> 反馈回来，测速发电机把电动机角速度变成电压做内回路反馈。求把各元部件换成传递函数后的结构图。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：一个元部件一个元部件地"看原理 → 写关系式 → 取拉氏变换 → 求传递函数 → 填进方框"</span>
+
+    <p><span class="sh">① 反馈口的比较关系。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=304">05:04</a>放大器输入端的电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi></math></span>，等于给定电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>g</mi></msub></math></span>、反馈电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>p</mi></msub></math></span> 与测速发电机送来的电压三者之和。把这条代数关系两端取拉氏变换，就得到结构图里<strong>比较点</strong>那一处的方程：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi><mo>=</mo><msub><mi>u</mi><mi>g</mi></msub><mo>+</mo><msub><mi>u</mi><mi>p</mi></msub><mo>+</mo><msub><mi>u</mi><mi>t</mi></msub></math></div>
+
+    <p><span class="sh">② 放大器。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=395">06:35</a>放大器是一个比例元部件：输出电压等于输入偏差乘放大倍数。设放大倍数为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub></math></span>，两端取拉氏变换、把输入除过去，传递函数就是一个常数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>U</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>U</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><msub><mi>K</mi><mn>1</mn></msub></math></div>
+
+    <p><span class="sh">③ 电动机（以角速度为输出）。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=440">07:20</a>电动机如果以角速度为输出，是一个一阶线性定常系统（典型的惯性环节，<a href="../P011-复域数学模型（下）/index.html">复域数学模型（下）</a>）。把它零初始条件下取拉氏变换，就能写出它自己的传递函数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>G</mi><mn>2</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mo>Ω</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>U</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+
+    <p><span class="sh">④ 积分得到转角。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=490">08:10</a>电动机的角速度再积分一次，就是输出轴转过的角度。这个积分关系在结构图上就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span> 的方框。</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>Θ</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mo>Ω</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></div>
+
+    <p><span class="sh">⑤ 减速器。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=536">08:56</a>电机轴的角度到减速器从动轮的角度是一个比例关系，两端取拉氏变换、比值就是常数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msub><mo>Θ</mo><mn>2</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><msub><mo>Θ</mo><mn>1</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><msub><mi>K</mi><mn>2</mn></msub></math></div>
+
+    <p><span class="sh">⑥ 绳轮机构。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=581">09:41</a>绳轮把减速器输出的旋转运动变成绳子的平移，记录笔与绳子绑在一起，所以"转角 → 笔的位移"也是一个比例关系：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>L</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><msub><mo>Θ</mo><mn>2</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><msub><mi>K</mi><mn>3</mn></msub></math></div>
+
+    <p><span class="sh">⑦ 测速发电机（内回路反馈）。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=627">10:27</a>测速发电机的电压与电动机角速度成正比，是个比例环节，传递函数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>t</mi></msub></math></span>。它从电动机的角速度处引出信号，送回放大器前端。</p>
+
+    <p><span class="sh">⑧ 电桥（外回路反馈）。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=627">10:27</a>电桥的输出电压与记录笔的位移成正比，也是一个比例环节，传递函数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>4</mn></msub></math></span>。它从记录笔的位移处引出信号，反馈回比较点。</p>
+
+    <p>把这八个传递函数<strong>分别填进方框图对应的方框里</strong>，就得到了函数记录仪的结构图。老师在这里停下来，专门补了一句关于"图上变量怎么写"的话——这句话是结构图与方框图的分界线。</p>
+
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">把结构图上方的变量当成时域原函数。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=672">11:12</a>方框里填的是"输出的拉氏变换 <strong>比</strong> 输入的拉氏变换"，所以正规写法，变量应当写成<strong>相（像函数）</strong>。老师也说得很实在：<em>我们在以后表达的过程当中，有时也就把它的像写成原函数放在那里了，但你应该理解成"像的传递关系"</em>。如果图上写的是具体物理量、框里又填的是"放大倍数"而不是传递函数，那它只是方框图，不是结构图。</p>
+    </div>
+  </div>
+</div>
+
+<div class="tbl-wrap">
+<table class="cmp">
+  <thead><tr><th>元部件</th><th>输入 → 输出</th><th>传递函数</th><th>在结构图里的角色</th></tr></thead>
+  <tbody>
+    <tr><td>放大器</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi></math></span> → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub></math></span></td><td>前向（比例环节）</td></tr>
+    <tr><td>电动机</td><td>电压 → 角速度</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span></td><td>前向（惯性环节）</td></tr>
+    <tr><td>积分</td><td>角速度 → 转角</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span></td><td>前向（积分环节）</td></tr>
+    <tr><td>减速器</td><td>转角 → 转角</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>2</mn></msub></math></span></td><td>前向（比例环节）</td></tr>
+    <tr><td>绳轮机构</td><td>转角 → 位移</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>3</mn></msub></math></span></td><td>前向（比例环节）</td></tr>
+    <tr><td>测速发电机</td><td>角速度 → 电压</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>t</mi></msub></math></span></td><td>内回路反馈（比例环节）</td></tr>
+    <tr><td>电桥</td><td>位移 → 电压</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>4</mn></msub></math></span></td><td>外回路反馈（比例环节）</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · "取拉氏变换求传递函数"这三步到底在干什么</span>
+  <p>跨专业的同学如果对拉氏变换还不熟，这里补三句话够用：对一个元部件，<strong>①</strong> 先写出它输入输出之间的<strong>时域关系式</strong>（可能是代数方程，也可能是微分方程）；<strong>②</strong> 在<strong>零初始条件</strong>下两端取拉氏变换，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span> 变成乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>、把常量原样保留；<strong>③</strong> 把输出项与输入项分别并到一起，做成"输出像 ÷ 输入像"的形式，那个比值就是传递函数。若关系式是代数方程（如放大器的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msub><mi>K</mi><mn>1</mn></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi></math></span>），第 ② 步之后它自动就是一个常数——对应的正是<strong>比例环节</strong>。这套动作本页后面每一步都在重复，练熟之后可以"心算"跳过中间过程。<em>更完整的拉氏变换内容在本系列前面（<a href="../P009-拉氏反变换与传递函数（下）/index.html">拉氏反变换与传递函数（下）</a>）已讲，这里只取当前需要的程度。</em></p>
+</div>
+
+<h2 id="s6">四、例2 · 电枢控制式直流电动机：由微分方程组拼出结构图</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=718">11:58</a>第二个例子是<strong>电枢控制式直流电动机</strong>。这个系统前面也讲过（<a href="../P008-拉氏反变换与传递函数（上）/index.html">拉氏反变换与传递函数（上）</a>），当时用的是"把数学方程拿来、消掉中间变量、得到微分方程"的老办法。今天换个做法：<strong>不消元</strong>，而是把描述它的每个子方程分别拉氏变换、画出子结构图，再拼成整机结构图。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=718">11:58</a>已知电枢控制式直流电动机：电枢回路输入电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>g</mi></msub></math></span>，回路电阻 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span>，反电势 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，电枢电流 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span>；反电势与角速度成正比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi><mo>=</mo><msub><mi>C</mi><mi>e</mi></msub><mo>ω</mo></math></span>，电磁力矩与电流成正比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi><mo>=</mo><msub><mi>C</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>i</mi></math></span>；电机轴力矩平衡为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>J</mi><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>ω</mo></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>=</mo><mi>M</mi><mo>−</mo><mi>f</mi><mo>ω</mo></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 为粘性摩擦系数）。试由这四个子方程拼出以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>g</mi></msub></math></span> 为输入、角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>（或转角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>）为输出的结构图。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：一个子方程画出一个小结构图，再把中间变量"接"起来</span>
+
+    <p><span class="sh">第 1 个子方程：电枢回路。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=764">12:44</a>由基尔霍夫电压定律，输入电压等于电阻压降加上反电势：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>u</mi><mi>g</mi></msub><mo>=</mo><mi>R</mi><mi>i</mi><mo>+</mo><mi>E</mi></math></div>
+    <p>两端取拉氏变换，<strong>把电流作为输出</strong>：加在等效电阻上的电压就是"输入电压与反电势之差"，再除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span> 就是电流。这就是第一个子结构图——一个比较点（减掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>）串一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>R</mi></mrow></mfrac></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>I</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mi>g</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>−</mo><mi>E</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi></mrow></mfrac></math></div>
+
+    <p><span class="sh">第 2 个子方程：反电势。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=810">13:30</a>由楞次定律，电机做好之后反电势只和电机轴的角速度成正比：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>E</mi><mo>=</mo><msub><mi>C</mi><mi>e</mi></msub><mo>ω</mo><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mi>E</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mo>Ω</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><msub><mi>C</mi><mi>e</mi></msub></math></div>
+    <p>子结构图：角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 经过一个常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>e</mi></msub></math></span> 得到反电势 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，而这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 正是反馈回第 1 个子图比较点的那个量。</p>
+
+    <p><span class="sh">第 3 个子方程：电磁力矩。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=906">15:06</a>由安培定律，通电绕组在磁场中受力矩，扭矩与电枢电流成正比：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>M</mi><mo>=</mo><msub><mi>C</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>i</mi><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mi>M</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>I</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><msub><mi>C</mi><mi>m</mi></msub></math></div>
+    <p>子结构图：电流 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 经过常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>m</mi></msub></math></span> 得到电磁力矩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi></math></span>。</p>
+
+    <p><span class="sh">第 4 个子方程：力矩平衡。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=954">15:54</a>由牛顿定律，电机轴上的力矩平衡为主动力矩减掉粘性摩擦力矩：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>J</mi><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>ω</mo></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>=</mo><mi>M</mi><mo>−</mo><mi>f</mi><mo>ω</mo></math></div>
+    <p>两端取拉氏变换、以转矩为输入、角速度为输出，整理后是一个一阶惯性环节（这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 是粘性摩擦系数，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>ω</mo></math></span> 项移过来即得）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>Ω</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>M</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi></mrow></mfrac></math></div>
+
+    <p><span class="sh">再把角度接上。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1047">17:27</a>如果输出取电机轴的转角，角速度再积分一次即可，又是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>。</p>
+
+    <p>把三个子结构图<strong>首尾相连</strong>——电流 → 电磁力矩 → 角速度，同时角速度经 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>e</mi></msub></math></span> 反馈到回路比较点——就得到电枢控制式直流电动机的结构图。老师强调：<em>这个图把三个子方程对应的关系连在一起了，这就是由微分方程组导出结构图的方法。</em></p>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么"不消元、逐个子方程拉氏变换"反而更好用</span>
+  <p>时域消元最后得到的是一条微分方程，读者看不出系统内部"电的惯性"和"机械的惯性"各占多少。而<strong>逐子方程拉氏变换</strong>保留的恰恰是这套物理结构：电枢回路一个环节、机电耦合一个环节、机械惯量一个环节——它们在图上各是一个方框，谁影响谁一目了然。更关键的是，<mark>结构图是"拼"出来的，可以随时增删元件再重拼</mark>：例如把粘性摩擦 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 去掉，只是让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi></mrow></mfrac></math></span> 变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>J</mi><mi>s</mi></mrow></mfrac></math></span>，其余不动。这种"改一处、看全局"的便利，是后面设计控制器时最需要的。</p>
+</div>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 电枢控制直流电动机的闭环结果到这里就要会背</span>
+  <p>把上面的结构图用下一节的"反馈等效"一化，就能得到整机的闭环传递函数。记 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 为输出时（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>=</mo><mn>0</mn></math></span> 的常见情形）：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mo>Ω</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><msub><mi>U</mi><mi>g</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mi>J</mi><mi>s</mi><mo>+</mo><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+  <p>其中分母的常数项就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></math></span>，所以增益 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>=</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span>），时间常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><mi>R</mi><mi>J</mi></mrow><mrow><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>=</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><mi>R</mi><mi>J</mi></mrow><mrow><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span>）。<strong>这条式子是经典结果，考试常直接要求写出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span> 并指出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>m</mi></msub></math></span> 由哪些物理量决定</strong>；若输出取转角，末端再乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>。注意分母里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></math></span> 那一项——它是机电耦合的产物，表示"反电势对电流的抑制"，<mark>它使时间常数比纯机械的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>R</mi><mi>J</mi></mrow><mrow><mi>R</mi><mi>f</mi></mrow></mfrac></math></span> 更小，也就是负反馈让电机反应更快</mark>。</p>
+</div>
+
+<h2 id="s7">五、三条基本联结：串联、并联、反馈</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1138">18:58</a>结构图拿到手以后，剩下的事就是"<em>把中间那些东西倒来倒去，全部窝成一个表达式</em>"，这个表达式就是输入输出之间的闭环传递函数。要做这件事，先得掌握三条最基本的等效规则：串联、并联、反馈。</p>
+
+<h3 id="s8">5.1 串联：传递函数相乘</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1138">18:58</a>两个环节串起来时，前一个的输出就是后一个的输入。设中间变量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>：输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>=</mo><msub><mi>G</mi><mn>2</mn></msub><mi>u</mi></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msub><mi>G</mi><mn>1</mn></msub><mi>r</mi></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 代进去得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>=</mo><msub><mi>G</mi><mn>2</mn></msub><msub><mi>G</mi><mn>1</mn></msub><mi>r</mi></math></span>，两边一比，总传递函数就是把两个传递函数乘到一起：</p>
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><msub><mi>G</mi><mn>1</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo><msub><mi>G</mi><mn>2</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo></math></div>
+<p>两个是这样，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 个也是这样——<strong>串联就一路乘过去</strong>，这条最简单，不需要专门去记。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 116" role="img" aria-label="串联等效：等效前输入 r 依次经过方框 G1 和 G2 得到输出 c；等效后输入 r 只经过一个方框 G1 乘 G2 得到输出 c，说明串联的总传递函数是各环节传递函数之积">
+    <defs>
+      <marker id="ar2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="150" y="30" class="m-sub" font-size="11.5" text-anchor="middle">等效前</text>
+    <text x="470" y="30" class="m-sub" font-size="11.5" text-anchor="middle">等效后</text>
+    <line x1="326" y1="22" x2="326" y2="112" class="d-thin" fill="none"/>
+
+    <text x="22" y="79" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="36" y1="74" x2="52" y2="74" class="d-line" marker-end="url(#ar2a)"/>
+    <rect x="54" y="54" width="76" height="40" rx="3" class="d-box"/>
+    <text x="92" y="79" class="m-math" font-size="11.5" text-anchor="middle">G1</text>
+    <line x1="130" y1="74" x2="158" y2="74" class="d-line" marker-end="url(#ar2a)"/>
+    <rect x="160" y="54" width="76" height="40" rx="3" class="d-box"/>
+    <text x="198" y="79" class="m-math" font-size="11.5" text-anchor="middle">G2</text>
+    <line x1="236" y1="74" x2="262" y2="74" class="d-line" marker-end="url(#ar2a)"/>
+    <text x="276" y="79" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <text x="150" y="106" class="m-sub" font-size="10.5" text-anchor="middle">r → G1 → G2 → c</text>
+
+    <text x="368" y="79" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="382" y1="74" x2="404" y2="74" class="d-line" marker-end="url(#ar2a)"/>
+    <rect x="406" y="54" width="140" height="40" rx="3" class="d-box-a"/>
+    <text x="476" y="79" class="m-math" font-size="11.5" text-anchor="middle">G1 · G2</text>
+    <line x1="546" y1="74" x2="572" y2="74" class="d-line" marker-end="url(#ar2a)"/>
+    <text x="586" y="79" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <text x="476" y="106" class="m-sub" font-size="10.5" text-anchor="middle">串联 = 传递函数相乘</text>
+  </svg>
+  <figcaption><b>串联：一路乘过去。</b>信号从左往右依次穿过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>2</mn></msub></math></span>，等价于只穿过一个方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><msub><mi>G</mi><mn>2</mn></msub></math></span>。<em>注意乘法的顺序不影响结果</em>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><msub><mi>G</mi><mn>2</mn></msub><mo>=</mo><msub><mi>G</mi><mn>2</mn></msub><msub><mi>G</mi><mn>1</mn></msub></math></span>），所以串联方框可以任意调换位置。</figcaption>
+</figure>
+
+<h3 id="s9">5.2 并联：传递函数叠加</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1183">19:43</a>两个环节并起来时，同一个输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 同时送进两个环节，两路输出再在比较点相加减。设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>c</mi><mn>1</mn></msub><mo>=</mo><msub><mi>G</mi><mn>1</mn></msub><mi>r</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>c</mi><mn>2</mn></msub><mo>=</mo><msub><mi>G</mi><mn>2</mn></msub><mi>r</mi></math></span>，输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>=</mo><msub><mi>c</mi><mn>1</mn></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>c</mi><mn>2</mn></msub></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>c</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>c</mi><mn>2</mn></msub></math></span> 代入，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 一提取就得到：</p>
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><msub><mi>G</mi><mn>1</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>2</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo></math></div>
+<p>老师的话很直接：<strong>并联就把相应的传递函数叠加起来，该加就加、该减就减，取决于支路本身的正负号</strong>。两个是这样，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 个也一样。</p>
+
+<figure class="fig">
+  <svg viewBox="0 44 640 176" role="img" aria-label="并联等效：等效前输入 r 分成上下两路，分别经过方框 G1 与 G2，两路输出在比较点相加或相减得到输出 c；等效后输入 r 只经过一个方框 G1 加减 G2 得到输出 c，说明并联的总传递函数是各支路传递函数的叠加">
+    <defs>
+      <marker id="ar3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="150" y="62" class="m-sub" font-size="11.5" text-anchor="middle">等效前</text>
+    <text x="480" y="62" class="m-sub" font-size="11.5" text-anchor="middle">等效后</text>
+    <line x1="330" y1="54" x2="330" y2="212" class="d-thin" fill="none"/>
+
+    <text x="18" y="140" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="30" y1="135" x2="50" y2="135" class="d-line"/>
+    <line x1="50" y1="95" x2="50" y2="175" class="d-line"/>
+    <line x1="50" y1="95" x2="70" y2="95" class="d-line" marker-end="url(#ar3a)"/>
+    <line x1="50" y1="175" x2="70" y2="175" class="d-line" marker-end="url(#ar3a)"/>
+    <rect x="72" y="75" width="76" height="40" rx="3" class="d-box"/>
+    <text x="110" y="100" class="m-math" font-size="11.5" text-anchor="middle">G1</text>
+    <rect x="72" y="155" width="76" height="40" rx="3" class="d-box"/>
+    <text x="110" y="180" class="m-math" font-size="11.5" text-anchor="middle">G2</text>
+    <line x1="148" y1="95" x2="240" y2="95" class="d-line"/>
+    <line x1="240" y1="95" x2="240" y2="123" class="d-line" marker-end="url(#ar3a)"/>
+    <line x1="148" y1="175" x2="240" y2="175" class="d-line"/>
+    <line x1="240" y1="175" x2="240" y2="147" class="d-line" marker-end="url(#ar3a)"/>
+    <circle cx="240" cy="135" r="13" class="d-sum"/>
+    <text x="228" y="122" class="m-sub" font-size="11" text-anchor="end">+</text>
+    <text x="252" y="152" class="m-sub" font-size="12" text-anchor="start">±</text>
+    <line x1="253" y1="135" x2="284" y2="135" class="d-line" marker-end="url(#ar3a)"/>
+    <text x="296" y="140" class="m-math" font-size="12" text-anchor="middle">c</text>
+
+    <text x="368" y="140" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="380" y1="135" x2="402" y2="135" class="d-line" marker-end="url(#ar3a)"/>
+    <rect x="404" y="115" width="152" height="40" rx="3" class="d-box-a"/>
+    <text x="480" y="140" class="m-math" font-size="11.5" text-anchor="middle">G1 ± G2</text>
+    <line x1="556" y1="135" x2="582" y2="135" class="d-line" marker-end="url(#ar3a)"/>
+    <text x="596" y="140" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <text x="480" y="196" class="m-sub" font-size="10.5" text-anchor="middle">并联 = 传递函数叠加（依支路符号）</text>
+  </svg>
+  <figcaption><b>并联：同一个输入，两路各走各的，最后叠加。</b>输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 分成两路，各自经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>2</mn></msub></math></span>，在比较点处<em>相加或相减</em>得到输出。<mark>符号由支路决定</mark>：如果某一路的传函前面带负号（或它在比较点上是减号），叠加时就要用减号。<b>并联和串联最大的区别</b>是——串联乘、并联加，千万别混。</figcaption>
+</figure>
+
+<h3 id="s10">5.3 反馈：分子是前向，分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>±</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi></math></span></h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1230">20:30</a>反馈连接是最重要的一条，老师特意让大家记牢。它的结构是：一条<strong>前向通道</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，一条<strong>反馈通道</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，反馈信号在比较点处与输入相加减。推导如下（设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 入、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 出）：</p>
+
+<ol class="steps">
+  <li>前向通道：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>=</mo><mi>G</mi><mi>e</mi></math></span>。</li>
+  <li>比较点：偏差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi><mo>=</mo><mi>r</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>b</mi></math></span>（正反馈取加、负反馈取减）。</li>
+  <li>反馈通道：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi><mo>=</mo><mi>H</mi><mi>c</mi></math></span>。</li>
+  <li>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 依次代入：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>=</mo><mi>G</mi><mo>(</mo><mi>r</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>H</mi><mi>c</mi><mo>)</mo><mo>=</mo><mi>G</mi><mi>r</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi><mi>c</mi></math></span>。</li>
+  <li>把含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 的项并到一边：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>(</mo><mn>1</mn><mo>∓</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi><mo>)</mo><mo>=</mo><mi>G</mi><mi>r</mi></math></span>，两边相比即得闭环传递函数。</li>
+</ol>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mn>1</mn><mo>∓</mo><mspace width="0.25em"></mspace><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mi>H</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac></math></div>
+
+<div class="why">
+  <span class="lbl">为什么反馈公式里那个符号要"倒一下"</span>
+  <p>很多同学记不住到底是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>G</mi><mi>H</mi></math></span> 还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi></math></span>。老师给的口诀是：<mark>看反馈口——反馈口里原来是"加"，公式里就用"减"；原来是"减"（负反馈），公式里就用"加"</mark>。原因是推导时把反馈项从右边移到左边，符号自然翻了号。所以：<strong>正反馈 → 分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>G</mi><mi>H</mi></math></span>；负反馈 → 分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi></math></span></strong>。而分子永远是前向通道的传递函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，这一点不受正负反馈影响。可以把结论压成一句话：<em>反馈 = <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mtext>前向</mtext></mrow><mrow><mn>1</mn><mspace width="1em"></mspace><mo>±</mo><mtext>前向</mtext><mo>×</mo><mtext>反馈</mtext></mrow></mfrac></math></span>，符号看反馈口的正负。</em></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 48 640 176" role="img" aria-label="反馈等效：等效前输入 r 在比较点与反馈信号 b 相加减得到偏差 e，e 经前向通道 G 得输出 c，c 经反馈通道 H 得 b 送回比较点；等效后输入 r 直接经过一个传递函数 G/(1 加减 GH) 的方框得到输出 c">
+    <defs>
+      <marker id="ar4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar4v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+    <text x="150" y="68" class="m-sub" font-size="11.5" text-anchor="middle">等效前</text>
+    <text x="478" y="68" class="m-sub" font-size="11.5" text-anchor="middle">等效后</text>
+    <line x1="326" y1="58" x2="326" y2="216" class="d-thin" fill="none"/>
+
+    <text x="16" y="115" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="28" y1="110" x2="46" y2="110" class="d-line" marker-end="url(#ar4a)"/>
+    <circle cx="60" cy="110" r="13" class="d-sum"/>
+    <text x="50" y="102" class="m-sub" font-size="11" text-anchor="end">+</text>
+    <text x="70" y="102" class="m-sub" font-size="12" text-anchor="start">±</text>
+    <line x1="73" y1="110" x2="96" y2="110" class="d-line" marker-end="url(#ar4a)"/>
+    <text x="86" y="102" class="m-math" font-size="10.5" text-anchor="middle">e</text>
+    <rect x="98" y="90" width="70" height="40" rx="3" class="d-box-a"/>
+    <text x="133" y="115" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="168" y1="110" x2="194" y2="110" class="d-line" marker-end="url(#ar4a)"/>
+    <circle cx="202" cy="110" r="3.5" class="d-tap"/>
+    <line x1="206" y1="110" x2="238" y2="110" class="d-line" marker-end="url(#ar4a)"/>
+    <text x="252" y="115" class="m-math" font-size="12" text-anchor="middle">c</text>
+
+    <rect x="110" y="168" width="70" height="36" rx="3" class="d-box-v"/>
+    <text x="145" y="191" class="m-math" font-size="11.5" text-anchor="middle">H</text>
+    <line x1="202" y1="110" x2="202" y2="186" class="d-fb"/>
+    <line x1="202" y1="186" x2="180" y2="186" class="d-fb" marker-end="url(#ar4v)"/>
+    <line x1="110" y1="186" x2="60" y2="186" class="d-fb"/>
+    <line x1="60" y1="186" x2="60" y2="123" class="d-fb" marker-end="url(#ar4v)"/>
+    <text x="205" y="176" class="m-math" font-size="10.5" text-anchor="start">b</text>
+
+    <text x="368" y="115" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="380" y1="110" x2="402" y2="110" class="d-line" marker-end="url(#ar4a)"/>
+    <rect x="404" y="86" width="160" height="48" rx="3" class="d-box-a"/>
+    <text x="484" y="114" class="m-math" font-size="11.5" text-anchor="middle">G / (1 ∓ GH)</text>
+    <line x1="564" y1="110" x2="590" y2="110" class="d-line" marker-end="url(#ar4a)"/>
+    <text x="604" y="115" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <text x="484" y="200" class="m-sub" font-size="10.5" text-anchor="middle">分子 = 前向 G，分母 = 1 ∓ GH</text>
+  </svg>
+  <figcaption><b>反馈：把整条回路折成一个方框。</b>左边是原始回路：输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 与反馈信号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 在比较点相加减得到偏差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span> 经前向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 得输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 再经反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>。<em>紫色线是反馈通道</em>。右边是等效结果：整条回路被折成一个方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>G</mi></mrow><mrow><mn>1</mn><mo>∓</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi></mrow></mfrac></math></span>。<mark>记忆要点：分子就是前向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>；分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 后面跟着"前向×反馈"，符号与反馈口相反。</mark></figcaption>
+</figure>
+
+<div class="tbl-wrap">
+<table class="cmp">
+  <thead><tr><th>联结方式</th><th>结构特征</th><th>等效传递函数</th><th>一句话记法</th></tr></thead>
+  <tbody>
+    <tr><td>串联</td><td>首尾相接，前一个的输出喂给后一个</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><msub><mi>G</mi><mn>2</mn></msub></math></span></td><td>乘</td></tr>
+    <tr><td>并联</td><td>同一输入分两路，输出在比较点叠加</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>2</mn></msub></math></span></td><td>叠加（看支路符号）</td></tr>
+    <tr><td>反馈</td><td>前向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>、反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi></math></span>，构成闭环</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>G</mi></mrow><mrow><mn>1</mn><mo>∓</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi></mrow></mfrac></math></span></td><td>分子前向，分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>∓</mo></math></span> 前向×反馈</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s11">六、比较点的移动：前移除、后移乘</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1462">24:22</a>除了上面三条联结，还有一类规则要讲：<strong>比较点和引出点的移动</strong>。它们的共同要求只有一个——<mark>移动之后，输入输出之间的传递关系必须和原来等效</mark>。老师先从<strong>比较点</strong>说起。</p>
+
+<p>比较点是两个或多个信号"在某一个点上相加减"的地方。假设原来的结构图里，<strong>比较点在某个环节的后边</strong>：输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 先经过环节 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，出来的信号再与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 在比较点相加减，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>=</mo><mi>G</mi><mi>r</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>q</mi></math></span>。现在为了化简方便，要把这个比较点<strong>前移</strong>到环节的前面去。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1507">25:07</a>能不能直接搬过去？不能。<em>直接把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 拉到环节前面，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 就白捡了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>（变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mi>q</mi></math></span>），结果变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>r</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>q</mi><mo>)</mo></math></span>，和原来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mi>r</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>q</mi></math></span> 不等效。</em>要保持等效，就要在把比较点前移的同时，把这条支路信号<strong>先除以一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></strong>再引过来。这样 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 先除 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>、再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，正好还原成单独的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span>。</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mtext>比较点前移：支路信号</mtext><mspace width="0.25em"></mspace><mo>÷</mo><mspace width="0.25em"></mspace><mi>G</mi><mspace width="0.25em"></mspace><mspace width="2em"></mspace><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mtext>比较点后移：支路信号</mtext><mspace width="0.25em"></mspace><mo>×</mo><mspace width="0.25em"></mspace><mi>G</mi></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1554">25:54</a>反过来，如果比较点原来在环节的前面，要把它<strong>后移</strong>到环节后面去，那就得把这条支路信号<strong>乘上一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></strong>再叠加。老师原话提醒：<em>"你也不必要专门去记这个公式，你就先仔细想一想就行了"</em>——直接搬过去不合适，多乘了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 就除回来，少乘了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 就补上去，逻辑很朴素。</p>
+
+<figure class="fig">
+  <svg viewBox="0 40 640 195" role="img" aria-label="比较点移动规则：第一行比较点前移，等效前 r 先经方框 G，再在比较点与 q 相加减得到 c；等效后比较点移到 G 之前，q 支路先除以 G 再送进比较点，再经 G 得到 c。第二行比较点后移，等效前 r 在比较点与 q 相加后经 G 得到 c；等效后比较点移到 G 之后，q 支路先乘以 G 再送进比较点得到 c">
+    <defs>
+      <marker id="ar5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="14" y="62" class="m-txt" font-size="11" text-anchor="start">① 比较点前移（移到环节前）</text>
+    <text x="340" y="62" class="m-sub" font-size="10.5" text-anchor="start">支路信号要先 ÷G 才等效</text>
+
+    <text x="18" y="105" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="30" y1="100" x2="46" y2="100" class="d-line" marker-end="url(#ar5a)"/>
+    <rect x="48" y="80" width="64" height="40" rx="3" class="d-box"/>
+    <text x="80" y="105" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="112" y1="100" x2="130" y2="100" class="d-line" marker-end="url(#ar5a)"/>
+    <circle cx="144" cy="100" r="12" class="d-sum"/>
+    <text x="144" y="66" class="m-math" font-size="11" text-anchor="middle">q</text>
+    <line x1="144" y1="70" x2="144" y2="86" class="d-line" marker-end="url(#ar5a)"/>
+    <line x1="156" y1="100" x2="182" y2="100" class="d-line" marker-end="url(#ar5a)"/>
+    <text x="194" y="105" class="m-math" font-size="12" text-anchor="middle">c</text>
+
+    <text x="348" y="105" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="360" y1="100" x2="378" y2="100" class="d-line" marker-end="url(#ar5a)"/>
+    <circle cx="392" cy="100" r="12" class="d-sum"/>
+    <text x="392" y="66" class="m-math" font-size="10.5" text-anchor="middle">q/G</text>
+    <line x1="392" y1="70" x2="392" y2="86" class="d-line" marker-end="url(#ar5a)"/>
+    <line x1="404" y1="100" x2="422" y2="100" class="d-line" marker-end="url(#ar5a)"/>
+    <rect x="424" y="80" width="64" height="40" rx="3" class="d-box-a"/>
+    <text x="456" y="105" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="488" y1="100" x2="514" y2="100" class="d-line" marker-end="url(#ar5a)"/>
+    <text x="526" y="105" class="m-math" font-size="12" text-anchor="middle">c</text>
+
+    <text x="14" y="168" class="m-txt" font-size="11" text-anchor="start">② 比较点后移（移到环节后）</text>
+    <text x="340" y="168" class="m-sub" font-size="10.5" text-anchor="start">支路信号要先 ×G 才等效</text>
+
+    <text x="18" y="211" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="30" y1="206" x2="46" y2="206" class="d-line" marker-end="url(#ar5a)"/>
+    <circle cx="60" cy="206" r="12" class="d-sum"/>
+    <text x="60" y="172" class="m-math" font-size="11" text-anchor="middle">q</text>
+    <line x1="60" y1="176" x2="60" y2="192" class="d-line" marker-end="url(#ar5a)"/>
+    <line x1="72" y1="206" x2="90" y2="206" class="d-line" marker-end="url(#ar5a)"/>
+    <rect x="92" y="186" width="64" height="40" rx="3" class="d-box"/>
+    <text x="124" y="211" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="156" y1="206" x2="182" y2="206" class="d-line" marker-end="url(#ar5a)"/>
+    <text x="194" y="211" class="m-math" font-size="12" text-anchor="middle">c</text>
+
+    <text x="348" y="211" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="360" y1="206" x2="378" y2="206" class="d-line" marker-end="url(#ar5a)"/>
+    <rect x="380" y="186" width="64" height="40" rx="3" class="d-box-a"/>
+    <text x="412" y="211" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="444" y1="206" x2="462" y2="206" class="d-line" marker-end="url(#ar5a)"/>
+    <circle cx="476" cy="206" r="12" class="d-sum"/>
+    <text x="476" y="170" class="m-math" font-size="10.5" text-anchor="middle">q·G</text>
+    <line x1="476" y1="174" x2="476" y2="192" class="d-line" marker-end="url(#ar5a)"/>
+    <line x1="488" y1="206" x2="514" y2="206" class="d-line" marker-end="url(#ar5a)"/>
+    <text x="526" y="211" class="m-math" font-size="12" text-anchor="middle">c</text>
+  </svg>
+  <figcaption><b>比较点移动：一条"反着补"的规则。</b>上排是<em>前移</em>：比较点从环节 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 后面搬到前面，被搬走的支路信号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 因为少经过一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，所以要先 <b>÷G</b>，进比较点后随主路一起再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，总额不变。下排是<em>后移</em>：比较点从前面搬到后面，支路信号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 因为多经过一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，所以要先 <b>×G</b> 再叠加。<mark>一句话：比较点前移除 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>、后移乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>。</mark></figcaption>
+</figure>
+
+<div class="trap">
+  <span class="lbl">这一步最容易错</span>
+  <p><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 除在"输出"上而不是"支路"上。</span>要除/要乘的，是<strong>被移动的那条支路信号</strong>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span>），不是主路。主路信号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 该经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 还是经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，一点都不能动。判断方法：<em>盯住那条被搬动的支路，看它原来经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 没有</em>——原来没经过、现在要经过，就乘；原来经过、现在不经过了，就除。</p>
+  <p><span class="bad">忘了"变前后等效"这条底线。</span>老师反复念的"<em>变换可以变换，但你一定要照顾到变换前后信号输入输出的传递等效关系</em>"，就是这一条。移动前先把原图输出表达式写出来，移动后对一遍，就不会错。</p>
+</div>
+
+<h2 id="s12">七、引出点的移动：前移乘、后移除（与比较点相反）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1645">27:25</a>接下来是<strong>引出点</strong>的移动。引出点是"把同一个信号源复制一份送到别处"的地方。规则和比较点恰好<strong>反过来</strong>。</p>
+
+<p>设原来<strong>引出点在某个环节的后边</strong>：主路的输出是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mi>r</mi></math></span>，我们从这里引出一路信号，它的值是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mi>r</mi></math></span>。现在要把这个引出点<strong>前移</strong>到环节前面去。如果直接把线拉过去，引出信号就变成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span>，<em>少乘了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></em>。要保持等效，就得在引出点前移的同时，把被引出的信号<strong>再乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></strong>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 又变回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mi>r</mi></math></span>。</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mtext>引出点前移：支路信号</mtext><mspace width="0.25em"></mspace><mo>×</mo><mspace width="0.25em"></mspace><mi>G</mi><mspace width="0.25em"></mspace><mspace width="2em"></mspace><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mtext>引出点后移：支路信号</mtext><mspace width="0.25em"></mspace><mo>÷</mo><mspace width="0.25em"></mspace><mi>G</mi></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1694">28:14</a>反过来，若要把引出点<strong>后移</strong>到环节后面去，被引出的信号就多经过了一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，所以要<strong>除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span></strong> 把它还原。</p>
+
+<div class="said">
+  <span class="lbl">老师原话 <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1694">28:14</a></span>
+  <p><q>你不必专门去追究这个事情，你就做这个事情的时候仔细地去琢磨一下、细心地去体会一下——该乘就乘，该除就除。</q></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 40 640 195" role="img" aria-label="引出点移动规则：第一行引出点前移，等效前引出点在方框 G 之后，取出的信号为 r 乘 G；等效后引出点移到 G 之前，取出的信号先乘 G 才等于 r 乘 G。第二行引出点后移，等效前引出点在方框 G 之前，取出的信号为 r；等效后引出点移到 G 之后，取出的信号要除以 G 才等于 r">
+    <defs>
+      <marker id="ar6a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="14" y="62" class="m-txt" font-size="11" text-anchor="start">① 引出点前移（移到环节前）</text>
+    <text x="340" y="62" class="m-sub" font-size="10.5" text-anchor="start">支路信号要先 ×G 才等效</text>
+
+    <text x="18" y="105" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="30" y1="100" x2="46" y2="100" class="d-line" marker-end="url(#ar6a)"/>
+    <rect x="48" y="80" width="64" height="40" rx="3" class="d-box"/>
+    <text x="80" y="105" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="112" y1="100" x2="128" y2="100" class="d-line" marker-end="url(#ar6a)"/>
+    <circle cx="136" cy="100" r="3.5" class="d-tap"/>
+    <line x1="136" y1="100" x2="166" y2="100" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="178" y="105" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <line x1="136" y1="100" x2="136" y2="72" class="d-line"/>
+    <line x1="136" y1="72" x2="172" y2="72" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="154" y="64" class="m-math" font-size="10.5" text-anchor="middle">r·G</text>
+
+    <text x="348" y="105" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="360" y1="100" x2="376" y2="100" class="d-line" marker-end="url(#ar6a)"/>
+    <circle cx="384" cy="100" r="3.5" class="d-tap"/>
+    <line x1="384" y1="100" x2="396" y2="100" class="d-line" marker-end="url(#ar6a)"/>
+    <rect x="398" y="80" width="64" height="40" rx="3" class="d-box-a"/>
+    <text x="430" y="105" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="462" y1="100" x2="488" y2="100" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="500" y="105" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <line x1="384" y1="100" x2="384" y2="72" class="d-line"/>
+    <line x1="384" y1="72" x2="420" y2="72" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="400" y="64" class="m-math" font-size="10.5" text-anchor="middle">r·G</text>
+
+    <text x="14" y="168" class="m-txt" font-size="11" text-anchor="start">② 引出点后移（移到环节后）</text>
+    <text x="340" y="168" class="m-sub" font-size="10.5" text-anchor="start">支路信号要先 ÷G 才等效</text>
+
+    <text x="18" y="211" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="30" y1="206" x2="44" y2="206" class="d-line" marker-end="url(#ar6a)"/>
+    <circle cx="52" cy="206" r="3.5" class="d-tap"/>
+    <line x1="52" y1="206" x2="64" y2="206" class="d-line" marker-end="url(#ar6a)"/>
+    <rect x="66" y="186" width="64" height="40" rx="3" class="d-box"/>
+    <text x="98" y="211" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="130" y1="206" x2="156" y2="206" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="168" y="211" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <line x1="52" y1="206" x2="52" y2="178" class="d-line"/>
+    <line x1="52" y1="178" x2="86" y2="178" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="70" y="170" class="m-math" font-size="10.5" text-anchor="middle">r</text>
+
+    <text x="348" y="211" class="m-math" font-size="12" text-anchor="middle">r</text>
+    <line x1="360" y1="206" x2="376" y2="206" class="d-line" marker-end="url(#ar6a)"/>
+    <rect x="378" y="186" width="64" height="40" rx="3" class="d-box-a"/>
+    <text x="410" y="211" class="m-math" font-size="11.5" text-anchor="middle">G</text>
+    <line x1="442" y1="206" x2="456" y2="206" class="d-line" marker-end="url(#ar6a)"/>
+    <circle cx="464" cy="206" r="3.5" class="d-tap"/>
+    <line x1="464" y1="206" x2="494" y2="206" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="506" y="211" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <line x1="464" y1="206" x2="464" y2="178" class="d-line"/>
+    <line x1="464" y1="178" x2="500" y2="178" class="d-line" marker-end="url(#ar6a)"/>
+    <text x="482" y="170" class="m-math" font-size="10.5" text-anchor="middle">c/G</text>
+  </svg>
+  <figcaption><b>引出点移动：与比较点"反着来"。</b>上排是<em>前移</em>：引出点从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 后面搬到前面，被引出的信号少经过一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，所以要再 <b>×G</b>，才能仍等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi><mi>G</mi></math></span>。下排是<em>后移</em>：引出点从前面搬到后面，信号多经过一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span>，所以要 <b>÷G</b> 还原成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span>。<mark>对照记：比较点前移除、后移乘；引出点前移乘、后移除——两者的"乘/除"刚好相反。</mark></figcaption>
+</figure>
+
+<h2 id="s13">八、同类互换，以及"比较点 ↔ 引出点"这张险招</h2>
+
+<h3 id="s14">8.1 比较点之间、引出点之间：可以随意调换</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1742">29:02</a>先说两条<strong>安全</strong>的规则。</p>
+
+<p><strong>比较点之间可以随意调换位置。</strong>挨在一起的几个比较点，谁在前谁在后都无所谓——因为加法有交换律，先加哪个后加哪个结果一样。老师唯一的叮嘱是：<mark>该加就加、该减就减，千万别在调换时把符号丢了</mark>。</p>
+
+<p><strong>引出点之间也可以随意调换位置。</strong>连在一起的几个引出点，谁先引出、谁后引出都没关系——因为它们引出的是<strong>同一个信号源</strong>，信号的物理性质与量值都不变。</p>
+
+<h3 id="s15">8.2 比较点 ↔ 引出点互换：千万注意，别轻易用</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1787">29:47</a>接下来这条最需要小心：把一个<strong>引出点</strong>和一个<strong>比较点</strong>互换位置。老师说得很重：<em>"千万注意"</em>。</p>
+
+<p>原来的局部结构是：<strong>比较点在前、引出点在后</strong>，两路信号都一样，都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>−</mo><msub><mi>r</mi><mn>2</mn></msub></math></span>。现在要把后边的引出点移到比较点的前面去。如果<strong>直接把引出点拉过去</strong>，那一路信号就只剩下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 了——<em>丢了那个减掉的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>2</mn></msub></math></span></em>，不再等效。要补救，就得在引出点前移的同时，<mark>把被引出的信号再减一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>2</mn></msub></math></span></mark>，让它重新变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>−</mo><msub><mi>r</mi><mn>2</mn></msub></math></span>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 170" role="img" aria-label="比较点与引出点互换：等效前 r1 与 r2 在比较点相减得到 r1 减 r2，比较点之后有一个引出点，把 r1 减 r2 这一路信号送到两处输出 c1 与 c2；等效后把引出点移到比较点之前，被引出的信号只是 r1，所以必须在引出之后再加一个比较点再减一次 r2，才能重新得到 r1 减 r2 送到 c2">
+    <defs>
+      <marker id="ar7a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="150" y="42" class="m-sub" font-size="11.5" text-anchor="middle">等效前</text>
+    <text x="552" y="42" class="m-sub" font-size="11.5" text-anchor="middle">等效后</text>
+    <line x1="320" y1="34" x2="320" y2="164" class="d-thin" fill="none"/>
+
+    <text x="16" y="112" class="m-math" font-size="12" text-anchor="middle">r1</text>
+    <line x1="30" y1="107" x2="46" y2="107" class="d-line" marker-end="url(#ar7a)"/>
+    <circle cx="60" cy="107" r="12" class="d-sum"/>
+    <text x="60" y="76" class="m-math" font-size="11" text-anchor="middle">r2</text>
+    <line x1="60" y1="80" x2="60" y2="93" class="d-line" marker-end="url(#ar7a)"/>
+    <text x="70" y="98" class="m-sub" font-size="12" text-anchor="start">−</text>
+    <line x1="72" y1="107" x2="96" y2="107" class="d-line" marker-end="url(#ar7a)"/>
+    <circle cx="104" cy="107" r="3.5" class="d-tap"/>
+    <line x1="104" y1="107" x2="140" y2="107" class="d-line" marker-end="url(#ar7a)"/>
+    <text x="152" y="112" class="m-math" font-size="12" text-anchor="middle">c1</text>
+    <line x1="104" y1="107" x2="104" y2="152" class="d-line"/>
+    <line x1="104" y1="152" x2="140" y2="152" class="d-line" marker-end="url(#ar7a)"/>
+    <text x="152" y="157" class="m-math" font-size="12" text-anchor="middle">c2</text>
+    <text x="128" y="132" class="m-sub" font-size="10" text-anchor="middle">r1−r2</text>
+
+    <text x="336" y="112" class="m-math" font-size="12" text-anchor="middle">r1</text>
+    <line x1="350" y1="107" x2="366" y2="107" class="d-line" marker-end="url(#ar7a)"/>
+    <circle cx="374" cy="107" r="3.5" class="d-tap"/>
+    <line x1="374" y1="107" x2="392" y2="107" class="d-line" marker-end="url(#ar7a)"/>
+    <circle cx="406" cy="107" r="12" class="d-sum"/>
+    <text x="406" y="78" class="m-math" font-size="11" text-anchor="middle">r2</text>
+    <line x1="406" y1="82" x2="406" y2="93" class="d-line" marker-end="url(#ar7a)"/>
+    <text x="416" y="98" class="m-sub" font-size="12" text-anchor="start">−</text>
+    <line x1="418" y1="107" x2="446" y2="107" class="d-line" marker-end="url(#ar7a)"/>
+    <text x="458" y="112" class="m-math" font-size="12" text-anchor="middle">c1</text>
+
+    <line x1="374" y1="107" x2="374" y2="42" class="d-line"/>
+    <line x1="374" y1="42" x2="410" y2="42" class="d-line" marker-end="url(#ar7a)"/>
+    <circle cx="424" cy="42" r="12" class="d-sum"/>
+    <text x="411" y="28" class="m-math" font-size="11" text-anchor="middle">r2</text>
+    <line x1="424" y1="2" x2="424" y2="26" class="d-line" marker-end="url(#ar7a)"/>
+    <text x="434" y="33" class="m-sub" font-size="12" text-anchor="start">−</text>
+    <line x1="436" y1="42" x2="464" y2="42" class="d-line" marker-end="url(#ar7a)"/>
+    <text x="476" y="47" class="m-math" font-size="12" text-anchor="middle">c2</text>
+    <text x="424" y="140" class="m-sub" font-size="10" text-anchor="middle">再减一次 r2，才等效</text>
+  </svg>
+  <figcaption><b>比较点↔引出点互换：必须"补上一刀"。</b>左边原图中，比较点在前、引出点在后，<em>两路输出都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>−</mo><msub><mi>r</mi><mn>2</mn></msub></math></span></em>。右边把引出点搬到比较点前面后，直接搬过来的那一路只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span>（<mark>少了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>r</mi><mn>2</mn></msub></math></span></mark>）；所以必须在引出之后<strong>再加一个比较点、再减一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>2</mn></msub></math></span></strong>，才能让它重新等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>−</mo><msub><mi>r</mi><mn>2</mn></msub></math></span>。<b>注意右边是不是比左边更"乱"了？</b>——这正是老师说的"<em>倒过来以后结构还更麻烦</em>"，所以这条规则<strong>不要轻易用</strong>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么这条"互换"规则要慎用、什么时候才果断用</span>
+  <p>把图倒过来看，右边的比较点、引出点数量并没有减少，还凭空多了一个比较点——<strong>结构看起来更乱了</strong>。所以老师的原则是：<em>能不用就不用</em>。但也不能因噎废食：当化简卡在中间某处、别的招都使不上时，就得果断用它。判断的时机在后面的例子里会看到——<mark>只有在"必须跨过某个比较点/引出点才能把回路折起来"的关键位置，才动用这一招</mark>，而且用的时候一定要记得"补减那一刀"。</p>
+</div>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 等效化简的"零件清单"</span>
+  <p>把上面所有规则收成一张表，做题时按表调用即可：</p>
+  <div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>操作</th><th>规则</th><th>方向记忆</th></tr></thead>
+    <tbody>
+      <tr><td>串联</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><msub><mi>G</mi><mn>2</mn></msub></math></span>（相乘）</td><td>—</td></tr>
+      <tr><td>并联</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>2</mn></msub></math></span>（叠加）</td><td>看支路符号</td></tr>
+      <tr><td>反馈</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>G</mi></mrow><mrow><mn>1</mn><mo>∓</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi></mrow></mfrac></math></span></td><td>正反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>G</mi><mi>H</mi></math></span>、负反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi></math></span></td></tr>
+      <tr><td>比较点移动</td><td>前移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>÷</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span>、后移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>×</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span></td><td>支路信号反着补</td></tr>
+      <tr><td>引出点移动</td><td>前移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>×</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span>、后移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>÷</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span></td><td>与比较点相反</td></tr>
+      <tr><td>比较点互换</td><td>可任意调换</td><td>别丢符号</td></tr>
+      <tr><td>引出点互换</td><td>可任意调换</td><td>同一信号源</td></tr>
+      <tr><td>比较点↔引出点</td><td>移动时须"再减一次"被丢掉的信号</td><td>慎用；非用不可时果断用</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<h2 id="s16">九、化简实战：三道例题把规则拼成流程</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1969">32:49</a>规则备齐了，下面的任务就是"<em>把一个复杂结构图从头到尾、中间窝来窝去，窝成一个框框</em>"，框里放的就是系统的传递函数。老师用了三道例题演示。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1969">32:49</a>把例2 得到的电枢控制式直流电动机结构图化简，求以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>g</mi></msub></math></span> 为输入、角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 为输出的闭环传递函数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：前向三环节先串成一个，再用一次反馈等效</span>
+    <p><span class="sh">第一步：前向串联。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=1969">32:49</a>前向通道上是三个环节串联：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>R</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>m</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi></mrow></mfrac></math></span>，直接乘到一起。</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>R</mi></mrow></mfrac><mo>⋅</mo><mspace width="0.25em"></mspace><msub><mi>C</mi><mi>m</mi></msub><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mo>(</mo><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi><mo>)</mo></mrow></mfrac></math></div>
+    <p><span class="sh">第二步：反馈等效。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2014">33:34</a>反馈通道的传递函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>e</mi></msub></math></span>，这是一个<strong>负反馈</strong>（反电势减在比较点上）。套公式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>G</mi></mrow><mrow><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi></mrow></mfrac></math></span>（负反馈用加号）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mo>(</mo><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi><mo>)</mo></mrow></mfrac></mrow><mrow><mn>1</mn><mo>+</mo><msub><mi>C</mi><mi>e</mi></msub><mo>⋅</mo><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mo>(</mo><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi><mo>)</mo></mrow></mfrac></mrow></mfrac></math></div>
+    <p><span class="sh">第三步：化简。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2060">34:20</a>分子分母同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>J</mi><mi>s</mi><mo>+</mo><mi>f</mi><mo>)</mo></math></span> 把"分母套分母"消掉，就得到干净的结果：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mi>J</mi><mi>s</mi><mo>+</mo><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></div>
+    <p><span class="sh">第四步：化尾一标准型。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2060">34:20</a>分子是常数，分母常数项是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></math></span>。分子分母同时除以这个常数项，把常数项化为 1：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></mrow><mrow><mfrac><mrow><mi>R</mi><mi>J</mi></mrow><mrow><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+    <p>读出来：这就是电机的<strong>时间常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><mi>R</mi><mi>J</mi></mrow><mrow><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span></strong> 和<strong>传递系数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span></strong>。当粘性摩擦 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>=</mo><mn>0</mn></math></span> 时，退化为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><mi>R</mi><mi>J</mi></mrow><mrow><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span>，正是课本上那个经典结果。</p>
+
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">反馈符号取反。</span>这里是负反馈，"反电势 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 减在比较点上"，所以分母要用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi></math></span>。若误用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>G</mi><mi>H</mi></math></span>，整个结果就错了。</p>
+      <p><span class="bad">忘了把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 乘过来。</span>"分母套分母"消掉后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 在分子上被乘过来（因为分母里含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的项经过通分），最后才得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mi>J</mi><mi>s</mi><mo>+</mo><mo>⋯</mo></math></span> 的形式，别漏这一步。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2105">35:05</a>把例1 的函数记录仪结构图化简，求以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>g</mi></msub></math></span> 为输入、记录笔位移为输出的闭环传递函数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：两个串联先乘、引出点前移、两路反馈并联、最后用一次反馈</span>
+    <p><span class="sh">第一步：串联先合并。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2151">35:51</a>先把连在一起的两个串联环节乘到一起（如电动机环节与积分环节、或减速器与绳轮机构），但<strong>不急着把内反馈去掉</strong>——老师说要先看清楚哪几块可以先并。</p>
+    <p><span class="sh">第二步：引出点前移。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2197">36:37</a>为了把内、外两条反馈"合流"，需要把测速发电机的引出点前移。前移时<strong>该乘的要乘</strong>：这里要把被引出的信号乘上"积分 + 减速器 + 绳轮"那一段的传递函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mn>2</mn></msub><msub><mi>K</mi><mn>3</mn></msub></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>，才能保持等效。老师特别提醒：<em>"把这个引出点前移到这儿来，你前移到这来以后是该乘呢是该除呢？想一想——你原本这个信号要通过它才到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>4</mn></msub></math></span> 这个口，你直接拉过来不是少乘了吗？该乘。"</em></p>
+    <p><span class="sh">第三步：两路反馈并联。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2243">37:23</a>内反馈与外反馈现在成了<strong>两路并联</strong>的反馈通道，且都是负反馈，于是把它们<strong>加起来</strong>并成一路，再用一次反馈等效。</p>
+    <p><span class="sh">第四步：消分母套分母，整理成降幂形式。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2288">38:08</a>反馈等效后，分子分母同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>T</mi><mi>m</mi></msub><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span> 把"分母套分母"消掉，再乘过来那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>，最后把分母按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的降幂整理成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>1</mn></msup></math></span>、常数项的形式。</p>
+    <p><span class="sh">第五步：化尾一标准型读增益。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2335">38:55</a>分母常数项是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub><msub><mi>K</mi><mn>2</mn></msub><msub><mi>K</mi><mn>3</mn></msub><msub><mi>K</mi><mi>m</mi></msub><msub><mi>K</mi><mn>4</mn></msub></math></span>（一对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span> 的乘积），分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub><msub><mi>K</mi><mn>2</mn></msub><msub><mi>K</mi><mn>3</mn></msub><msub><mi>K</mi><mi>m</mi></msub></math></span>，两者一比，<strong>闭环增益就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msub><mi>K</mi><mn>4</mn></msub></mrow></mfrac></math></span></strong>。</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msub><mi>K</mi><mn>4</mn></msub></mrow></mfrac></math></div>
+    <div class="why">
+      <span class="lbl">为什么化简路径不止一条、结果却唯一</span>
+      <p>老师反复强调：<mark>结果唯一，但做法不止一种</mark>。可以先消内反馈再消外反馈，也可以像这里先并两路反馈再一次性消掉；只要每一步都守"变前后等效"，终点必然相同。所以考试时<strong>不必纠结"老师是用哪种顺序"</strong>，选自己最顺的一条走完即可——这也是结构图化简比时域消元省心的地方：方法自由，答案固定。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2386">39:46</a>一个较复杂的结构图：多个比较点、引出点交错。求把它化简成单回路的方法与顺序。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先扫描、从两头处理，别从中间钻</span>
+    <p>老师说，面对这类图先别急着动笔，先做一次<strong>扫描</strong>：<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2431">40:31</a><em>看哪些比较点是连在一起的、哪些引出点是连在一起的，它们前后能不能调换；能调换就先调换，让问题简化一点。</em></p>
+    <ol class="steps">
+      <li><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2431">40:31</a><span class="sh">先看"两头"。</span>从主通道的头部和尾部入手：头部的比较点往往能后移、形成局部反馈；尾部的引出点往往能前移、也能形成局部反馈。</li>
+      <li><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2476">41:16</a><span class="sh">局部反馈先消。</span>把比较点后移（该乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>2</mn></msub></math></span>），让某一段形成一个小回路，用反馈等效一次消掉。</li>
+      <li><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2522">42:02</a><span class="sh">引出点前移再消。</span>再把引出点前移（该乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>5</mn></msub></math></span>），又消掉一个局部回路。</li>
+      <li><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2570">42:50</a><span class="sh">反复用串、并、反馈。</span>局部反馈处理干净后，图就简化成基本联结的组合，一路用三条基本规则收口。</li>
+    </ol>
+
+    <div class="trap">
+      <span class="lbl">老师反复叮嘱的两条</span>
+      <p><span class="bad">从中间开刀。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2476">41:16</a>从中间处理，"<em>势必要用到引出点和比较点互换</em>"——那是最后才动用的险招，会让结构更乱。所以顺序是：<mark>先两头、后中间；先能调换的、后不得已的</mark>。</p>
+      <p><span class="bad">图省事，不在草稿上画中间图。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2805">46:45</a>老师特别叮嘱：<em>"做的时候不要怕麻烦，把中间的那些推导图形都要画出来……要不然你交完作业，老师不知道你是怎么一步一步做出来的；你错了，也不知道错在哪一步。"</em>化简是"接力赛"，每一步的中间结果都要落到纸上，才能回溯、才能检查。</p>
+    </div>
+  </div>
+</div>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · 结构图之外还有一条更快的路</span>
+  <p>本讲的"等效化简"是<strong>一步步折图</strong>的办法，优点是直观、不用背公式；缺点是对付多回路交错的大图时步骤繁多。理论上有另一条更系统的路——把结构图改画成<strong>信号流图</strong>，再用<strong>梅森（Mason）增益公式</strong>一次性写出传递函数。它的思想是：把每种"从一个节点走到另一个节点、不重复经过同一节点"的通路（叫<em>前向通路</em>）和每种闭合回路（叫<em>回路</em>）分别找出来，按公式代数组合即可，<mark>完全跳过了"移动点"的手工操作</mark>。这一工具在本课程后续章节会作为求传递函数的通用手段出现，现在只需知道"还有这么一条路"即可。</p>
+</div>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 本讲的收敛点 <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=12&amp;t=2805">46:45</a></span>
+  <p>老师最后把这一节课收在一句话上：<strong>由结构图求传递函数，今天讲的是"等效化简"这一个方法；它的全部内容，就是三条基本联结加上几类"移动点"的规则。</strong>做题时任选一条路线走到底都行，只要每一步都保证"变前变后等效"，结果必然唯一。至于为什么"该乘就乘、该除就除"，不必死背，<em>动手前先把原图的输出表达式写出来，改完再对一遍——等效性自己会告诉你符号对不对。</em></p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>来源</b> 方框图换名 / 微分方程拼图</span><span class="ar">→</span>
+    <span class="n"><b>零件</b> 串联乘 · 并联叠加 · 反馈</span><span class="ar">→</span>
+    <span class="n"><b>移动</b> 比较点/引出点</span><span class="ar">→</span>
+    <span class="n"><b>落点</b> 单回路 → 闭环传递函数</span>
+  </div>
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li><strong>两条来路</strong>：方框图"换名"（每框填传递函数）；微分方程组"逐个子方程拉氏变换 + 首尾相连"。</li>
+    <li><strong>串联</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><msub><mi>G</mi><mn>2</mn></msub></math></span>；<strong>并联</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>1</mn></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>2</mn></msub></math></span>；<strong>反馈</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>G</mi></mrow><mrow><mn>1</mn><mo>∓</mo><mspace width="0.25em"></mspace><mi>G</mi><mi>H</mi></mrow></mfrac></math></span>（正反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>G</mi><mi>H</mi></math></span>、负反馈 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>G</mi><mi>H</mi></math></span>）。</li>
+    <li><strong>比较点</strong>：前移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>÷</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span>、后移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>×</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span>。</li>
+    <li><strong>引出点</strong>：前移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>×</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span>、后移 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>÷</mo><mspace width="0.25em"></mspace><mi>G</mi></math></span>（与比较点相反）。</li>
+    <li><strong>安全互换</strong>：比较点之间、引出点之间可任意调换（别丢符号）。</li>
+    <li><strong>电机模型</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>Ω</mo></mrow><mrow><msub><mi>U</mi><mi>g</mi></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mi>m</mi></msub></mrow><mrow><mi>R</mi><mi>J</mi><mi>s</mi><mo>+</mo><mi>R</mi><mi>f</mi><mo>+</mo><msub><mi>C</mi><mi>m</mi></msub><msub><mi>C</mi><mi>e</mi></msub></mrow></mfrac></math></span>，化尾一得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>；记录仪增益 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msub><mi>K</mi><mn>4</mn></msub></mrow></mfrac></math></span>。</li>
+  </ul>
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li><strong>比较点↔引出点互换</strong>要"再减一次被丢掉的信号"，且非必要不用（会让结构更乱）。</li>
+    <li><strong>化简顺序从两头、不从中间</strong>；中间过程必须画出来，否则错了无法回溯。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P011-复域数学模型（下）/index.html">复域数学模型（下）</a> 复域数学模型（下）：七个典型环节</li>
+      <li><a href="../P002-自动控制的一般概念（下）/index.html">自动控制的一般概念（下）</a> 函数记录仪的原理与方框图</li>
+      <li><span class="cur">零初始条件下对微分方程取拉氏变换</span></li>
+      <li><span class="cur">比较点 / 引出点 / 前向与反馈通道</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P013-结构图及其等效变换（下）/index.html">结构图及其等效变换（下）</a> 结构图等效变换（下）：两道复杂题练流程</li>
+      <li><span class="cur">本章收口：由结构图求闭环传递函数</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>串联（乘）↔ 并联（叠加）</li>
+      <li>比较点移动（前移除/后移乘）↔ 引出点移动（前移乘/后移除）</li>
+      <li>结构图（框里是传递函数）↔ 方框图（框里是元部件名字）</li>
+    </ul>
+  </div>
+</div>
+  <footer class="doc-foot"><span>卢京潮《自动控制原理》· 西北工业大学 · 第 12 讲</span><a href="../P011-复域数学模型（下）/index.html">← P011</a><a href="../index.html">全部目录</a><a href="../P013-结构图及其等效变换（下）/index.html">P013 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、这节课只办一件事：把结构图化成一个传递函数</a>
+    <a href="#s2">二、结构图从哪来：两条导出渠道</a>
+    <a class="sub" href="#s3">2.1 渠道①：由方框图&quot;换名&quot;得到结构图</a>
+    <a class="sub" href="#s4">2.2 渠道②：由微分方程组&quot;拼&quot;出结构图</a>
+    <a href="#s5">三、例1 · 函数记录仪：由方框图直接&quot;换名&quot;成结构图</a>
+    <a href="#s6">四、例2 · 电枢控制式直流电动机：由微分方程组拼出结构图</a>
+    <a href="#s7">五、三条基本联结：串联、并联、反馈</a>
+    <a class="sub" href="#s8">5.1 串联：传递函数相乘</a>
+    <a class="sub" href="#s9">5.2 并联：传递函数叠加</a>
+    <a class="sub" href="#s10">5.3 反馈：分子是前向，分母是 1±GH</a>
+    <a href="#s11">六、比较点的移动：前移除、后移乘</a>
+    <a href="#s12">七、引出点的移动：前移乘、后移除（与比较点相反）</a>
+    <a href="#s13">八、同类互换，以及&quot;比较点 ↔ 引出点&quot;这张险招</a>
+    <a class="sub" href="#s14">8.1 比较点之间、引出点之间：可以随意调换</a>
+    <a class="sub" href="#s15">8.2 比较点 ↔ 引出点互换：千万注意，别轻易用</a>
+    <a href="#s16">九、化简实战：三道例题把规则拼成流程</a>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>函数图形的绘制 · 六步法 · 高等数学笔记</title>
+<meta name="description" content="画图不是「凭感觉描点」，而是把定义域 / 奇偶周期 / 一二阶导 / 渐近走向逐项算清，再落笔。核心口诀：一阶导管单调与驻点，二阶导管凹凸与拐点；最后把所有信息收进一张表，照表描图。渐近线要分水平、铅垂、斜三种，按「铅垂 → 水平 → 斜」的顺序排查。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 3 章  微分中值定理与导数的应用</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 36 讲</div>
+    <h1 class="title"><span class="pnum">P036</span>函数图形的绘制 · 六步法</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>画图不是「凭感觉描点」，而是把<strong>定义域 / 奇偶周期 / 一二阶导 / 渐近走向</strong>逐项算清，再落笔。核心口诀：<strong>一阶导管单调与驻点，二阶导管凹凸与拐点</strong>；最后把所有信息收进一张表，照表描图。渐近线要分<mark>水平、铅垂、斜</mark>三种，按「铅垂 → 水平 → 斜」的顺序排查。</p></div>
+    <div class="meta"><span>时长 26m02s</span><span class="w" title="考试权重">●●●○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1">00:01</a><span class="vv">画图<b>六步法</b>总览：定义域 → 奇偶周期 → 一阶二阶导 → 令导数为零及特殊点 → 渐近线 → 描图。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=45">00:45</a><span class="vv">一阶导管<b>单调 / 驻点</b>，二阶导管<b>凹凸 / 拐点</b>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=195">03:15</a><span class="vv"><b>三种渐近线</b>：水平、铅垂是重点，还有并列提到的<b>斜渐近线</b>（用得少，但公式要会）。</span></li>
+    <li class="sep"><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=358">05:58</a><span class="vv"><b>水平渐近线</b>：x→∞ 时 f(x)→A，则 y=A；三种情形，arctan x 有两条、不唯一。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=466">07:46</a><span class="vv"><b>用语纠正</b>：写「y=0」，不要写「x 轴」——渐近线是一条直线。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=530">08:50</a><span class="vv"><b>铅垂渐近线</b>：x→a 时 f(x)→∞，则 x=a；常因分母为零，tan x 有多条。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=725">12:05</a><span class="vv">例 <b>y=x³−x²−x+1</b>：求导、求驻点与拐点。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=872">14:32</a><span class="vv">列表：用 −1/3、1/3、1 把区间切开，判单调与凹凸。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=985">16:25</a><span class="vv">四种弯法：<b>增/减 × 凹/凸</b>，一阶导定升降、二阶导定弯法，缺一不可。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1231">20:31</a><span class="vv">算关键点函数值，照表<b>描出综合图</b>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1531">25:31</a><span class="vv">补 x=3/2 等点确认走向；画图确实有点麻烦，但流程是死的。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">六步法：把「画图」变成「查表」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1">00:01</a>老师开篇就交底：画图这部分不算考试重点，因为「比较麻烦」，但一般步骤必须了解。他把流程总结成六步，本质是让画图从「凭手感」变成「按清单逐项填」：</p>
+
+<ol class="steps">
+  <li><span class="sh">定义域</span>：先搞清楚函数在哪有定义。</li>
+  <li><span class="sh">奇偶性、周期性</span>：周期性用得少，但奇偶性要查——它直接决定图像是否对称，能少画一半。</li>
+  <li><span class="sh">求一阶导、二阶导</span>：一阶导判断单调与找驻点；二阶导判断凹凸与找拐点。</li>
+  <li><span class="sh">令导数为零及特殊点</span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>（驻点）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>（拐点）、原函数为零的点、间断点、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 不存在的点。</li>
+  <li><span class="sh">渐近线</span>：水平渐近线、铅垂（铅直）渐近线；斜渐近线用得少。</li>
+  <li><span class="sh">描图</span>：把上面信息收进一张表，照表落笔。</li>
+</ol>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=45">00:45</a>一句话记住分工：<strong>一阶导回答「往上还是往下走」，二阶导回答「凹着还是凸着走」。</strong>单调性很简单——一阶导大于零单调增、小于零单调减，和高中的讲法一致；真正要小心的是凹凸性与二阶导正负的关系。</p>
+
+<div class="why">
+  <span class="lbl">二阶导正 = 凹，负 = 凸，为什么</span>
+  <p>二阶导是「一阶导的变化率」。二阶导为正，说明斜率越走越大——曲线越走越陡，长得像碗口朝上（凹）；二阶导为负，斜率越走越小，长得像拱背（凸）。所以「凹 / 凸」看的不是函数本身的升降，而是<strong>升降的快慢在加速还是减速</strong>。</p>
+</div>
+
+<h2 id="s2">渐近线（一）：水平渐近线</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=315">05:15</a>水平渐近线定义：如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的极限是个常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，那么直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>A</mi></math></span> 就是水平渐近线。这里「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span>」要拆开看，它其实包含三种情形：</p>
+
+<div class="tbl-wrap">
+  <table class="k">
+    <thead><tr><th>情形</th><th>条件</th></tr></thead>
+    <tbody>
+      <tr><td>总体</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo>∞</mo></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span></td></tr>
+      <tr><td>单侧（正无穷）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span></td></tr>
+      <tr><td>单侧（负无穷）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo form="prefix">−</mo><mo>∞</mo></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>只要三种里有一种极限是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，就得到一条水平渐近线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>A</mi></math></span>。多数函数左右两端趋于同一个数，只有一条；但两端趋于不同数的函数就会有两三条。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=558">09:18</a><strong>水平渐近线不唯一。</strong>最经典的反例是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span> 时它逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo form="prefix">−</mo><mo>∞</mo></math></span> 时它逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>——一条函数图像可以有两条水平渐近线。做题时思路是：先看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 整体极限是不是一个固定数；如果要分正负无穷讨论，就分开讨论。</p>
+
+<div class="note">
+  <span class="lbl">说「y=0」不要说「x 轴」</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=746">12:26</a>老师专门纠正过用语：我们说的是「直线」，应写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span>；说「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴」不规范，因为坐标轴是规定了原点、正方向、单位长度的数轴，而渐近线只是一条线。考试写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 就够。</p>
+</div>
+
+<h2 id="s3">渐近线（二）：铅垂渐近线</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=850">14:10</a>铅垂（也叫铅直、垂直）渐近线定义：如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>a</mi></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mo>∞</mo></math></span>，那么直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span> 就是铅垂渐近线。逼近可以从左边（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">−</mo></mrow></msup></math></span>）也可以从右边（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></math></span>），只要有一侧极限是无穷即可。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=949">15:49</a>它最常见的来源就一句话：<strong>分母为零</strong>。比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时极限是无穷，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>（即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴）是铅垂渐近线。再比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>∞</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 也是它的铅垂渐近线（只从右侧逼近）。</p>
+
+<div class="note">
+  <span class="lbl">还有斜渐近线（考得少，但公式要会）</span>
+  <p>除了水平、铅垂两种，还有「斜渐近线」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>≠</mo><mn>0</mn></math></span>）：当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 时曲线无限贴近一条斜线。老师明确说「用的比较少」，所以六步法里把它放在可选位置——但<strong>求它的公式考试会考</strong>，下面单独讲。</p>
+</div>
+
+<p>查找渐近线建议固定顺序，免得漏或白费功夫：先查<strong>铅垂</strong>——把使分母为零（或对数真数趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 拎出来，看单侧或双侧极限是否无穷；再查<strong>水平</strong>——看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo form="prefix">±</mo><mo>∞</mo></math></span> 的极限是否为常数；若水平没有，才考虑<strong>斜</strong>的。像本节这种多项式，两端奔向无穷但不是贴近某条固定直线，三种渐近线一概没有，这步直接跳过即可。</p>
+
+<div class="blk plain">
+  <span class="lbl">铅垂渐近线也不唯一</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1054">17:34</a>见过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的图像吗？它在每个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>+</mo><mi>k</mi><mo>π</mo></math></span> 处都窜向无穷，所以有无数条铅垂渐近线。结论和水平渐近线一样：<strong>数量没有上限，见到「趋于无穷」就记一条</strong>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 256" role="img" aria-label="水平渐近线与铅垂渐近线示意图">
+    <line x1="40" y1="40" x2="40" y2="232" class="m-line" stroke-width="1.4"></line>
+    <line x1="40" y1="216" x2="624" y2="216" class="m-line" stroke-width="1.4"></line>
+    <text x="612" y="232" class="m-sub" font-size="12">x</text>
+    <text x="26" y="48" class="m-sub" font-size="12">y</text>
+    <line x1="40" y1="120" x2="300" y2="120" class="m-warn" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <path d="M 50 150 Q 170 150 290 122" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <path d="M 300 120 Q 320 118 340 116" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <text x="150" y="112" class="m-warn" font-size="11.5">y = A 水平渐近线</text>
+    <text x="60" y="146" class="m-sub" font-size="11.5">x→+∞ 逼近</text>
+    <line x1="470" y1="40" x2="470" y2="232" class="m-warn" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <path d="M 360 224 Q 460 200 468 90" fill="none" class="m-good" stroke-width="1.8"></path>
+    <path d="M 472 90 Q 480 200 580 224" fill="none" class="m-good" stroke-width="1.8"></path>
+    <text x="430" y="60" class="m-warn" font-size="11.5">x = a 铅垂</text>
+    <text x="488" y="150" class="m-sub" font-size="11.5">趋于无穷</text>
+    <line x1="320" y1="20" x2="320" y2="236" class="m-thin" stroke-width="1" stroke-dasharray="2 3"></line>
+    <text x="332" y="228" class="m-sub" font-size="11.5">左：水平渐近线（如 1/x 右支）</text>
+    <text x="332" y="244" class="m-sub" font-size="11.5">右：铅垂渐近线（如 ln x、tan x）</text>
+  </svg>
+  <figcaption><b>两种渐近线各管一头。</b>左图：曲线向右无限延伸时贴着一条水平虚线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>A</mi></math></span>，这就是水平渐近线。右图：曲线在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span> 附近向上向下窜向无穷，竖虚线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span> 就是铅垂渐近线，<strong>它几乎总来自分母为零</strong>。画图第五步就是专门把这两类线找出来，免得描图时不知道两端往哪跑。</figcaption>
+</figure>
+
+<h2 id="s4">渐近线（三）：斜渐近线怎么求</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=195">03:15</a>水平渐近线管的是「曲线最终变成一条水平线」，但如果曲线两端是<em>斜着</em>奔向无穷——比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 向右上方跑——那就既没有水平渐近线，也可能没有铅垂渐近线，得看斜的。判断方法分两步：<strong>先求斜率 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span>，再求截距 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span></strong>。</p>
+
+<div class="blk def">
+  <span class="lbl">斜渐近线的求法</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 满足</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>k</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>b</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo>∞</mo></mrow></munder><mo>(</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo></math></div>
+  <p>且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 存在、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>≠</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 也存在，则直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span> 就是斜渐近线。两个极限<strong>缺一不可</strong>。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">这两个极限是怎么想出来的</span>
+  <p>假设曲线真的贴着一条斜线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span>，那么当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 很大时两者之差应趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mo>(</mo><mi>k</mi><mi>x</mi><mo>+</mo><mi>b</mi><mo>)</mo><mo>→</mo><mn>0</mn></math></span>。</p>
+  <p>两边同除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>−</mo><mi>k</mi><mo>−</mo><mfrac><mrow><mi>b</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mn>0</mn></math></span>。后两项里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mspace width="0.25em"></mspace><mi>b</mi></mfrac><mi>x</mi><mo>→</mo><mn>0</mn></math></span>，于是<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mi>k</mi></math></span></mark>——这就是第一个公式，先把斜率「量」出来。</p>
+  <p>斜率到手后，代回原式就得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>k</mi><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>b</mi></math></span>，截距也随之「量」出来了。<strong>所以两个公式不是硬背的，而是「假设贴着斜线 → 两边除掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」自然挤出来的。</strong>顺序也不能颠倒——先有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span>，才求得了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>。</p>
+</div>
+
+<p>把它用在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 上：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>1</mn></math></span>；再算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>k</mi><mi>x</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac><mo>→</mo><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi><mo>=</mo><mn>0</mn></math></span>。于是斜渐近线是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span>——图像离原点越远，越贴着这条直线。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 262" role="img" aria-label="y 等于 x 加 x 分之一 的两条渐近线：右侧曲线贴着斜渐近线 y=x 上升，x=0 是铅垂渐近线">
+    <line x1="300" y1="255" x2="300" y2="12" class="m-line" stroke-width="1.4"></line>
+    <polygon points="300,8 296,18 304,18" class="m-fill"></polygon>
+    <line x1="300" y1="140" x2="620" y2="140" class="m-line" stroke-width="1.4"></line>
+    <polygon points="624,140 614,136 614,144" class="m-fill"></polygon>
+    <line x1="120" y1="260" x2="507" y2="2" class="m-warn" stroke-width="1.3" stroke-dasharray="6 4"></line>
+    <path d="M 310.8 7.8 C 311.2 11.7 312.3 23.5 313.5 31 C 314.7 38.5 316.5 47.3 318 53 C 319.5 58.7 320.6 61.4 322.5 65 C 324.4 68.6 327.1 72.2 329.3 74.4 C 331.6 76.7 333.4 77.6 336 78.5 C 338.6 79.4 341.6 80 345 80 C 348.4 80 352.6 79.3 356.3 78.5 C 360.1 77.7 363.4 76.5 367.5 75 C 371.6 73.5 375.8 71.7 381 69.3 C 386.2 66.9 393 63.5 399 60.4 C 405 57.3 411 53.9 417 50.5 C 423 47.1 429 43.5 435 40 C 441 36.5 447 32.9 453 29.2 C 459 25.6 468 20 471 18.1" fill="none" class="m-good" stroke-width="1.9"></path>
+    <path d="M 287.7 258 C 287.1 254.4 286 243.4 284.3 236.2 C 282.6 229 279.8 220.1 277.5 215 C 275.2 209.9 273.1 207.9 270.8 205.7 C 268.6 203.4 266.6 202.4 264 201.5 C 261.4 200.6 258.4 200 255 200 C 251.6 200 247.6 200.7 243.8 201.5 C 240.1 202.3 236.6 203.5 232.5 205 C 228.4 206.5 224.2 208.3 219 210.7 C 213.8 213.1 207 216.5 201 219.6 C 195 222.7 189 226.1 183 229.5 C 177 232.9 171 236.4 165 240 C 159 243.6 150 249 147 250.8" fill="none" class="m-good" stroke-width="1.9"></path>
+    <text x="415" y="88" class="m-warn" font-size="12">斜渐近线 y = x</text>
+    <text x="306" y="246" class="m-warn" font-size="11.5">铅垂渐近线 x = 0</text>
+    <text x="352" y="126" class="m-good" font-size="12">y = x + 1/x</text>
+    <text x="30" y="210" class="m-sub" font-size="11.5">x→-∞ 贴近 y=x</text>
+    <text x="288" y="156" class="m-sub" font-size="11.5">O</text>
+    <text x="284" y="24" class="m-sub" font-size="12">y</text>
+    <text x="608" y="158" class="m-sub" font-size="12">x</text>
+  </svg>
+  <figcaption><b>一条斜渐近线 + 一条铅垂渐近线，说明「渐近线可以不止一种、也不止一条」。</b>曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在右侧越来越贴近虚线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span>（斜渐近线，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>b</mi><mo>=</mo><mn>0</mn></math></span>）；而在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时窜向无穷，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是铅垂渐近线。注意图上<em>曲线穿过自己的斜渐近线</em>也没关系——渐近线只描述「无穷远处的走向」，中途穿一穿不影响资格。</figcaption>
+</figure>
+
+<h2 id="s5">渐近线排查的标准顺序</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=315">05:15</a>三种渐近线混在一起容易乱，老师给的顺序是一条固定的链：<strong>先查铅垂 → 再查水平 → 最后才查斜</strong>。理由很实在——铅垂渐近线来自「分母为零」这类明显坏点，一眼能找；水平渐近线只要算一次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo form="prefix">±</mo><mo>∞</mo></math></span> 的极限；只有前两条都没有时，才值得动 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 两个极限去查斜的。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>类型</th><th>判据</th><th>方程</th><th>常见出现场合</th></tr></thead>
+    <tbody>
+      <tr><td>铅垂</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>a</mi></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mo>∞</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span></td><td>分母为零、对数真数趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>）</td></tr>
+      <tr><td>水平</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mspace width="0.25em"></mspace><mi>A</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>A</mi></math></span></td><td>趋于定值的函数（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>x</mi></mrow></msup></math></span>）</td></tr>
+      <tr><td>斜</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mo largeop="true" movablelimits="true">lim</mo><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>≠</mo><mn>0</mn></math></span> 且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi><mo>=</mo><mo largeop="true" movablelimits="true">lim</mo><mo>(</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo></math></span> 都存在</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span></td><td>增长得像一次函数的函数（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>）</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="trap">
+  <span class="lbl">三条容易踩的线</span>
+  <ul class="tight">
+    <li><span class="bad">把水平渐近线和斜渐近线同时算。</span>同一方向（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>）上两者<strong>二选一</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 是常数就是水平线；不是常数却又能被一次函数追上，才是斜线。不会同时出现。</li>
+    <li><span class="bad">只算了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 就下结论。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 存在只是必要条件，还得看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 是否存在。两个都算完才能写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span>。</li>
+    <li><span class="bad">以为曲线不能穿越渐近线。</span>渐近线只管「远处贴近」，中途交叉完全允许（见上图）。</li>
+  </ul>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q">求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span> 的所有渐近线。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：按「铅垂 → 水平 → 斜」的顺序逐项排查</span>
+    <p><b>第一步，铅垂。</b>分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>。当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 时分子趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、分母趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，函数值窜向无穷，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 是铅垂渐近线。</p>
+    <p><b>第二步，水平。</b>看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，不是常数，<strong>没有水平渐近线</strong>。既然没有水平线，才轮到查斜的。</p>
+    <p><b>第三步，斜。</b>先求斜率：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>1</mn></math></span>。再求截距：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>b</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo>∞</mo></mrow></munder><mrow><mo stretchy="true">(</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>−</mo><mi>x</mi><mo stretchy="true">)</mo></mrow><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mi>x</mi><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mi>x</mi></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></div>
+    <p>所以斜渐近线是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>。一共两条渐近线：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>。</p>
+    <div class="note">
+      <span class="lbl">验算一遍更放心</span>
+      <p>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span> 做多项式除法：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>。末尾那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>→</mo><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 很大时函数值确实趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mn>1</mn></math></span>——斜渐近线一眼可见。<strong>能除尽就先做除法，斜渐近线会自己跳出来</strong>，这是最快的验算手段。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1205">20:05</a>用六步法画 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span> 的图像。</span></p>
+  <div class="sol">
+    <p>下面把六步法走一遍。函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>。</p>
+
+<p><b>第一步 定义域</b>：多项式，定义域是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span>，无特殊限制。</p>
+<p><b>第三步 求导</b>（奇偶周期这里没有）：</p>
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>2</mn><mi>x</mi><mo>−</mo><mn>1</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>6</mn><mi>x</mi><mo>−</mo><mn>2</mn></math></div>
+<p>这里为什么是三个切分点、得到四段？因为驻点有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 两个、拐点候选 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 一个，共三个「符号可能变号」的位置。把它们按从小到大排好，相邻两个之间符号不会再变，于是每一段内的单调、凹凸都恒定，可以放心下结论。通用配方是：<strong>切分点个数 = 驻点个数 + 拐点候选个数</strong>，列表法照此切段即可。</p>
+
+<p><b>第四步 特殊点</b>：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>：</p>
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>2</mn><mi>x</mi><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>(</mo><mn>3</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mn>1</mn></math></div>
+<p>这两个是<b>驻点</b>。令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>，这是<b>拐点候选</b>。</p>
+
+<h3 id="s6">列表：用三个点把数轴切开</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1419">23:39</a>用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 三个点把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span> 切成四段，逐段判一阶导、二阶导符号。考试时建议按下面这张表的<strong>六列</strong>写全——右侧三列是把两个符号「翻译」成人话，答题分就落在这里：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>区间</th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></th><th>单调性</th><th>凹凸</th><th>结论</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td>单调增</td><td>凸</td><td>增且凸，曲线鼓着上升</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td>单调减</td><td>凸</td><td>减且凸，鼓着下降</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mn>1</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td>单调减</td><td>凹</td><td>减且凹，兜着下降</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td>单调增</td><td>凹</td><td>增且凹，兜着上升</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1625">27:05</a>符号判断的小技巧：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>(</mo><mn>3</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></math></span>，看两个因式正负；二阶导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn><mi>x</mi><mo>−</mo><mn>2</mn></math></span> 只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 变号，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 全凹、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 全凸。</p>
+
+<p>把四段摊开读：<strong>「单调增」出现了两次</strong>（第一段与第四段），但一个「增且凸」、一个「增且凹」；<strong>「单调减」也两次</strong>，同样一个凸一个凹。可见<strong>一阶导只回答「往上还是往下走」，二阶导才回答「拱着还是兜着走」</strong>——两者合起来才能唯一确定每一段曲线的形状。漏掉二阶导，你连这一段该拱起来还是塌下去都不知道，图就画不出来。所以老师反复强调：这张表是整个画图过程的「核心」，<em>所有信息都先集中到表里，再照表落笔</em>。</p>
+
+<div class="why">
+  <span class="lbl">拐点的判定</span>
+  <p>二阶导在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 左侧为负（凸）、右侧为正（凹），凹凸性发生翻转，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 是真正的<b>拐点</b>。驻点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 处一阶导由正变负，是局部极大；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处一阶导由负变正，是局部极小。</p>
+</div>
+
+<h3 id="s7">算关键点，照表描图</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=1928">32:08</a>把几个关键横坐标代回原函数取函数值。先因式分解更省力：</p>
+
+<p>因式分解这一步不只是为了求零点，更是为了「一眼看出曲线从哪穿过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴」：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span> 告诉我们 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 是单根（曲线斜穿过去）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 是二重根（曲线在这里「贴着」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴但不穿过，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>≥</mo><mn>0</mn></math></span> 始终非负）。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 既是根又是局部极小，图像在该点轻轻「吻」一下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴再弹起——这和表里「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处由减转增」完全吻合。</p>
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>=</mo><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></div>
+<p>由此可知 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>；再算：</p>
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mn>3</mn><mn>2</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mspace width="1em"></mspace><mo>(</mo><mtext>局部极大</mtext><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>f</mi><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn><mn>6</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mspace width="1em"></mspace><mo>(</mo><mtext>拐点</mtext><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>f</mi><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>8</mn></mrow></mfrac></math></div>
+
+<p>照表落笔时，从左到右一段段画：最左段「增且凸」，曲线从左下昂头、向上鼓着往右上爬，到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>3</mn><mn>2</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mo>)</mo></math></span> 达到局部极大；接着「减且凸」，调头向下、仍向上鼓，过拐点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>1</mn><mn>6</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mo>)</mo></math></span> 后转为「减且凹」——这里凹凸翻面，曲线从「鼓着下」变成「兜着下」；继续下行到局部极小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>；之后「增且凹」，从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴弹起、兜着向下一路向右上冲。补点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>)</mo><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>8</mn></mrow></mfrac></math></span> 确认它确实在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 上方继续上升。整张图就是把表里四行的「增 / 减 × 凸 / 凹」逐字翻译成笔触。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 256" role="img" aria-label="三次函数 x 三次减 x 平方减 x 加一 的综合图像含极值拐点标注">
+    <line x1="40" y1="40" x2="40" y2="222" class="m-line" stroke-width="1.4"></line>
+    <line x1="40" y1="143" x2="624" y2="143" class="m-line" stroke-width="1.4"></line>
+    <polygon points="628,143 618,139 618,147" class="m-fill"></polygon>
+    <text x="26" y="48" class="m-sub" font-size="12">y</text>
+    <text x="612" y="159" class="m-sub" font-size="12">x</text>
+    <path d="M 60 198 C 66 188.8 70 163.5 96 143 C 122 122.5 186 84.5 216 75 C 246 65.5 256 80.3 276 86 C 296 91.7 306 99.5 336 109 C 366 118.5 421 143.3 456 143 C 491 142.7 522 124 546 107 C 570 90 591 52 600 41" fill="none" class="m-acc" stroke-width="2"></path>
+    <circle cx="96" cy="143" r="3.8" class="m-fill-g"></circle>
+    <circle cx="216" cy="75" r="4.4" class="m-fill-a"></circle>
+    <circle cx="336" cy="109" r="4.4" class="m-fill-v"></circle>
+    <circle cx="456" cy="143" r="4.4" class="m-fill-w"></circle>
+    <circle cx="276" cy="86" r="3.4" class="m-fill-g"></circle>
+    <text x="120" y="70" class="m-fill-a" font-size="11.5">局部极大 32/27</text>
+    <text x="300" y="135" class="m-fill-v" font-size="11.5">拐点 1/3</text>
+    <text x="430" y="160" class="m-fill-w" font-size="11.5">局部极小 f(1)=0</text>
+    <text x="250" y="80" class="m-fill-g" font-size="11.5">f(0)=1</text>
+    <text x="520" y="100" class="m-fill-g" font-size="11.5">f(3/2)=5/8</text>
+    <text x="60" y="212" class="m-sub" font-size="11.5">-1.2</text>
+    <text x="206" y="64" class="m-sub" font-size="11.5">-1/3</text>
+    <text x="330" y="128" class="m-sub" font-size="11.5">1/3</text>
+    <text x="450" y="160" class="m-sub" font-size="11.5">1</text>
+    <text x="596" y="60" class="m-sub" font-size="11.5">1.8</text>
+  </svg>
+  <figcaption><b>六步法收工图。</b>左端单调增且凸，冲到局部极大 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>3</mn><mn>2</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mo>)</mo></math></span>；然后单调减且凸，过拐点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>1</mn><mn>6</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mo>)</mo></math></span> 转成减且凹；到局部极小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 后翻头单调增且凹，一路向上（补点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>)</mo><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>8</mn></mrow></mfrac></math></span> 确认走向）。多项式无渐近线，两端自然奔向正负无穷。整张图就是把上面那张表「翻译」成了曲线。</figcaption>
+</figure>
+
+  </div>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=36&amp;t=2531">42:11</a>补点的作用</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 这种点没有特殊意义，纯粹是为了「描图时心里有底」——你知道曲线过了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 之后是朝上走，再补一个点确认弧度即可。老师说：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 等于二也行啊，你整个二不也行吗？」他原文用的就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。老师还说过一句大实话：<em>「画图还是有点麻烦是吧」</em>——所以这一节不是考试重点，但流程是死的，照六步走就不会乱。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q">用六步法讨论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span> 的图像（带渐近线的完整流程）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：上一题是多项式（无渐近线），这一题专门把渐近线那一步用上</span>
+    <p><b>第一步 定义域。</b>分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>1</mn><mo>≠</mo><mn>0</mn></math></span>，所以定义域是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>1</mn></math></span>——注意这一点会在图上留下一条铅垂渐近线。</p>
+    <p><b>第二步 奇偶周期。</b>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>x</mi></math></span> 得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mo form="prefix">−</mo><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>，既不等于原式、也不等于负原式，<strong>非奇非偶</strong>；也不是周期函数。这两项都查不出信息，跳过。</p>
+    <p><b>第三步 求导。</b>用商的求导法则：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>2</mn><mi>x</mi><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>2</mn><mi>x</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>x</mi><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mo>(</mo><mn>2</mn><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>−</mo><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>⋅</mo><mn>2</mn><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>4</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>3</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>二阶导化简后这么短，是因为分子里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></math></span> 被约掉了一次——<strong>先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></math></span> 提出来约，比硬展开省力得多</strong>。</p>
+    <p><b>第四步 特殊点。</b>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，因为分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>&gt;</mo><mn>0</mn></math></span> 恒正，只需 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，得驻点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span>。令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>——但分子是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，永远不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<strong>所以没有拐点候选</strong>。另外 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 是间断点，必须单独作为切分点写进表里。</p>
+    <p><b>第五步 渐近线。</b>先查铅垂：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 时函数窜向无穷，故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 是铅垂渐近线。再查水平：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，不是常数，没有水平渐近线。最后查斜：前面算过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi><mo>=</mo><mn>1</mn></math></span>，所以斜渐近线是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>。<strong>三条里齐了两条。</strong></p>
+    <p><b>第六步 列表。</b>切分点用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 是间断点也要切）把数轴分成四段：</p>
+    <div class="tbl-wrap">
+      <table class="cmp">
+        <thead><tr><th>区间</th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></th><th>单调性</th><th>凹凸</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mn>0</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td>单调增</td><td>凸</td></tr>
+          <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td>单调减</td><td>凸</td></tr>
+          <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td>单调减</td><td>凹</td></tr>
+          <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td>单调增</td><td>凹</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>关键点函数值：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>2</mn><mo>)</mo><mo>=</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mn>4</mn></math></span>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处是局部极大（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 由正变负，值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 处是局部极小（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 由负变正，值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn></math></span>）。</p>
+    <p><b>落笔。</b>左端沿斜渐近线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span> 贴上来，增且凸地爬上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 这个局部极大；随后减且凸，一路向左下冲向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 这条铅垂线；越过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 后从右上重新出现（凹，减）下行到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span>；最后增且凹，向右上重新贴近斜渐近线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>。</p>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">把间断点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 漏出切分点。</span>列表的切分点不只是驻点和拐点候选，<strong>间断点、导数不存在的点都要一并切</strong>。漏掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>，你会在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 上一路画成连续的下降，完全看不出曲线在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 两侧是「两支」——而这两支正是铅垂渐近线的两张脸。</p>
+    </div>
+  </div>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+  <h3>一句话</h3>
+  <p>画图 = <strong>一阶导管升降、二阶导管凹凸</strong>，再补渐近线，最后照表描。</p>
+  <h3>六步</h3>
+  <ol class="tight">
+    <li>定义域</li>
+    <li>奇偶 / 周期</li>
+    <li>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></li>
+    <li>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span>（驻点）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span>（拐点）、间断点、导数不存在点</li>
+    <li>水平 / 铅垂渐近线</li>
+    <li>列表描图</li>
+  </ol>
+  <h3>三种渐近线</h3>
+  <ul class="tight">
+    <li><b>铅垂</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>a</mi></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mo>∞</mo></math></span> ⇒ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span>（常因分母为零，如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 多条）</li>
+    <li><b>水平</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>→</mo><mspace width="0.25em"></mspace><mi>A</mi></math></span> ⇒ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>A</mi></math></span>（可多条，如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>）</li>
+    <li><b>斜</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mo largeop="true" movablelimits="true">lim</mo><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>≠</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi><mo>=</mo><mo largeop="true" movablelimits="true">lim</mo><mo>(</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>k</mi><mi>x</mi><mo>)</mo></math></span> ⇒ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi><mo>+</mo><mi>b</mi></math></span>（同一方向上与水平线二选一）</li>
+  </ul>
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>凹凸看二阶导，不看升降；「单调增」有凸 / 凹两种弯法</li>
+    <li>写渐近线写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 不要写「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴」</li>
+    <li>渐近线排查顺序：铅垂 → 水平 → 斜，前一条有了就少查后面</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><span class="cur">一阶导与单调性、驻点</span></li>
+      <li><span class="cur">二阶导与凹凸性、拐点</span></li>
+      <li><span class="cur">极限求法（判渐近线）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P037-曲率/index.html">曲率</a> 曲率（给曲线「弯得多狠」一个度量）</li>
+      <li><a href="../P038-不定积分的定义/index.html">不定积分的定义</a> 不定积分（画图工具的反方向——由导数找回函数）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>单调增≠凹：增且凸、增且凹是两种不同弯法</li>
+      <li>拐点处 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 不一定为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></li>
+      <li>水平渐近线可有多条（既非唯一也不是一定只有一条）</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 36 讲</span><a href="../P035-最值/index.html">← P035</a><a href="../index.html">全部目录</a><a href="../P037-曲率/index.html">P037 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">六步法：把「画图」变成「查表」</a>
+    <a href="#s2">渐近线（一）：水平渐近线</a>
+    <a href="#s3">渐近线（二）：铅垂渐近线</a>
+    <a href="#s4">渐近线（三）：斜渐近线怎么求</a>
+    <a href="#s5">渐近线排查的标准顺序</a>
+    <a class="sub" href="#s6">列表：用三个点把数轴切开</a>
+    <a class="sub" href="#s7">算关键点，照表描图</a>
+  </aside>
+</div>
+</body>
+</html>

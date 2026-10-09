@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>反函数求导 · 高等数学笔记</title>
+<meta name="description" content="反函数求导一句话：反函数的导数 = 原导数的倒数，即 dydx=1dx/dy。它做题用得不多，价值在于推出反三角与对数的一族导数公式。几何上看，反函数图像关于 y=x 对称，切线也对称，斜率自然互为倒数。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  导数与微分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 21 讲</div>
+    <h1 class="title"><span class="pnum">P021</span>反函数求导</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>反函数求导一句话：<strong>反函数的导数 = 原导数的倒数</strong>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span>。它做题用得不多，价值在于<mark>推出反三角与对数的一族导数公式</mark>。几何上看，反函数图像关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 对称，切线也对称，斜率自然互为倒数。</p></div>
+    <div class="meta"><span>时长 17m10s</span><span class="w" title="考试权重">●●●○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=0">00:00</a><span class="vv">反函数求导定理：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span> 在区间上<strong>单调、可导、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span></strong>。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=48">00:48</a><span class="vv"><b>条件解释</b>：单调连续 ⇒ 反函数存在；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span> 因为它要进分母。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=126">02:06</a><span class="vv">结论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span>；大聪明：「直接倒过来不就完了？」</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=199">03:19</a><span class="vv"><b>证明</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>/</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>，两边取极限。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=263">04:23</a><span class="vv">书上形式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>f</mi><mo>'</mo><mo>(</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow></mfrac></math></span>，简单形式更好懂。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=316">05:16</a><span class="vv"><b>举例验证</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>≥</mo><mn>0</mn><mo>)</mo></math></span>，反函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msqrt><mrow><mi>y</mi></mrow></msqrt></math></span>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=461">07:41</a><span class="vv">验证 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mi>y</mi></mrow></msqrt></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>，互为倒数成立。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=513">08:33</a><span class="vv"><b>推公式</b>：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span>，设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>∈</mo><mo>[</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>]</mo></math></span>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=602">10:02</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span> 决定开根号取正；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 定义域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=685">11:25</a><span class="vv">得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=852">14:12</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">±</mo><mn>1</mn></math></span> 时分母为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，定义域取开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=889">14:49</a><span class="vv">六个公式卡：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mo>,</mo><mi mathvariant="normal">arccos</mi></math></span>（一正一负），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mo>,</mo><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow></math></span>（一正一负）。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=951">15:51</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span>；当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mi>e</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。</span></li>
+  </ol>
+</div>
+
+<div class="said">
+  <span class="lbl">课堂原话（大意）<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=0">00:00</a></span>
+  <p>老师一上来先把这节的分量交代清楚：<q>下面内容是反函数的求导法则。这部分我们其实在做题的时候用的是比较少的——借助反函数来求导，这个部分用得很少很少，而且这部分大家不是很好理解。</q></p>
+  <p>那学它干什么？老师也直说了目的：<q>这一小节你最终就记住这六个公式就可以了。</q>也就是说，定理本身是"工具"，真正的产出是那六个反三角与对数的导数公式——价值在<strong>推出一族新公式</strong>，不在拿它去算题。</p>
+</div>
+
+<h2 id="s1">定理：反函数的导数 = 原导数的倒数</h2>
+
+<div class="blk thm">
+  <span class="lbl">反函数求导定理</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span> 在区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>I</mi><mi>y</mi></msub></math></span> 上<strong>单调、可导</strong>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span>，则其反函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在对应区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>I</mi><mi>x</mi></msub></math></span> 上也<strong>可导</strong>，并且</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></mrow></mfrac><mspace width="2em"></mspace><mtext>即</mtext><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mo>(</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>f</mi><mo>'</mo><mo>(</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow></mfrac></math></div>
+  <p>一句话：<strong>反函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导，等于原函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导的倒数。</strong></p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=48">00:48</a>三个条件，每个都有交代</span>
+  <p>定理列了三个条件，不是凑数：</p>
+  <ul class="tight">
+    <li><strong>单调 + 连续 ⇒ 反函数存在。</strong>「可导必连续」我们上节课证过，所以「单调且可导」自动保证单调且连续；而单调连续函数才有反函数。这一条保证「反函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 确实存在」。</li>
+    <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span> ⇒ 分母不为零。</strong>看结论：原导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo></math></span> 出现在<em>分母</em>上。分母不能为零，所以必须要求它处处不为零。</li>
+  </ul>
+  <p>老师原话点明：「这个条件我稍微给大家解释解释……可导必连续没问题，它单调并且连续呢它就存在反函数」「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo></math></span> 还不能等于零，因为<em>这个东西一会会放在分母上</em>」。两个条件，一个管「反函数有没有」，一个管「公式有没有意义」。</p>
+</div>
+
+<div class="trap">
+  <span class="lbl">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span> 去掉会怎样：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在原点没有有限导数</span>
+  <p>那条 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span> 看着像"技术性条款"，其实是命门。看一个最朴素的例子：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span>，它的直接函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup></math></span>。对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mo>(</mo><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></div>
+  <p>问题来了——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 处<strong>恰好等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>，定理的第三个条件被踩掉。此时结论里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span> 变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>0</mn></mrow></mfrac></math></span>，<mark>根本没有意义</mark>。</p>
+  <p>这也不是"公式暂时失灵"，而是"导数真的不存在"：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在原点处的切线与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴平行、<strong>是竖直的</strong>，斜率趋于无穷大，取不到有限值。可见 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span> 保证的正是"倒数仍是个有限数"；分母为零，这步就断了。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 240" role="img" aria-label="三次根号 x 在原点有竖直切线，导数不是有限值">
+    <line x1="40" y1="150" x2="600" y2="150" class="m-line" stroke-width="1.3"></line>
+    <line x1="200" y1="30" x2="200" y2="215" class="m-line" stroke-width="1.3"></line>
+    <polygon points="604,150 594,146 594,154" class="m-fill"></polygon>
+    <polygon points="200,26 196,36 204,36" class="m-fill"></polygon>
+    <polyline points="31.2,225.0 50.0,222.1 75.0,217.9 100.0,213.0 125.0,207.2 150.0,200.0 170.0,192.2 185.0,183.5 200.0,150.0 215.0,116.5 230.0,107.8 250.0,100.0 275.0,92.8 300.0,87.0 350.0,77.9 400.0,70.6 450.0,64.5 500.0,59.1 550.0,54.4 600.0,50.0" fill="none" class="m-acc" stroke-width="2"></polyline>
+    <line x1="200" y1="55" x2="200" y2="218" class="m-warn" stroke-width="1.6" stroke-dasharray="5 4"></line>
+    <circle cx="200" cy="150" r="4.2" class="m-fill-w"></circle>
+    <text x="610" y="168" class="m-sub" font-size="12">x</text>
+    <text x="178" y="38" class="m-sub" font-size="12">y</text>
+    <text x="206" y="168" class="m-txt" font-size="12">0</text>
+    <text x="328" y="70" class="m-acc" font-size="12">y = ∛x</text>
+    <text x="240" y="142" class="m-warn" font-size="12">原点处切线竖直：dy/dx 趋于无穷大</text>
+    <text x="40" y="232" class="m-sub" font-size="11.5">直接函数 x = y³ 在 y = 0 处 dx/dy = 3y² = 0，取倒数就没有意义</text>
+  </svg>
+  <figcaption><b>曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在原点的切线是竖直的。</b>竖直切线的斜率在通常意义下不存在（趋于无穷），所以这里的导数不是有限数。从直接函数那侧看，就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 处等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——一旦允许分母为零，"取倒数"这步就断了。<strong>定理里那句 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span>，挡的就是这种情形。</strong></figcaption>
+</figure>
+
+<h3 id="s2">先把两个函数分清：谁是自变量、对谁求导</h3>
+
+<p>这一节最容易晕的根源，是<strong>同名符号在两个函数里扮演的角色不一样</strong>。把下面这张表竖起来读一遍，角色就清楚了：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th></th><th>直接函数</th><th>反函数</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>写法</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo></math></span></td></tr>
+      <tr><td>谁是自变量</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></td></tr>
+      <tr><td>定义域 / 值域</td><td>定义域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>I</mi><mi>y</mi></msub></math></span>，值域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>I</mi><mi>x</mi></msub></math></span></td><td>定义域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>I</mi><mi>x</mi></msub></math></span>，值域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>I</mi><mi>y</mi></msub></math></span></td></tr>
+      <tr><td>我们要的导数</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span>（对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>（对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导）</td></tr>
+      <tr><td>两者的关系</td><td colspan="2">互为倒数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=685">11:25</a>注意第三行：直接函数与反函数的<strong>定义域、值域刚好互换</strong>。老师原话：<q>直接函数和它的反函数，它的定义域和值域刚好是交换过来的。</q>所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的定义域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 根本不用背——它就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 的值域换过来的。同理，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是自变量时写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是自变量时写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>，<mark>谁当自变量，就对谁求导</mark>。</p>
+
+<h2 id="s3">结论与证明：为什么是倒数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=126">02:06</a>结论写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span>。有同学立马「大聪明」上线：「老师，把这个一倒过来不就完了吗？」老师回应：<strong>这个理解其实不算完全错</strong>——因为后面我们会学到，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>,</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 在某些语境下确实可以拆开看。但现在刚入门，还是从定义老老实实推一遍最稳。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=199">03:19</a>证明只用到一个朴素的等式：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></mrow></mfrac></math></div>
+
+<p>这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 本来就是分开的（一个是自变量改变量，一个是函数值改变量），所以把分式整体取倒数完全合法。两边对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 取极限，左边变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>，右边分母变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span>，于是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></mrow></mfrac></math></div>
+
+<div class="why">
+  <span class="lbl">「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 凭什么能倒过来？」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=199">03:19</a></span>
+  <p>证明里最关键的一步是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>/</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>。马上有同学反问：导数的记号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span> 是个<strong>整体符号</strong>，凭什么能像分数那样一倒就倒？</p>
+  <p>关键在于：这里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> <strong>是真正分开的两个数</strong>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是自变量的改变量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是函数值的改变量，各是一个独立的实数。两个数组成的比值整体取倒数，是初等代数里就成立的等式，所以这一步完全合法。</p>
+  <p>但要分清时机：等到<strong>取完极限</strong>之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span> 才被打包成一个整体记号，那时就不能随手"约分"了。老师在这里埋了一句伏笔：<q>这个符号是个整体的，但是后面有一些部分其实是能够看作是分开的，我们等到后面再说。</q>——那就是下一章的<strong>微分</strong>。</p>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=263">04:23</a>书上两种写法，挑好懂的记</span>
+  <p>课本给的形式是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>f</mi><mo>'</mo><mo>(</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow></mfrac></math></span>——里面有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup></math></span>，很多同学一看就懵。老师建议记<strong>简单形式</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span>：它没出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup></math></span>，意思就是「反函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导数 = 原直接函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的导数的倒数」。做题时先写出直接函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的导数，再取倒数最方便。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 260" role="img" aria-label="直接函数与反函数的切线斜率互为倒数">
+    <path d="M 40.0 205.0 C 120.0 170.0 200.0 120.0 300.0 70.0" fill="none" class="m-acc" stroke-width="2"></path>
+    <path d="M 340.0 205.0 C 420.0 170.0 500.0 120.0 600.0 70.0" fill="none" class="m-vio" stroke-width="2"></path>
+    <line x1="120" y1="178" x2="240" y2="116" class="m-good" stroke-width="2.2"></line>
+    <line x1="420" y1="178" x2="540" y2="116" class="m-warn" stroke-width="2.2"></line>
+    <circle cx="180" cy="147" r="4.5" class="m-fill-a"></circle>
+    <circle cx="480" cy="147" r="4.5" class="m-fill-a"></circle>
+    <path d="M 308.0 150.0 C 330.0 130.0 328.0 110.0 332.0 95.0" fill="none" class="m-thin" stroke-width="1.3" stroke-dasharray="4 4"></path>
+    <text x="44" y="222" class="m-acc" font-size="12.5">直接函数 y = f(x)</text>
+    <text x="344" y="222" class="m-vio" font-size="12.5">反函数 x = f(y)</text>
+    <text x="128" y="112" class="m-good" font-size="12">斜率 m</text>
+    <text x="430" y="112" class="m-warn" font-size="12">斜率 1/m</text>
+    <text x="300" y="60" class="m-sub" font-size="12">x, y 互换（反函数）</text>
+    <text x="200" y="244" class="m-txt" font-size="12.5">两个切线斜率互为倒数：m · (1/m) = 1</text>
+  </svg>
+  <figcaption><b>把「直接函数」和「反函数」并排看，斜率的关系一目了然。</b>左边曲线在某一点的切线斜率是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi></math></span>；右边它的反函数在对应点（横纵坐标互换）的切线斜率是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>m</mi></math></span>。因为反函数就是把图像关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 翻折，切线也跟着翻折，倾斜角从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>−</mo><mo>θ</mo></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mo>(</mo><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>−</mo><mo>θ</mo><mo>)</mo><mo>=</mo><mi mathvariant="normal">cot</mi><mo>θ</mo><mo>=</mo><mn>1</mn><mo>/</mo><mi mathvariant="normal">tan</mi><mo>θ</mo></math></span>——<strong>这就是「为什么是倒数」的几何真相</strong>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">「互为倒数」的几何解释：一次对折，角度变成余角</span>
+  <p>把这件事拆成两步，就能看透它为什么必须是倒数：</p>
+  <ol class="steps">
+    <li><strong>反函数的图像 = 原图像关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 对折。</strong>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>f</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 等价于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span>，把横纵坐标互换一下，得到的就是同一条曲线。所以"求反函数"在图上不做任何拉伸、只做一次对折。</li>
+    <li><strong>对折是刚性变换，切线被原样带过去。</strong>设原切线的倾斜角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>，它关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 对折后，倾斜角变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>−</mo><mo>θ</mo></math></span>（两条互为镜像的直线，倾斜角互补成直角）。</li>
+    <li><strong>算斜率。</strong>对折后的倾斜角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>−</mo><mo>θ</mo></math></span>，于是
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mtext>反函数切线斜率</mtext><mo>=</mo><mi mathvariant="normal">tan</mi><mo>(</mo><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>−</mo><mo>θ</mo><mo>)</mo><mo>=</mo><mi mathvariant="normal">cot</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">tan</mi><mo>θ</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mtext>原切线斜率</mtext></mrow></mfrac></math></div></li>
+  </ol>
+  <p>所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span> 不是"代数上凑巧能倒过来"，而是<mark>图像对称的必然结果</mark>：斜率之所以取倒数，是因为切线的倾斜角被对折成了余角。</p>
+</div>
+
+<h2 id="s4">先用一个例子验证（不是证明，是「说人话」）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=316">05:16</a>直接套抽象公式容易晕，老师先用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>≥</mo><mn>0</mn><mo>)</mo></math></span> 验一遍。这个函数的反函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msqrt><mrow><mi>y</mi></mrow></msqrt></math></span>（注意把变量名互换了）。</p>
+
+<ol class="steps">
+  <li>直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>2</mn><mi>x</mi></math></span>。</li>
+  <li>反函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msqrt><mrow><mi>y</mi></mrow></msqrt><mo>=</mo><msup><mi>y</mi><mrow><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导：
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><msup><mi>y</mi><mrow><mo form="prefix">−</mo><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mi>y</mi></mrow></msqrt></mrow></mfrac></math></div></li>
+  <li>按定理，两者应互为倒数。乘一下验证：
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>2</mn><mi>x</mi><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mi>y</mi></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><msqrt><mrow><mi>y</mi></mrow></msqrt></mrow></mfrac></math></div></li>
+  <li><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=461">07:41</a>因为反函数关系里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msqrt><mrow><mi>y</mi></mrow></msqrt></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi></mrow><mrow><msqrt><mrow><mi>y</mi></mrow></msqrt></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>。于是乘积恰为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，互为倒数<strong>成立</strong>。</li>
+</ol>
+
+<p>老师原话很接地气：「我是通过一个例子来给大家再做一次验证……说点人话。」这个例子不替代证明，但能让你<em>相信</em>公式不是凭空来的。</p>
+
+<div class="said">
+  <span class="lbl">课堂原话（大意）<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=316">05:16</a></span>
+  <p><q>这个不是证明，就是给大家举一个简单的例子验证验证。用句通俗的话说，就是给大家说点人话。</q>——说完这句，老师自己先笑了一下：<q>大家会觉得数学课老师说的都不是人话。</q></p>
+  <p>他还交代了自己的"土办法"：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msqrt><mrow><mi>y</mi></mrow></msqrt></math></span> 换成看着顺眼的写法再来一遍，<q>因为这个地方原来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导，所以要把你写回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，要变回来。</q></p>
+</div>
+
+<div class="trap">
+  <span class="lbl">最容易错的一步：名字换了，最后要换回来 <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=361">06:01</a></span>
+  <p>反函数求导里，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的角色是<strong>互换</strong>的：直接函数写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>y</mi><mo>)</mo></math></span>，此刻 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 才是自变量。很多人不习惯"对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导"，会下意识地把名字对调、当成熟悉的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 来算——<strong>这个动作本身没错</strong>，但<mark>算完必须把名字换回去</mark>，否则会把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span> 彻底弄反，整道题就南辕北辙了。</p>
+  <p>老师演示时正是这么做的：先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msqrt><mrow><mi>y</mi></mrow></msqrt></math></span> 改写成顺眼的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msqrt><mrow><mi>x</mi></mrow></msqrt></math></span>，求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span>；然后立刻提醒自己"原来的角色是反的"，换回来得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mi>y</mi></mrow></msqrt></mrow></mfrac></math></span>。<strong>两次改名，一步都不能漏。</strong></p>
+  <p>本题也印证了这一点：算出的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mi>y</mi></mrow></msqrt></mrow></mfrac></math></span> 里还留着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，而题目问的是关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导数——所以最后必须用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msqrt><mrow><mi>y</mi></mrow></msqrt></math></span> 把它换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>x</mi></mrow></mfrac></math></span>。<mark>谁当自变量，答案里就只能留谁。</mark></p>
+</div>
+
+<h2 id="s5">推公式：反三角与对数的导数（本节的真正产出）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=889">14:49</a>反函数求导「做题用得很少」，但它用来<strong>把六个重要公式推出来</strong>，以后直接当结论用。先看反三角函数。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=513">08:33</a>推导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把要求的东西设为反函数，先写出它的直接函数</span>
+    <p>要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的导数，先写出它的<strong>直接函数</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span>，并限定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>∈</mo><mo>[</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>]</mo></math></span>。为什么限定这段？因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 整体震荡、不单调，只有取这一片单调区间才存在反函数——这正是定理里「单调」条件的来历。</p>
+    <p>对直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的导数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi></math></div>
+    <p>取倒数得反函数导数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=602">10:02</a>现在要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>=</mo><mn>1</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mo form="prefix">±</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow></msqrt></math></span>。因为限定了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>∈</mo><mo>[</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>]</mo></math></span>，在这段上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>≥</mo><mn>0</mn></math></span>，所以<strong>取正号</strong>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></div>
+    <p>代入得</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></div>
+    <div class="trap">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=852">14:12</a>定义域为什么要取开区间</span>
+      <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 本身的定义域是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>（它是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 的值域）。但上面这个公式的<strong>分母</strong>是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>，当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">±</mo><mn>1</mn></math></span> 时分母为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，导数不存在。所以<strong>求导公式只在开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 成立</strong>。端点处要谈导数得另外看左右导数，别想当然地把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mn>1</mn></math></span> 代进去。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 260" role="img" aria-label="由 x 等于 sin y 推导 arcsin x 的导数流程">
+    <rect x="30" y="40" width="150" height="56" rx="8" class="m-box-a"></rect>
+    <text x="48" y="66" class="m-txt" font-size="13">x = sin y</text>
+    <text x="44" y="86" class="m-sub" font-size="11">y ∈ [-π/2, π/2]</text>
+    <rect x="230" y="40" width="170" height="56" rx="8" class="m-box-g"></rect>
+    <text x="246" y="66" class="m-txt" font-size="12.5">(arcsin x)' = 1/(sin y)'</text>
+    <text x="244" y="86" class="m-sub" font-size="11">= 1 / cos y</text>
+    <rect x="440" y="40" width="170" height="56" rx="8" class="m-panel-a"></rect>
+    <text x="456" y="66" class="m-good" font-size="12.5">cos y = √(1-sin²y)</text>
+    <text x="456" y="86" class="m-sub" font-size="11">= √(1 - x²)  （取正）</text>
+    <line x1="180" y1="68" x2="228" y2="68" class="m-acc" stroke-width="1.8"></line>
+    <polygon points="228,68 218,64 218,72" class="m-fill-a"></polygon>
+    <line x1="400" y1="68" x2="438" y2="68" class="m-acc" stroke-width="1.8"></line>
+    <polygon points="438,68 428,64 428,72" class="m-fill-a"></polygon>
+    <rect x="210" y="150" width="220" height="60" rx="8" class="m-panel"></rect>
+    <text x="228" y="178" class="m-good" font-size="13.5">(arcsin x)' = 1/√(1-x²)</text>
+    <text x="226" y="198" class="m-sub" font-size="11">定义域：x ∈ (-1, 1)</text>
+    <line x1="415" y1="96" x2="320" y2="148" class="m-acc" stroke-width="1.6"></line>
+    <line x1="525" y1="96" x2="430" y2="148" class="m-acc" stroke-width="1.6"></line>
+    <text x="40" y="240" class="m-sub" font-size="11.5">直接函数求导 → 取倒数 → 用 sin²+cos²=1 换元（注意 cos y 的正负号由单调区间决定）</text>
+  </svg>
+  <figcaption><b>一图走完 arcsin 导数的推导。</b>从直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 出发，先对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导再取倒数，然后用恒等式把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。<strong>最关键的括号是「取正号」</strong>——它来自 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>∈</mo><mo>[</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>]</mo></math></span> 上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>≥</mo><mn>0</mn></math></span>；如果忘了这点，根号前会凭空多一个正负号，公式就错了。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=889">14:49</a>为什么 arcsin、arctan 带正号，arccos、arccot 带负号</span>
+  <p>六个反三角导数里，正负号不是随机的，它由<strong>直接函数在所取单调区间上的单调性</strong>决定：</p>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>]</mo></math></span> 上<strong>递增</strong>（导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>），反函数也递增 ⇒ 导数<strong>正</strong>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span> 上<strong>递减</strong>（导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>&lt;</mo><mn>0</mn></math></span>），反函数递减 ⇒ 导数<strong>负</strong>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span> 上递增（导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>）⇒ <strong>正</strong>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mi>x</mi></math></span>：直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>)</mo></math></span> 上递减（导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msup><mi mathvariant="normal">csc</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>&lt;</mo><mn>0</mn></math></span>）⇒ <strong>负</strong>。</li>
+  </ul>
+  <p>所以记忆法：<mark>正、负、正、负</mark>成对记。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mi>x</mi></math></span> 前面那道负号，就是「直接函数递减」留下的记号。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">练</span><span class="ex-q">照上面 arcsin 的三步走，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span> 自己推一遍（老师说"下边两个我也不证了"，但方法一模一样）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：照搬三步走，只更换直接函数与单调区间</span>
+    <p>要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的导数，先写出直接函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span>，并限定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>∈</mo><mo>(</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span>。为什么要限定？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 在长度为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo></math></span> 的每个区间里单调，为了"存在反函数"必须只取一片；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的值域恰好就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>,</mo><mo>π</mo><mo>/</mo><mn>2</mn><mo>)</mo></math></span>。</p>
+    <p>对直接函数求导：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></math></span>。按定理取倒数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow></mfrac></math></div>
+    <p>最后把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></math></span> 换回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><msup><mi mathvariant="normal">tan</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>x</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>=</mo><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>。代入得</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>回看要点：这一步<strong>完全没有正负号的纠结</strong>，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></math></span> 恒为正，开不出两个根来——这正是它比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 好推的地方。顺便也把上面那条规律落实了：<mark>符号由直接函数在所取单调区间上的增减性决定</mark>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 递增，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi></math></span> 不带负号。</p>
+  </div>
+</div>
+
+<h2 id="s6">六个公式卡 + 对数导数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=889">14:49</a>本节最终要死记住的，就是下面这六个（反三角函数）再加一个对数：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>函数</th><th>导数</th><th>符号</th><th>定义域</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span></td><td class="m-good">正</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span></td><td class="m-warn">负</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td><td class="m-good">正</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td><td class="m-warn">负</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span></td><td>—</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mi>a</mi><mo>&gt;</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mi>a</mi><mo>≠</mo><mn>1</mn></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td><td>—</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=951">15:51</a>最后两个来自对数：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi></math></span> 看成反函数，它的直接函数是指数函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup></math></span>。老师原话：<q>当然不需要证明，对不对……这六个公式做成公式直接记住。</q>不过下面还是推一遍——它和前面求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo></math></span> 用的是<strong>同一套三步走</strong>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=21&amp;t=951">15:51</a>用反函数求导，推出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span>，并由此得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把对数看成指数函数的反函数，先对直接函数求导</span>
+    <p>要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mi>a</mi><mo>&gt;</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mi>a</mi><mo>≠</mo><mn>1</mn><mo>)</mo></math></span> 的导数，先写出它的<strong>直接函数</strong>——指数函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup></math></span>。对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导，用指数函数的求导公式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mo>(</mo><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></div>
+    <p>按定理取倒数，得到反函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></div>
+    <p>接着做<strong>那个必须做的收尾动作</strong>——把表达式里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 换回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。直接函数的关系 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup></math></span> 正好给了替换：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup><mo>=</mo><mi>x</mi></math></span>。于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></div>
+    <p>最后令底数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mi>e</mi></math></span>。此时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>e</mi><mo>=</mo><mn>1</mn></math></span>，公式立刻退化成</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></div>
+    <p>回看要点：三步走和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 那道题完全一样——<strong>写直接函数 → 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导 → 取倒数并把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 换回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></strong>。老师的态度是"做成公式直接用"，但知道它从哪来，记起来会牢得多。这也正是本节定理唯一的"产出"途径：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mo>,</mo><mi mathvariant="normal">arccos</mi><mo>,</mo><mi mathvariant="normal">arctan</mi><mo>,</mo><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mo>,</mo><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi></math></span> 这些新公式，全是从它推出来的。</p>
+  </div>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>核心公式</h3>
+  <p><div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>/</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></div> 反函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导 = 直接函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导的<strong>倒数</strong>。</p>
+  <p>几何解释：反函数图像 = 原图像关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 对折，切线倾斜角由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 变 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>−</mo><mo>θ</mo></math></span>，斜率取倒数。条件 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>≠</mo><mn>0</mn></math></span> 保证这个倒数<strong>有限</strong>。</p>
+
+  <h3>六个要背的公式</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>（正），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>（负）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>（正）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>（负）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi mathvariant="normal">log</mi><mrow><mi>a</mi></mrow></msub><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></mrow></mfrac></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li>开根号时<strong>正负号由单调区间决定</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 段的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 取正、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi></math></span> 段的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span> 取正，别乱加 ±。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mi mathvariant="normal">arccos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的导数公式只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 成立，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">±</mo><mn>1</mn></math></span> 时分母为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</li>
+    <li>算到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac></math></span> 后，<strong>要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 换回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></strong>（用直接函数的关系）。谁当自变量，答案里就只能留谁。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 时必须停手：如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在原点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow></mfrac><mo>=</mo><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span>，切线竖直、导数不存在。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P015-连续函数运算 反函数复合函数的连续/index.html">连续函数运算 反函数复合函数的连续</a> 连续函数运算 · 反函数复合函数的连续（反函数存在的条件）</li>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数的定义（差商、极限）</li>
+      <li><span class="cur">三角函数图像与单调性（决定反三角的单调区间与正负号）</span></li>
+      <li><span class="cur">反函数图像关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 对称（「斜率互为倒数」的几何来源）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P022-复合函数求导/index.html">复合函数求导</a> 复合函数求导（链式法则，下节课，考试必考）</li>
+      <li><a href="../P020-求导公式/index.html">求导公式</a> 求导公式（四则运算与三角导数，本节公式建立在它之上）</li>
+      <li><a href="../P023-基本求导法则与公式/index.html">基本求导法则与公式</a> 基本求导法则与公式（总表）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「直接函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导」和「反函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」别搞反——结论是后者等于前者的倒数。</li>
+      <li>反三角导数公式的<strong>定义域比函数本身小</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 函数定义 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>，导数公式只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi><mo>,</mo><mrow><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>c</mi><mi>o</mi><mi>t</mi></mrow></mrow></math></span> 带负号；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mo>,</mo><mi mathvariant="normal">arctan</mi></math></span> 不带。</li>
+      <li>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的名字互换来"看懂"之后，<strong>结尾必须换回原角色</strong>。</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 时倒数无意义：反例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在原点切线竖直、导数不存在。</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 21 讲</span><a href="../P020-求导公式/index.html">← P020</a><a href="../index.html">全部目录</a><a href="../P022-复合函数求导/index.html">P022 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">定理：反函数的导数 = 原导数的倒数</a>
+    <a class="sub" href="#s2">先把两个函数分清：谁是自变量、对谁求导</a>
+    <a href="#s3">结论与证明：为什么是倒数</a>
+    <a href="#s4">先用一个例子验证（不是证明，是「说人话」）</a>
+    <a href="#s5">推公式：反三角与对数的导数（本节的真正产出）</a>
+    <a href="#s6">六个公式卡 + 对数导数</a>
+  </aside>
+</div>
+</body>
+</html>

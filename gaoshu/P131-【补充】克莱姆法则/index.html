@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【补充】克莱姆法则：为什么高数课要插一节线性代数 · 高等数学笔记</title>
+<meta name="description" content="这 8 分钟是老师为下一节「方程组确定的隐函数求导」专门补的工具课。克莱姆法则把 n 元线性方程组的解写成分式：系数行列式 D≠0 时 xi=DiD，其中 Di 是把 D 的第 i 列换成右端常数项。要记住的只有三点：分母是系数行列式、分子是替换第 i 列、前提是 D≠0。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 131 讲</div>
+    <h1 class="title"><span class="pnum">P131</span>【补充】克莱姆法则：为什么高数课要插一节线性代数</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这 8 分钟是老师为下一节「方程组确定的隐函数求导」专门补的工具课。<strong>克莱姆法则</strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 元线性方程组的解写成分式：系数行列式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>D</mi><mi>i</mi></msub></mrow><mrow><mi>D</mi></mrow></mfrac></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>i</mi></msub></math></span> 是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 的<em>第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 列</em>换成右端常数项。要记住的只有三点：<mark>分母是系数行列式、分子是替换第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 列、前提是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span></mark>。</p></div>
+    <div class="meta"><span>时长 8m10s</span><span class="w" title="考试权重">●●●○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=2">00:02</a><span class="vv">开场点题：<b>从二元一次方程组引出二阶行列式</b>的定义。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=78">01:18</a><span class="vv">消元：第一式两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span>、第二式两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>，相减把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 消掉。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=171">02:51</a><span class="vv">留下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，<b>前提就是分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span></b>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=232">03:52</a><span class="vv">分子分母都是「四个数先相乘再相减」，于是引出<b>二阶行列式</b>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=291">04:51</a><span class="vv">记号：两根竖线；<b>主对角线</b>与<b>副对角线</b>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=330">05:30</a><span class="vv">行标 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span>、列标 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>j</mi></math></span>，以及 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></math></span> 的读法。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=397">06:37</a><span class="vv">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的解写成行列式的比：分母都是系数行列式。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=449">07:29</a><span class="vv">规律：分子是<b>右端常数项替换第一列、第二列</b>——法则留到后面再讲。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">这一步为什么需要新记号</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=2">00:02</a>这一节只有 8 分钟，位置很特殊：它夹在隐函数求导的前后之间，是老师为了讲「方程组确定的隐函数求导」而临时补的一块线性代数。他自己交代得很清楚——「今天啊我们想从二元一次方程组，然后引出二阶行列式的定义」。</p>
+
+<p>动机不复杂。解二元一次方程组用加减消元法当然能解，但解出来的表达式很长，也看不出结构。把这套表达式压成一个固定记号，以后写「方程组确定的隐函数求导」的答案时就整齐了。这就是行列式的意义：<strong>它不是为了让算得更快，而是为了把「四个数两两相乘再相减」这种搭配写成一个符号。</strong></p>
+
+<h2 id="s2">从消元到二阶行列式</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=78">01:18</a>设一般形式的二元一次方程组</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>a</mi><mi>x</mi><mo>+</mo><mi>b</mi><mi>y</mi><mo>=</mo><mi>m</mi></mtd></mtr><mtr><mtd><mi>c</mi><mi>x</mi><mo>+</mo><mi>d</mi><mi>y</mi><mo>=</mo><mi>n</mi></mtd></mtr></mtable></mrow></math></div>
+
+<p>系数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>c</mi><mo>,</mo><mi>d</mi><mo>,</mo><mi>m</mi><mo>,</mo><mi>n</mi></math></span> 都是<strong>任意假设</strong>的，所以结论对一切二元一次方程组都成立。消元分两步——第一式两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span>、第二式两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>，两式的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 项系数都变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>c</mi></math></span>：</p>
+
+<ol class="steps">
+  <li><span class="sh">第一式乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span>：</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>c</mi><mi>x</mi><mo>+</mo><mi>b</mi><mi>c</mi><mi>y</mi><mo>=</mo><mi>m</mi><mi>c</mi></math></span>。</li>
+  <li><span class="sh">第二式乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>：</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>c</mi><mi>x</mi><mo>+</mo><mi>a</mi><mi>d</mi><mi>y</mi><mo>=</mo><mi>a</mi><mi>n</mi></math></span>。</li>
+  <li><span class="sh">两式相减，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>c</mi><mi>x</mi></math></span> 消掉：</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>d</mi><mi>y</mi><mo>−</mo><mi>b</mi><mi>c</mi><mi>y</mi><mo>=</mo><mi>a</mi><mi>n</mi><mo>−</mo><mi>m</mi><mi>c</mi></math></span>。</li>
+  <li><span class="sh">提出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>：</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi><mo>)</mo><mspace width="1em"></mspace><mi>y</mi><mo>=</mo><mi>a</mi><mi>n</mi><mo>−</mo><mi>m</mi><mi>c</mi></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><mi>a</mi><mi>n</mi><mo>−</mo><mi>m</mi><mi>c</mi></mrow><mrow><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi></mrow></mfrac></math></span>。</li>
+</ol>
+
+<p>同样的办法把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 消掉，可以解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mi>m</mi><mi>d</mi><mo>−</mo><mi>n</mi><mi>b</mi></mrow><mrow><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi></mrow></mfrac></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=171">02:51</a>老师在这里专门点了前提：<strong>「我们既然把一个数写在分母上，这个数肯定不能等于零」</strong>——也就是要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>。这个限制后面会以「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>」的形式反复出现。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=232">03:52</a>盯着这两个解看：分母、分子全都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>,</mo><mi>b</mi><mo>,</mo><mi>c</mi><mo>,</mo><mi>d</mi><mo>,</mo><mi>m</mi><mo>,</mo><mi>n</mi></math></span> 里挑四个出来，「先相乘、再相减」，规律「特别的明显」。既然这么明显，就干脆给它一个专门的记号。</p>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=291">04:51</a>二阶行列式的定义</span>
+  <p>把四个数按<strong>行</strong>和<strong>列</strong>排好，外面画两根竖线，就得到二阶行列式：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>a</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>d</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi></math></div>
+  <p>其中从左上角到右下角的那条线叫<strong>主对角线</strong>，对应的乘积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>d</mi></math></span> 取正号；从右上角到左下角的那条线叫<strong>副对角线</strong>，对应的乘积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi><mi>c</mi></math></span> 取负号。口诀是：<mark>主对角线相乘，减去副对角线相乘。</mark></p>
+</div>
+
+<p>老师顺手回答了「为什么用两根竖线」：没有什么道理好讲——「人家最早就是这么定义的」。定义里每个数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></math></span>：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=330">05:30</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 是<strong>行标</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>j</mi></math></span> 是<strong>列标</strong>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 238" role="img" aria-label="二阶行列式与三阶行列式的对角线展开法则">
+    <text x="24" y="22" class="m-txt" font-size="12">二阶：两条对角线，一正一负</text>
+    <line x1="60" y1="84" x2="60" y2="168" class="m-line" stroke-width="1.4"></line>
+    <line x1="172" y1="84" x2="172" y2="168" class="m-line" stroke-width="1.4"></line>
+    <line x1="76" y1="96" x2="156" y2="156" class="m-acc" stroke-width="1.8"></line>
+    <line x1="156" y1="96" x2="76" y2="156" class="m-line" stroke-width="1.4" stroke-dasharray="5 4"></line>
+    <text x="88" y="108" class="m-math" font-size="12" text-anchor="middle">a</text>
+    <text x="144" y="108" class="m-math" font-size="12" text-anchor="middle">b</text>
+    <text x="88" y="152" class="m-math" font-size="12" text-anchor="middle">c</text>
+    <text x="144" y="152" class="m-math" font-size="12" text-anchor="middle">d</text>
+    <text x="24" y="192" class="m-math" font-size="12">实线 a·d：取 +</text>
+    <text x="24" y="214" class="m-sub" font-size="11.5">虚线 b·c：取 −</text>
+
+    <line x1="252" y1="14" x2="252" y2="228" class="m-thin" stroke-width="1" stroke-dasharray="5 4"></line>
+
+    <text x="272" y="22" class="m-txt" font-size="12">三阶：把前两列抄到右边，再斜着连</text>
+    <text x="300" y="52" class="m-math" font-size="11.5" text-anchor="middle">a₁₁</text>
+    <text x="356" y="52" class="m-math" font-size="11.5" text-anchor="middle">a₁₂</text>
+    <text x="412" y="52" class="m-math" font-size="11.5" text-anchor="middle">a₁₃</text>
+    <text x="468" y="52" class="m-math" font-size="11.5" text-anchor="middle">a₁₁</text>
+    <text x="524" y="52" class="m-math" font-size="11.5" text-anchor="middle">a₁₂</text>
+    <text x="300" y="92" class="m-math" font-size="11.5" text-anchor="middle">a₂₁</text>
+    <text x="356" y="92" class="m-math" font-size="11.5" text-anchor="middle">a₂₂</text>
+    <text x="412" y="92" class="m-math" font-size="11.5" text-anchor="middle">a₂₃</text>
+    <text x="468" y="92" class="m-math" font-size="11.5" text-anchor="middle">a₂₁</text>
+    <text x="524" y="92" class="m-math" font-size="11.5" text-anchor="middle">a₂₂</text>
+    <text x="300" y="132" class="m-math" font-size="11.5" text-anchor="middle">a₃₁</text>
+    <text x="356" y="132" class="m-math" font-size="11.5" text-anchor="middle">a₃₂</text>
+    <text x="412" y="132" class="m-math" font-size="11.5" text-anchor="middle">a₃₃</text>
+    <text x="468" y="132" class="m-math" font-size="11.5" text-anchor="middle">a₃₁</text>
+    <text x="524" y="132" class="m-math" font-size="11.5" text-anchor="middle">a₃₂</text>
+    <line x1="286" y1="38" x2="286" y2="146" class="m-line" stroke-width="1.4"></line>
+    <line x1="438" y1="38" x2="438" y2="146" class="m-line" stroke-width="1.4"></line>
+    <line x1="538" y1="38" x2="538" y2="146" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="300" y1="44" x2="412" y2="140" class="m-acc" stroke-width="1.8"></line>
+    <line x1="356" y1="44" x2="468" y2="140" class="m-acc" stroke-width="1.8"></line>
+    <line x1="412" y1="44" x2="524" y2="140" class="m-acc" stroke-width="1.8"></line>
+    <line x1="412" y1="44" x2="300" y2="140" class="m-line" stroke-width="1.4" stroke-dasharray="5 4"></line>
+    <line x1="468" y1="44" x2="356" y2="140" class="m-line" stroke-width="1.4" stroke-dasharray="5 4"></line>
+    <line x1="524" y1="44" x2="412" y2="140" class="m-line" stroke-width="1.4" stroke-dasharray="5 4"></line>
+    <text x="272" y="172" class="m-math" font-size="11.5">实线三条：a₁₁a₂₂a₃₃、a₁₂a₂₃a₃₁、a₁₃a₂₁a₃₂，全部取 +</text>
+    <text x="272" y="196" class="m-math" font-size="11.5">虚线三条：a₁₃a₂₂a₃₁、a₁₁a₂₃a₃₂、a₁₂a₂₁a₃₃，全部取 −</text>
+    <text x="272" y="220" class="m-sub" font-size="11.5">两条竖线以内才是原来的三阶行列式，右边两列只是抄来的</text>
+  </svg>
+  <figcaption><b>二阶与三阶是仅有的两个「可以斜着数」的行列式。</b>左图：主对角线（实线）相乘取正，副对角线（虚线）相乘取负。右图是三阶的<b>对角线法则（沙路法则）</b>：把第一、第二列照抄到右边，画三条向右下的实线（取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span>）、三条向左下的虚线（取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span>）。<em>两条竖线以内才是行列式本身，右边两列只是抄来的辅助列。</em></figcaption>
+</figure>
+
+<h2 id="s3">用行列式重写解，得到克莱姆法则</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=397">06:37</a>有了记号，就可以把前面那三个「先相乘再相减」的东西全部写成行列式。分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi></math></span> 就是系数排成的行列式；分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mi>d</mi><mo>−</mo><mi>n</mi><mi>b</mi></math></span> 是把<strong>第一列</strong>换成右端的常数项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>,</mo><mi>n</mi></math></span>；分母再出现一次，分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>n</mi><mo>−</mo><mi>m</mi><mi>c</mi></math></span> 是把<strong>第二列</strong>换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>,</mo><mi>n</mi></math></span>：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>m</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>b</mi></mtd></mtr><mtr><mtd><mi>n</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>d</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></mrow><mrow><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>a</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>d</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mfrac><mrow><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>a</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>m</mi></mtd></mtr><mtr><mtd><mi>c</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>n</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></mrow><mrow><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>a</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>d</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=449">07:29</a>老师把这条规律总结成两句话，并特意说明「这个其实是一个法则，我们留到后面再讲」：</p>
+
+<ul class="tight">
+  <li><strong>分母</strong>永远是把系数原样排好的行列式，两个未知数共用一个。</li>
+  <li><strong>分子</strong>把右端的常数项去<strong>替换</strong>对应那一列：解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 替换第一列，解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 替换第二列。</li>
+</ul>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 226" role="img" aria-label="克莱姆法则中分母与分子的构造：分子把右端常数项替换对应列">
+    <text x="30" y="26" class="m-txt" font-size="12">分母 D：系数照原样摆好（三个未知数就三列）</text>
+    <rect x="30" y="36" width="180" height="34" class="m-panel"></rect>
+    <line x1="90" y1="36" x2="90" y2="70" class="m-thin" stroke-width="1"></line>
+    <line x1="150" y1="36" x2="150" y2="70" class="m-thin" stroke-width="1"></line>
+    <text x="60" y="58" class="m-sub" font-size="11.5" text-anchor="middle">第1列</text>
+    <text x="120" y="58" class="m-sub" font-size="11.5" text-anchor="middle">第2列</text>
+    <text x="180" y="58" class="m-sub" font-size="11.5" text-anchor="middle">第3列</text>
+
+    <text x="264" y="26" class="m-txt" font-size="12">公式：xᵢ = Dᵢ / D，前提 D ≠ 0</text>
+    <rect x="264" y="36" width="346" height="34" class="m-panel-hi"></rect>
+    <text x="276" y="58" class="m-math" font-size="11.5">Dᵢ 的来历：把 D 的第 i 列换成右端的常数项，其余列不动</text>
+
+    <text x="30" y="112" class="m-txt" font-size="12">分子 D₁：换掉第 1 列</text>
+    <rect x="30" y="122" width="180" height="34" class="m-panel"></rect>
+    <rect x="30" y="122" width="60" height="34" class="m-panel-a"></rect>
+    <line x1="90" y1="122" x2="90" y2="156" class="m-thin" stroke-width="1"></line>
+    <line x1="150" y1="122" x2="150" y2="156" class="m-thin" stroke-width="1"></line>
+    <text x="60" y="144" class="m-math" font-size="11.5" text-anchor="middle">b</text>
+    <text x="120" y="144" class="m-sub" font-size="11.5" text-anchor="middle">第2列</text>
+    <text x="180" y="144" class="m-sub" font-size="11.5" text-anchor="middle">第3列</text>
+
+    <text x="230" y="112" class="m-txt" font-size="12">分子 D₂：换掉第 2 列</text>
+    <rect x="230" y="122" width="180" height="34" class="m-panel"></rect>
+    <rect x="290" y="122" width="60" height="34" class="m-panel-a"></rect>
+    <line x1="290" y1="122" x2="290" y2="156" class="m-thin" stroke-width="1"></line>
+    <line x1="350" y1="122" x2="350" y2="156" class="m-thin" stroke-width="1"></line>
+    <text x="260" y="144" class="m-sub" font-size="11.5" text-anchor="middle">第1列</text>
+    <text x="320" y="144" class="m-math" font-size="11.5" text-anchor="middle">b</text>
+    <text x="380" y="144" class="m-sub" font-size="11.5" text-anchor="middle">第3列</text>
+
+    <text x="430" y="112" class="m-txt" font-size="12">分子 D₃：换掉第 3 列</text>
+    <rect x="430" y="122" width="180" height="34" class="m-panel"></rect>
+    <rect x="490" y="122" width="60" height="34" class="m-panel-a"></rect>
+    <line x1="490" y1="122" x2="490" y2="156" class="m-thin" stroke-width="1"></line>
+    <line x1="550" y1="122" x2="550" y2="156" class="m-thin" stroke-width="1"></line>
+    <text x="460" y="144" class="m-sub" font-size="11.5" text-anchor="middle">第1列</text>
+    <text x="520" y="144" class="m-sub" font-size="11.5" text-anchor="middle">第2列</text>
+    <text x="580" y="144" class="m-math" font-size="11.5" text-anchor="middle">b</text>
+
+    <text x="30" y="192" class="m-sub" font-size="11.5">高亮的列 = 被右端常数项替换掉的那一列</text>
+    <text x="30" y="212" class="m-sub" font-size="11.5">D 只有一个，先算它；D₁ D₂ D₃ 只是换了列</text>
+  </svg>
+  <figcaption><b>克莱姆法则的全部内容就是这张替换图。</b>分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 只有一个，把系数行列式原样搬过来；分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mn>1</mn></msub><mo>,</mo><msub><mi>D</mi><mn>2</mn></msub><mo>,</mo><msub><mi>D</mi><mn>3</mn></msub></math></span> 是把右端那一列常数换到第 1、2、3 列的位置上。<em>换列的顺序与未知量的顺序严格对应</em>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mn>1</mn></msub></math></span> 必须替换第 1 列。</figcaption>
+</figure>
+
+<div class="blk thm">
+  <span class="lbl">克莱姆法则（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 元一般形式）</span>
+  <p>含有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 个未知量、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 个方程的线性方程组，如果它的<strong>系数行列式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span></strong>，那么它有唯一解</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>x</mi><mn>1</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>D</mi><mn>1</mn></msub></mrow><mrow><mi>D</mi></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>2</mn></msub><mo>=</mo><mfrac><mrow><msub><mi>D</mi><mn>2</mn></msub></mrow><mrow><mi>D</mi></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>…</mo><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msub><mi>x</mi><mi>n</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>D</mi><mi>n</mi></msub></mrow><mrow><mi>D</mi></mrow></mfrac></math></div>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>i</mi></msub></math></span> 是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 的第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 列换成方程组右端常数项以后得到的行列式。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么非要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，而不是「最好不为零」</span>
+  <p>回到解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 那一步：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi><mo>)</mo><mi>y</mi><mo>=</mo><mi>a</mi><mi>n</mi><mo>−</mo><mi>m</mi><mi>c</mi></math></span>。要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 解出来，必须两边同时除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi></math></span>——除数不能是零，所以整个推导<strong>只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 时成立</strong>。</p>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>0</mn></math></span> 时左边恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，右端也必须为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>：右端不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，方程组无解；右端是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 可任取，有无穷多解。两种情况都<mark>推不出唯一解</mark>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>0</mn></math></span> 时法则不是「算不准」，而是<strong>给不出唯一解</strong>。</p>
+</div>
+
+<h2 id="s4">两道例题</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=131&amp;t=232">03:52</a>用克莱姆法则解方程组 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>y</mi><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>x</mi><mo>−</mo><mn>2</mn><mi>y</mi><mo>=</mo><mn>4</mn></mtd></mtr></mtable></mrow></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先算分母 D，再算两个分子，最后相除</span>
+    <p><strong>第一步，算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span>。</strong>系数按原顺序排成二阶行列式，用主对角线减副对角线：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>D</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>2</mn><mo>×</mo><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo><mo>−</mo><mn>3</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>=</mo><mo form="prefix">−</mo><mn>4</mn><mo>−</mo><mn>3</mn><mo>=</mo><mo form="prefix">−</mo><mn>7</mn></math></div>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mo form="prefix">−</mo><mn>7</mn><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，所以方程组有唯一解，可以放心用公式。</p>
+    <p><strong>第二步，算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mn>1</mn></msub></math></span>：</strong>把常数项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>)</mo></mrow></math></span> 替换第 1 列：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mn>4</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>1</mn><mo>×</mo><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo><mo>−</mo><mn>3</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>4</mn><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mo>−</mo><mn>1</mn><mn>2</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mn>4</mn></math></div>
+    <p><strong>第三步，算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mn>2</mn></msub></math></span>：</strong>替换第 2 列：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>4</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>2</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>4</mn><mo>−</mo><mn>1</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>=</mo><mn>8</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>7</mn></math></div>
+    <p><strong>第四步，相除。</strong></p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><msub><mi>D</mi><mn>1</mn></msub></mrow><mrow><mi>D</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mn>1</mn><mn>4</mn></mrow><mrow><mo form="prefix">−</mo><mn>7</mn></mrow></mfrac><mo>=</mo><mn>2</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mfrac><mrow><msub><mi>D</mi><mn>2</mn></msub></mrow><mrow><mi>D</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>7</mn></mrow><mrow><mo form="prefix">−</mo><mn>7</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></div>
+    <p><strong>回头验一遍。</strong>代回原方程组：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>+</mo><mn>3</mn><mo>×</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>1</mn></math></span> ✓；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>−</mo><mn>2</mn><mo>×</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>4</mn></math></span> ✓。克莱姆法则的步骤机械，但每一步都是「乘减」，符号一多就容易把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>；代回原方程只花几秒钟，是最便宜的自查。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">用克莱姆法则解方程组 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>6</mn></mtd></mtr><mtr><mtd><mn>2</mn><mi>x</mi><mo>−</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>3</mn></mtd></mtr><mtr><mtd><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>−</mo><mi>z</mi><mo>=</mo><mn>2</mn></mtd></mtr></mtable></mrow></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三阶用对角线法则，每个行列式都按「三条实线减三条虚线」写</span>
+    <p><strong>第一步，算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span>。</strong>三个未知量就用三阶行列式。按对角线法则展开：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>D</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></div>
+    <p>先写三条实线（右下方向）之积的和，再减去三条虚线（左下方向）之积的和：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>D</mi><mo>=</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>+</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>−</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>−</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>−</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>D</mi><mo>=</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>4</mn><mo>−</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mn>2</mn><mo>−</mo><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo><mo>=</mo><mn>7</mn></math></div>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>7</mn><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，可以用克莱姆法则。</p>
+    <p><strong>第二步，算三个分子。</strong>把右端常数项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>2</mn></math></span> 依次替换第 1、2、3 列：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>6</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>3</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>7</mn></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>6</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>1</mn><mn>4</mn></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>D</mi><mn>3</mn></msub><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>6</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>2</mn><mn>1</mn></math></div>
+    <p><strong>第三步，相除。</strong></p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mn>7</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mn>4</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>=</mo><mn>2</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><mfrac><mrow><mn>2</mn><mn>1</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>=</mo><mn>3</mn></math></div>
+    <p><strong>验算。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>3</mn><mo>=</mo><mn>6</mn></math></span> ✓；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>−</mo><mn>2</mn><mo>+</mo><mn>3</mn><mo>=</mo><mn>3</mn></math></span> ✓；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>4</mn><mo>−</mo><mn>3</mn><mo>=</mo><mn>2</mn></math></span> ✓。</p>
+    <div class="trap">
+      <span class="lbl">三阶最容易错的两处</span>
+      <p><span class="bad">一、虚线那三条忘记「减负数」。</span>例 2 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span> 展开后是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mn>1</mn></math></span>，顺手就会写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>。建议<strong>先把三条实线的乘积和写出来，再写三条虚线，最后统一加符号</strong>。</p>
+      <p><span class="bad">二、抄辅助列时抄错。</span>沙路法则要求把第 1、2 列<strong>整列照抄</strong>到右边；这一步不产生新信息，抄错一个数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 就全废。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s5">适用条件与局限：什么时候它能用，什么时候一定不能用</h2>
+
+<p>克莱姆法则好用，但它是解线性方程组的方法里<strong>限制最多</strong>的一个。做题前先对下面这张清单检查一遍。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>条件</th><th>具体要求</th><th>不满足时会怎样</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>方程个数 = 未知数个数</td>
+        <td>3 个未知量就必须恰好有 3 个方程</td>
+        <td>行列式根本排不出来（只有方阵才有行列式）；方程组若有解，一定是无穷多解</td>
+      </tr>
+      <tr>
+        <td>系数行列式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span></td>
+        <td>先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 算出来，确认它不是零</td>
+        <td>公式失效：可能无解，也可能有无穷多解，需要另外判别</td>
+      </tr>
+      <tr>
+        <td>方程必须是「线性」的</td>
+        <td>每个未知量只以一次方出现，不出现未知量之间的乘积</td>
+        <td>出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 之类的项就不是线性方程组，替换规则不再对应任何有意义的式子</td>
+      </tr>
+      <tr>
+        <td>系数与常数项要是「确定的数」</td>
+        <td>可以含字母，但把它们当作已知量</td>
+        <td>若含有未知量，先整理成标准形状再套用</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>最后一条最要紧：<strong>克莱姆法则本质上是「解出唯一解」的公式。</strong>它没有说「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>0</mn></math></span> 时无解」，也没有说「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>0</mn></math></span> 时无穷多解」——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>0</mn></math></span> 时它只是<em>保持沉默</em>，那两种情况必须另想办法判别。</p>
+
+<div class="why">
+  <span class="lbl">高数课为什么要插这 8 分钟</span>
+  <p>因为下一节的「方程组确定的隐函数求导」会不断遇到这种场面：两边同时对自变量求导之后，得到一个<strong>关于未知偏导数的线性方程组</strong>，而未知量恰好和方程一样多。比如由两个方程确定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 时，逐项求导会得到</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><msub><mi>a</mi><mrow><mn>1</mn><mn>1</mn></mrow></msub><mi>y</mi><mo>'</mo><mo>+</mo><msub><mi>a</mi><mrow><mn>1</mn><mn>2</mn></mrow></msub><mi>z</mi><mo>'</mo><mo>=</mo><msub><mi>b</mi><mn>1</mn></msub></mtd></mtr><mtr><mtd><msub><mi>a</mi><mrow><mn>2</mn><mn>1</mn></mrow></msub><mi>y</mi><mo>'</mo><mo>+</mo><msub><mi>a</mi><mrow><mn>2</mn><mn>2</mn></mrow></msub><mi>z</mi><mo>'</mo><mo>=</mo><msub><mi>b</mi><mn>2</mn></msub></mtd></mtr></mtable></mrow></math></div>
+  <p>这里的「系数」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></math></span> 是原来的函数式，「常数项」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>b</mi><mi>i</mi></msub></math></span> 也含函数——但<strong>这并不妨碍克莱姆法则的用法</strong>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span> 当成未知量，右端那一整块当成常数项，照抄公式就行。老师明确说了，隐函数方程组的那些定理结论「是个人就记不住」，也没有必要记；<mark>真正干活的就是「两边求偏导 + 克莱姆法则」这两步</mark>。所以这 8 分钟不是额外负担，它是 <a href="../P132-【黑板】隐函数求导/index.html">【黑板】隐函数求导</a> 里一件必须随身带着的工具。</p></div>
+
+<div class="blk trap">
+  <span class="lbl">三个高频错误</span>
+  <p><span class="bad">一、忘记先检查 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>。</span>直接往下算，最后得到一个分母为零的结果，只能返工。</p>
+  <p><span class="bad">二、替换的列与未知量对不上。</span>解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>2</mn></msub></math></span> 却替换了第 1 列，答案就错位了。<strong>列的顺序必须与未知量的书写顺序一致。</strong></p>
+  <p><span class="bad">三、把三阶的对角线法则用到四阶上。</span>对角线法则<strong>只对二阶、三阶成立</strong>；四阶及以上必须按行（列）展开或化三角，斜着数一定出错。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>动机</b> 解二元一次方程组，表达式太长</span><span class="ar">→</span>
+    <span class="n"><b>记号</b> 二阶行列式 = 主对角线 − 副对角线</span><span class="ar">→</span>
+    <span class="n"><b>法则</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><msub><mi>D</mi><mi>i</mi></msub><mo>/</mo><mi>D</mi></math></span></span><span class="ar">→</span>
+    <span class="n"><b>用到</b> 隐函数方程组的偏导</span>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>二阶：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>a</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>d</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi></math></span>（主对角线相乘减副对角线相乘）。</li>
+    <li>三阶：抄前两列到右边，三条实线取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span>、三条虚线取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span>；<strong>四阶以上不能用</strong>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 元：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>D</mi><mi>i</mi></msub></mrow><mrow><mi>D</mi></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mi>i</mi></msub></math></span> 是<strong>把第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 列换成右端常数项</strong>。</li>
+  </ul>
+
+  <h3>适用与局限</h3>
+  <ul class="tight">
+    <li>要求：方程个数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo></math></span> 未知量个数；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>；方程组必须是线性的。</li>
+    <li><mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>0</mn></math></span> 时法则失效</mark>——它只是沉默，不告诉你无解还是无穷多解。</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>替换列的顺序与未知量的书写顺序必须一一对应。</li>
+    <li>算完代回原方程验一次，比重新算一遍便宜得多。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><span class="cur">加减消元法解二元一次方程组</span></li>
+      <li><span class="cur">线性代数里的行列式与克莱姆法则（老师假定已学过）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P132-【黑板】隐函数求导/index.html">【黑板】隐函数求导</a> 【黑板】隐函数求导（方程组情形直接用它）</li>
+      <li><a href="../P081-隐函数求导/index.html">隐函数求导</a> 隐函数求导（正课里的方程组例题）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 有唯一解」≠「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi><mo>=</mo><mn>0</mn></math></span> 无解」</li>
+      <li>分母永远是系数行列式，分子才做替换</li>
+      <li>三阶可以斜着数，四阶不行</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 131 讲</span><a href="../P130-【黑板】多元复合函数求导（2）/index.html">← P130</a><a href="../index.html">全部目录</a><a href="../P132-【黑板】隐函数求导/index.html">P132 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">这一步为什么需要新记号</a>
+    <a href="#s2">从消元到二阶行列式</a>
+    <a href="#s3">用行列式重写解，得到克莱姆法则</a>
+    <a href="#s4">两道例题</a>
+    <a href="#s5">适用条件与局限：什么时候它能用，什么时候一定不能用</a>
+  </aside>
+</div>
+</body>
+</html>

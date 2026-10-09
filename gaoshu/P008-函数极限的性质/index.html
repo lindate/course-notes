@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>函数极限的性质：局部有界、局部保号、与数列极限的桥 · 高等数学笔记</title>
+<meta name="description" content="和 [[6]] 的数列极限性质同构，只是把「项数 N 之后」换成了「x0 旁边一小段」。本课三条：极限唯一、局部有界、局部保号；再加一座桥——函数极限存在时，沿任意数列逼近都得同一极限。正因「只保局部」，有界不保收敛那套陷阱在这里换了个样子重现。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 1 章  函数与极限</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 8 讲</div>
+    <h1 class="title"><span class="pnum">P008</span>函数极限的性质：局部有界、局部保号、与数列极限的桥</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>和 <a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 的数列极限性质<strong>同构</strong>，只是把「项数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 之后」换成了「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 旁边一小段」。本课三条：极限<strong>唯一</strong>、<strong>局部有界</strong>、<strong>局部保号</strong>；再加一座桥——函数极限存在时，沿任意数列逼近都得同一极限。正因「只保局部」，<strong>有界不保收敛</strong>那套陷阱在这里换了个样子重现。</p></div>
+    <div class="meta"><span>时长 19m37s</span><span class="w" title="考试权重">●●●○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=0">00:00</a><span class="vv">唯一性：函数极限若存在则唯一（与数列同构）。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=79">01:19</a><span class="vv">局部有界性：在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 某去心邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>|</mo><mo>≤</mo><mspace width="0.25em"></mspace><mi>M</mi></math></span>。例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span>）。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=139">02:19</a><span class="vv">局部保号性：极限为正 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 某邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=204">03:24</a><span class="vv">画图：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 哪怕只比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴高一点点，也能找出一个小邻域保号。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=321">05:21</a><span class="vv">推论：邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>≥</mo><mn>0</mn></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>≥</mo><mn>0</mn></math></span>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=407">06:47</a><span class="vv">陷阱：邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span> 严格 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>≥</mo><mn>0</mn></math></span>（反例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup></math></span>）。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=457">07:37</a><span class="vv">函数极限与数列极限的桥：存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 沿任意数列同极限。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=533">08:53</a><span class="vv">条件：数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>x</mi><mi>n</mi></msub><mo>}</mo></math></span> 在定义域内、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=682">11:22</a><span class="vv">画图：离散点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span> 逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>，函数值逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=901">15:01</a><span class="vv">反过来<strong>不成立</strong>：不是充要条件（老师：「他傻呀？充要条件他当然会写充要条件」）。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=1026">17:06</a><span class="vv">反例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mi>n</mi><mo>π</mo></mrow></mfrac></math></span> 函数值为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，但函数极限不存在。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=950">15:50</a><span class="vv">把这条桥接回旧知识：它就是数列那边<b>「子列」</b>的函数版。</span></li>
+    <li class="sep"><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=1157">19:17</a><span class="vv">收尾：这几条性质以理解为主，实际计算时用得比较少。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">唯一性（一句话带过）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=0">00:00</a>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 存在，则它唯一。这和 <a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 数列极限的唯一性是一回事——如果极限不唯一，按 <a href="../P007-函数极限定义/index.html">函数极限定义</a> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>–<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 定义会立刻推出矛盾。下面重点讲另外两条「局部」性质，以及函数极限与数列极限的关系。</p>
+
+<h3 id="s2">先立一张总表：前提是什么、结论只管多大范围</h3>
+
+<p>本课三条性质，都有一句共同的<strong>前提</strong>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> <mark>存在</mark>；也都共享同一个字——<strong>局部</strong>。先把这两件事摆清楚，后面每一条才不会读歪：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>性质</th><th>前提</th><th>结论</th><th>结论的范围</th><th>去掉前提会怎样</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>唯一性</td>
+        <td rowspan="3"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span> 存在</td>
+        <td>极限值只有这一个</td>
+        <td>—（只是一个数）</td>
+        <td>连 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 都谈不上，更别说唯一</td>
+      </tr>
+      <tr>
+        <td>局部有界</td>
+        <td>存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi><mo>&gt;</mo><mn>0</mn></math></span>，使 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>|</mo><mo>≤</mo><mspace width="0.25em"></mspace><mi>M</mi></math></span></td>
+        <td>某个去心邻域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span></td>
+        <td>可能无界（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>）</td>
+      </tr>
+      <tr>
+        <td>局部保号</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span></td>
+        <td>某个去心邻域内</td>
+        <td>正负来回跳，谈不上保号</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>最后一列是这张表的重点：<strong>三条性质全靠「极限存在」托底</strong>。<mark>把前提拿掉，结论一条都留不住。</mark>下面会把这三个反例一个一个摆出来。</p>
+
+<h2 id="s3">局部有界性</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=79">01:19</a>数列「有界」是针对<strong>所有项</strong>；函数极限的「有界」只针对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> <strong>附近一小段</strong>，所以叫<strong>局部</strong>有界。</p>
+
+<div class="blk thm">
+  <span class="lbl">性质 · 局部有界性</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span> 存在，则存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi><mo>&gt;</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>&gt;</mo><mn>0</mn></math></span>，使得当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span> 时，都有</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>|</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>|</mo><mo>≤</mo><mspace width="0.25em"></mspace><mi>M</mi></math></div>
+  <p>即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的某个去心邻域内有界。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=79">01:19</a>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mi>e</mi><mi>x</mi></msup></math></span> 的极限显然是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mn>1</mn></msup><mo>=</mo><mi>e</mi></math></span>。故在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 的某个小去心邻域内，函数值有界。</span></p>
+  <div class="sol">
+    <span class="lbl">为什么强调「局部」</span>
+    <p>老师特意点了一句：你说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup></math></span> 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span> 时无界、朝无穷飞，和「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn></math></span> 时它有极限」<strong>完全不矛盾</strong>。因为局部有界只管 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mn>1</mn></math></span> 旁边那一小段——在这一小段里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup></math></span> 约等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>e</mi></math></span>，当然框得住。你跑到无穷远处那档子事，和这里的邻域没关系。</p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 230" role="img" aria-label="局部有界：只看 x0 附近一小段被框住，远处再野也不影响">
+    <line x1="40" y1="180" x2="600" y2="180" class="m-line" stroke-width="1.3"></line>
+    <rect x="250" y="60" width="140" height="120" class="m-bg-a"></rect>
+    <path d="M60 200 Q200 160 280 140 Q320 130 360 150 Q420 185 560 40" fill="none" class="m-thin" stroke-width="1.7"></path>
+    <line x1="250" y1="48" x2="250" y2="196" class="m-warn" stroke-width="1.2" stroke-dasharray="4 3"></line>
+    <line x1="390" y1="48" x2="390" y2="196" class="m-warn" stroke-width="1.2" stroke-dasharray="4 3"></line>
+    <circle cx="320" cy="135" r="3.6" class="m-fill"></circle>
+    <text x="40" y="170" class="m-sub" font-size="12">y</text>
+    <text x="600" y="198" class="m-sub" font-size="12">x</text>
+    <text x="296" y="40" class="m-txt" font-size="12">x₀</text>
+    <text x="258" y="56" class="m-sub" font-size="11.5">x₀ − δ</text>
+    <text x="378" y="56" class="m-sub" font-size="11.5">x₀ + δ</text>
+    <text x="256" y="216" class="m-acc" font-size="12">只看这一小段：有界</text>
+    <text x="430" y="60" class="m-warn" font-size="12">远处飞天，与局部无关</text>
+  </svg>
+  <figcaption><b>蓝色方框就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的去心邻域。</b>曲线在这段里被上下两条线框住（有界）；框外那一段即便一路冲上天，也不影响「局部有界」的结论。关键词是<strong>局部</strong>：它只承诺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 旁边，不承诺全定义域。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么是「局部」而不是「整体」</span>
+  <p><a href="../P007-函数极限定义/index.html">函数极限定义</a> 的定义只要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的<strong>去心邻域</strong>内有定义、有极限。极限存在只刻画了「逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 时」的行为，远处的函数图像长什么样，定义压根没管。所以「有界」只能是局部的——这也预示了：和数列一样，<strong>局部有界推不出极限存在</strong>。</p>
+</div>
+
+<h2 id="s4">局部保号性</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=139">02:19</a>类似地，「保号」也只保 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 旁边一小段。</p>
+
+<div class="blk thm">
+  <span class="lbl">性质 · 局部保号性</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn></math></span>，则存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>&gt;</mo><mn>0</mn></math></span>，使得当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span> 时，都有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>。<br>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&lt;</mo><mn>0</mn></math></span>，则在某去心邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&lt;</mo><mn>0</mn></math></span>。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=204">03:24</a>直觉：极限点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上方，曲线挤在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 附近，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 旁边那一小段自然全在零上方。哪怕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 只比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴高「一丢丢」，也总能找到一个足够小的邻域，把这段曲线整个托在零上方。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 236" role="img" aria-label="局部保号：A 仅在 x 轴上方一丢丢，仍可在小邻域内保 f(x)>0">
+    <line x1="40" y1="170" x2="600" y2="170" class="m-line" stroke-width="1.3"></line>
+    <line x1="320" y1="30" x2="320" y2="200" class="m-thin" stroke-width="1.2"></line>
+    <polygon points="604,170 594,166 594,174" class="m-fill"></polygon>
+    <polygon points="320,26 316,36 324,36" class="m-fill"></polygon>
+    <rect x="270" y="150" width="100" height="30" class="m-bg-a"></rect>
+    <path d="M120 120 Q250 150 320 158 Q390 150 520 120" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <line x1="270" y1="138" x2="270" y2="200" class="m-warn" stroke-width="1.1" stroke-dasharray="4 3"></line>
+    <line x1="370" y1="138" x2="370" y2="200" class="m-warn" stroke-width="1.1" stroke-dasharray="4 3"></line>
+    <circle cx="320" cy="158" r="3.6" class="m-fill"></circle>
+    <text x="40" y="160" class="m-sub" font-size="12">y</text>
+    <text x="600" y="188" class="m-sub" font-size="12">x</text>
+    <text x="300" y="166" class="m-txt" font-size="12">x₀</text>
+    <text x="326" y="150" class="m-acc" font-size="11.5">A &gt; 0</text>
+    <text x="276" y="226" class="m-acc" font-size="12">小邻域内全在 x 轴上方</text>
+    <text x="380" y="60" class="m-warn" font-size="12">邻域外可下穿 x 轴，不管</text>
+  </svg>
+  <figcaption><b>极限点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 只比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴高一点点，但局部保号照样成立。</b>蓝色那段小邻域里曲线全在零上方；方框外面即使又掉回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴下方，也不影响「局部保号」——定义只负责 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 旁边。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 抬到多高不是重点，重点是「存在这样一个邻域」。</figcaption>
+</figure>
+
+<div class="blk plain">
+  <span class="lbl">推论 <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=321">05:21</a></span>
+  <p>若在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的某去心邻域内恒有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>≥</mo><mn>0</mn></math></span>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span> 存在，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>≥</mo><mn>0</mn></math></span>。</p>
+</div>
+
+<div class="trap">
+  <span class="lbl">书上没有、但必须记的陷阱 <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=407">06:47</a></span>
+  <p>若邻域内<strong>严格有</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>，极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是不是严格大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>？<strong>不是，只是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>≥</mo><mn>0</mn></math></span>。</strong>这和 <a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 数列保号性里的陷阱一字不差。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=407">06:47</a>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 的去心邻域内，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup></math></span> 恒有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>&gt;</mo><mn>0</mn></math></span>，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><mn>0</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">为什么它是陷阱的标本</span>
+    <p>因为去心，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 这点挖掉，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span> 对一切 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span> 都严格大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。但极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——恰好压在边界上。所以「函数全正」只能推出「极限非负」，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mn>2</mn></msup><mo>=</mo><mn>0</mn></math></span> 就是「严格正」却「极限为零」的活标本。记忆同数列：<mark>保号保方向，不保离零多远。</mark></p>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl">「保号」为什么只能是局部的，不能推广到整个区间 <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=321">05:21</a></span>
+  <p>同学最自然的疑问是：既然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn></math></span>、邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>，为什么不干脆说"在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 附近一大片都正"、甚至"在整个区间上都正"？</p>
+  <p>卡点在"局部"这两个字背后的<strong>量词</strong>：保号性只承诺<mark>存在一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span></mark>，绝不承诺"对所有的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 都成立"。它给的是"总找得到足够小的一小段"，而这一小段之外——定义<strong>压根没管</strong>。所以邻域可以取得任意小，但一旦出了这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 想怎么飞就怎么飞。</p>
+  <p>老师是用一张图把这个反问堵回去的：画一条在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 上方、但更远处又掉到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴下方的曲线，然后反问——<q>那你这个还小于零了呀？那你这个在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴的下方啊。我们是局部保号，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的旁边一点点保证它大于零，再远了我们就不知道了。</q>「<strong>再远了不知道</strong>」，就是"局部"两个字的全部含义。</p>
+</div>
+
+<div class="note">
+  <span class="lbl">补一句：保号性还有个"加强版"，推不等式时天天用</span>
+  <p>课上老师只说到"<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn><mspace width="0.25em"></mspace><mo>⇒</mo></math></span> 邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>"。但在证明题里，真正好用的往往是紧接着的下面这个版本（它由极限定义直接得来，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 即可）：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mtext>存在</mtext><mspace width="1em"></mspace><mo>δ</mo><mo>&gt;</mo><mn>0</mn><mo>,</mo><mtext>使</mtext><mspace width="1em"></mspace><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo><mtext>时</mtext><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+  <p>推导只有一行：由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span>，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>（这是正数，可以用）存在相应的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span>，使 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>&lt;</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&lt;</mo><mfrac><mrow><mn>3</mn><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。左半边就是我们要的那条不等式。</p>
+  <p>它比原版强在哪儿？<strong>结论不只说"大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>"，而是说"大于一个固定的正数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>"。</strong>后面证"极限保序"（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>≤</mo><mspace width="0.25em"></mspace><mi>g</mi><mspace width="0.25em"></mspace><mo>⇒</mo><mspace width="0.25em"></mspace><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>≤</mo><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><mi>g</mi></math></span>）、做比较判别，靠的都是这种能"钉住一个正下界"的写法。</p>
+</div>
+
+<h2 id="s5">去掉前提会怎样：两个反例</h2>
+
+<p>三条性质都以"极限存在"打头，这不是官僚式的铺垫。把前提抽掉，结论就地崩掉——下面两个反例分别对应局部有界与局部保号。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">反例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=79">01:19</a>局部有界：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 不存在，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 附近<strong>无界</strong>。</span></p>
+  <div class="sol">
+    <span class="lbl">极限不存在 ⇒ 局部有界无处可依</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时的极限不是有限数（它趋于无穷），"极限存在"这个前提被抽掉。此时结论也保不住：无论把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 取多小，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>x</mi><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span> 里总有点让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo stretchy="true">|</mo></mrow></math></span> 任意大——<strong>不存在</strong>任何一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi></math></span> 能把它框住。</p>
+    <p>可见"局部有界"这条结论，真的是被"极限存在"撑起来的。反过来说，只要极限存在，哪怕函数在远处一路飞天（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 旁边那一段照样被框得死死的。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">反例 2</span><span class="ex-q">局部保号：设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>1</mn><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>&gt;</mo><mn>0</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>&lt;</mo><mn>0</mn><mo>)</mo></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 不存在，谈不上保号。</span></p>
+  <div class="sol">
+    <span class="lbl">没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，就没有"保谁的号"</span>
+    <p>保号性说的是"极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的符号，邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的符号跟着走"。可这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 处左极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>、右极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，两者不等，函数极限<strong>根本不存在</strong>——没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 可保。</p>
+    <p>而且事实上，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的<strong>任何</strong>去心邻域里，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 都同时取到正值和负值。正负两边都不肯让路，所谓"保号"自然无从谈起。<mark>局部保号的任务是"把极限的符号复制到邻域里"，极限不在，复制不了。</mark></p>
+  </div>
+</div>
+
+<div class="note">
+  <span class="lbl">还有第三个方向：前提成立，结论也推不回去</span>
+  <p>上面两个反例说明"前提不能去"。还有一类更隐蔽的坑：<strong>把结论当条件用</strong>。例如"局部有界"成立，能不能反推"极限存在"？不能——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 附近明明有界（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi mathvariant="normal">sin</mi><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>|</mo><mo>≤</mo><mn>1</mn></math></span>），极限却不存在。这个例子下面讲"函数极限与数列极限的桥"时会正面撞上，那里会把它拆开看。</p>
+</div>
+
+<h2 id="s6">函数极限与数列极限的桥</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=457">07:37</a>这是本课最关键、也最容易被绕晕的一条：函数极限存在，可以"翻译"成——沿着任何一条逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的数列，函数值的数列都收敛到同一极限。先写正向（函数极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 数列极限）：</p>
+
+<h3 id="s7">先对照：数列极限与函数极限，性质是"同构"的</h3>
+
+<p>这座桥不是新发明，它是 <a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 那套数列性质"换了个舞台"。两边并排看，几乎一一对应：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>性质</th><th>数列极限（<a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a>）</th><th>函数极限（本页）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>唯一性</td><td>收敛 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 极限唯一</td><td>极限存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 唯一</td></tr>
+      <tr><td>有界性</td><td>收敛 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> <strong>整体</strong>有界</td><td>极限存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> <strong>局部</strong>有界</td></tr>
+      <tr><td>保号性</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 某 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 项之后 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mi>n</mi></msub><mo>&gt;</mo><mn>0</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 某去心邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span></td></tr>
+      <tr><td>"抽样"</td><td>收敛 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 任意子列收敛于同一极限</td><td>极限存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 沿任意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span> 得同一极限</td></tr>
+      <tr><td>反向</td><td>子列收敛，<strong>推不出</strong>原数列收敛</td><td>一条数列收敛，<strong>推不出</strong>函数极限存在</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>最值得玩味的是最后两行：右边的"沿任意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span> 抽样"，正是左边"子列"的连续版本；两边都是<strong>正向成立、反向不成立</strong>，连破法都一模一样。</p>
+
+<div class="note">
+  <span class="lbl">换个熟悉的说法：这座桥就是"子列"的函数版 <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=950">15:50</a></span>
+  <p>老师提醒把新结论挂到旧知识上。<a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 里讲过：<q>如果一个数列的极限是存在的，那么它任意子列的极限也得存在并且相等；但反过来，找一个子列的极限存在，原数列的极限是不是也得存在？</q>答案是不一定。</p>
+  <p>现在把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>x</mi><mi>n</mi></msub><mo>}</mo></math></span> 看成"从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span> 的过程中抽样取出来的一部分"，它扮演的正是"子列"的角色。于是两边可以逐条对上：正向（函数极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 沿任意数列同极限）就是"收敛 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 子列收敛"；反向不成立，就是"子列收敛推不出原数列收敛"。<mark>同一件事，换了个舞台重演一遍。</mark></p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 函数极限 ⇒ 数列极限</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span> 存在，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>x</mi><mi>n</mi></msub><mo>}</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 定义域内满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span> 的数列，则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mi>f</mi><mo>(</mo><msub><mi>x</mi><mi>n</mi></msub><mo>)</mo><mo>=</mo><mi>A</mi></math></div>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么这条桥成立 <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=682">11:22</a></span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span> 且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span>，就是「取一列越来越靠近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>、但永远到不了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的离散点」。当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 足够大，这些点全落在 <a href="../P007-函数极限定义/index.html">函数极限定义</a> 那个去心邻域里，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mi>n</mi></msub><mo>)</mo></math></span> 全落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 带里——这正是数列极限的定义。换句话说，函数极限是「连续地逼近」，数列极限是「离散地抽样逼近」，结论自然一致。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="离散点 x_n 逼近 x0，函数值 f(x_n) 逼近 A">
+    <line x1="60" y1="210" x2="600" y2="210" class="m-line" stroke-width="1.3"></line>
+    <line x1="90" y1="40" x2="90" y2="210" class="m-line" stroke-width="1.3"></line>
+    <polygon points="604,210 594,206 594,214" class="m-fill"></polygon>
+    <polygon points="90,36 86,46 94,46" class="m-fill"></polygon>
+    <path d="M150 60 Q400 150 560 200" fill="none" class="m-thin" stroke-width="1.7"></path>
+    <line x1="90" y1="120" x2="600" y2="120" class="m-acc" stroke-width="1.1" stroke-dasharray="5 4"></line>
+    <g class="m-fill-a">
+      <circle cx="170" cy="183" r="3.8"></circle><circle cx="250" cy="170" r="3.8"></circle>
+      <circle cx="330" cy="156" r="3.8"></circle><circle cx="410" cy="143" r="3.8"></circle>
+      <circle cx="490" cy="131" r="3.8"></circle><circle cx="560" cy="122" r="3.8"></circle>
+    </g>
+    <g class="m-fill-w">
+      <circle cx="170" cy="210" r="3.4"></circle><circle cx="250" cy="210" r="3.4"></circle>
+      <circle cx="330" cy="210" r="3.4"></circle><circle cx="410" cy="210" r="3.4"></circle>
+      <circle cx="490" cy="210" r="3.4"></circle><circle cx="560" cy="210" r="3.4"></circle>
+    </g>
+    <text x="60" y="200" class="m-sub" font-size="12">y</text>
+    <text x="600" y="228" class="m-sub" font-size="12">x</text>
+    <text x="300" y="112" class="m-acc" font-size="12">A</text>
+    <text x="100" y="200" class="m-txt" font-size="12">x₀</text>
+    <text x="180" y="240" class="m-sub" font-size="11.5">xₙ → x₀</text>
+    <text x="420" y="150" class="m-good" font-size="12">f(xₙ) → A</text>
+  </svg>
+  <figcaption><b>六个离散点沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴越来越挤向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>（下排），它们对应的函数值（上排蓝点）也越来越挤向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>。</b>这就是「函数极限存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 沿任意数列逼近都得同极限」。注意下方点永不到达 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>（空心），正对应条件 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span>。</figcaption>
+</figure>
+
+<div class="blk trap">
+  <span class="lbl">反过来不成立！不是充要条件 <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=901">15:01</a></span>
+  <p>正向成立，但<strong>反向不成立</strong>：不能因为「找到一条数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span> 使得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mi>n</mi></msub><mo>)</mo></math></span> 收敛」，就断定函数极限存在。老师打了个比方：班里挑出几个同学发现都是女生，能说全班都是女生吗？当然不能。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">反例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=1026">17:06</a>考察 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mi>n</mi><mo>π</mo></mrow></mfrac></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mi>n</mi></msub><mo>)</mo><mo>=</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mi>n</mi><mo>π</mo><mo>)</mo><mo>=</mo><mn>0</mn><mo>→</mo><mn>0</mn></math></span>；但函数极限并不存在。</span></p>
+  <div class="sol">
+    <span class="lbl">为什么一条数列不够</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=1132">18:52</a>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mi>n</mi><mo>π</mo></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mo>…</mo></math></span>），显然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mn>0</mn></math></span> 且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>≠</mo><mn>0</mn></math></span>。代入函数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mi>n</mi></msub><mo>)</mo><mo>=</mo><mi mathvariant="normal">sin</mi><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>/</mo><mo>(</mo><mi>n</mi><mo>π</mo><mo>)</mo></mrow></mfrac><mo>=</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mi>n</mi><mo>π</mo><mo>)</mo><mo>=</mo><mn>0</mn></math></div>
+    <p>所以这串函数值的数列<strong>恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>，极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。但这<strong>推不出</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 存在——因为只要你换一条别的数列（比如让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>+</mo><mn>2</mn><mi>k</mi><mo>π</mo></math></span>），函数值又全是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。不同的抽样给出不同的极限，说明函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 附近剧烈振荡、根本没有一个统一的极限。</p>
+    <div class="note">
+      <span class="lbl">这条桥怎么用</span>
+      <p>正向用来<strong>证明函数极限存在</strong>（沿任意数列都同极限，常配合左右极限或子列）；反向用来<strong>证明函数极限不存在</strong>——只要找出<strong>两条</strong>数列给出不同极限即可。这里只用了一条数列，所以什么也证不出，只是「存在一个收敛的子抽样」。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 240" role="img" aria-label="sin(1/x) 在 0 附近剧烈振荡，不同抽样得不同极限">
+    <line x1="320" y1="40" x2="320" y2="200" class="m-line" stroke-width="1.3"></line>
+    <line x1="60" y1="120" x2="600" y2="120" class="m-line" stroke-width="1.3"></line>
+    <polygon points="604,120 594,116 594,124" class="m-fill"></polygon>
+    <polygon points="320,36 316,46 324,46" class="m-fill"></polygon>
+    <path d="M70 120 Q110 60 150 120 Q190 180 230 120 Q270 60 310 120 Q350 180 390 120 Q430 60 470 120 Q510 180 550 120 Q585 60 600 110" fill="none" class="m-warn" stroke-width="1.6"></path>
+    <g class="m-fill-a">
+      <circle cx="150" cy="120" r="4"></circle><circle cx="230" cy="120" r="4"></circle>
+      <circle cx="310" cy="120" r="4"></circle><circle cx="390" cy="120" r="4"></circle>
+      <circle cx="470" cy="120" r="4"></circle><circle cx="550" cy="120" r="4"></circle>
+    </g>
+    <text x="60" y="110" class="m-sub" font-size="12">y</text>
+    <text x="600" y="138" class="m-sub" font-size="12">x</text>
+    <text x="300" y="110" class="m-txt" font-size="12">0</text>
+    <text x="120" y="200" class="m-acc" font-size="12">抽样 xₙ=1/(nπ)：全落在 y=0</text>
+    <text x="430" y="50" class="m-warn" font-size="12">换条抽样 → 全落在 y=1，极限不统一</text>
+  </svg>
+  <figcaption><b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 附近越挤越密地振荡。</b>蓝点是抽样 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn><mo>/</mo><mo>(</mo><mi>n</mi><mo>π</mo><mo>)</mo></math></span>，它们恰好全落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 上——但这只是「一条」抽样。换别的抽样，函数值的极限会是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 或别的常数。因为不存在「对所有抽样都一致的极限」，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></math></span> 不存在。这正是「函数极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 数列极限」<strong>不可逆</strong>的原因。</figcaption>
+</figure>
+
+<div class="said">
+  <span class="lbl">课堂原话（大意）<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=901">15:01</a></span>
+  <p>老师断定反向不成立，用的是一句很朴素的话：<q>如果这种条件是充要条件、正过来推也行、反过来推也行，你猜课本会不会把它写成一个充要条件、写成一个定理？当然会呀，他傻呀？充要条件他当然会写充要条件。</q>所以<q>反过来肯定是不行的</q>。</p>
+  <p>为了让学生记住"一条抽样推不出整体"，他还举了班里的例子：<q>咱们班里头有男生有女生，我找了几个同学发现有女生——那我就说我们全班的同学都是女生吗？当然不是。</q><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=8&amp;t=1157">19:17</a>课到这里，老师还特意收了尾：<q>函数极限的性质这几条，大家理解就行，我们在计算的时候用的相对来说是比较少的。</q></p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>三条性质（都靠「极限存在」托底，都只管「局部」）</h3>
+  <dl class="kv">
+    <dt>唯一性</dt><dd>极限存在则唯一</dd>
+    <dt>局部有界</dt><dd>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 某去心邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>|</mo><mo>≤</mo><mspace width="0.25em"></mspace><mi>M</mi></math></span></dd>
+    <dt>局部保号</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn><mo>⇒</mo></math></span> 邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>；邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>≥</mo><mn>0</mn><mo>⇒</mo><mspace width="0.25em"></mspace><mi>A</mi><mo>≥</mo><mn>0</mn></math></span></dd>
+  </dl>
+  <p>加强版（证不等式常用）：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn><mo>⇒</mo></math></span> 邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。</p>
+  <p><strong>前提不能去</strong>：去掉"极限存在"，局部有界会崩（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 附近无界），保号也无从谈起（分段函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 处无极限）。</p>
+
+  <h3>一座桥</h3>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mo>∀</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>x</mi><mi>n</mi></msub><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub><mo>:</mo><mspace width="1em"></mspace><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mi>f</mi><mo>(</mo><msub><mi>x</mi><mi>n</mi></msub><mo>)</mo><mo>=</mo><mi>A</mi></math></div>
+  <p>反向<strong>不成立</strong>：一条数列收敛推不出函数极限存在。它就是数列那边「子列收敛推不出原数列收敛」的函数版。</p>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li>「局部」只管 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 附近；远处无界、穿轴都不影响这三条性质</li>
+    <li>邻域内 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span> 严格 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 极限仅 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>≥</mo><mn>0</mn></math></span>（反例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 处）</li>
+    <li>「局部有界」是极限存在的<strong>必要</strong>条件：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 有界却无极限</li>
+  </ul>
+
+  <h3>怎么用这座桥</h3>
+  <ul class="tight">
+    <li>证存在：沿任意数列同极限</li>
+    <li>证不存在：找<strong>两条</strong>数列给不同极限（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>）</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 收敛数列的性质（唯一、有界、保号）</li>
+      <li><a href="../P007-函数极限定义/index.html">函数极限定义</a> 函数极限定义、去心邻域、左右极限</li>
+      <li><span class="cur">数列极限定义（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>–<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P009-无穷小与无穷大/index.html">无穷小与无穷大</a> 无穷小与无穷大（极限为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> / 为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∞</mo></math></span> 的量）</li>
+      <li><a href="../P010-极限运算法则/index.html">极限运算法则</a> 极限运算法则（把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>–<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 证明省掉）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「局部有界」≠「整体有界」（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mi>x</mi></msup></math></span>）</li>
+      <li>函数极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 数列极限，但<strong>反之不真</strong></li>
+      <li>保号推 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>≥</mo><mn>0</mn></math></span>，不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn></math></span></li>
+      <li>三条性质都要先有「极限存在」这个前提；前提一去，结论就崩</li>
+      <li>「沿任意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span> 同极限」是「子列」的连续版，别当成新东西另背</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 8 讲</span><a href="../P007-函数极限定义/index.html">← P007</a><a href="../index.html">全部目录</a><a href="../P009-无穷小与无穷大/index.html">P009 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">唯一性（一句话带过）</a>
+    <a class="sub" href="#s2">先立一张总表：前提是什么、结论只管多大范围</a>
+    <a href="#s3">局部有界性</a>
+    <a href="#s4">局部保号性</a>
+    <a href="#s5">去掉前提会怎样：两个反例</a>
+    <a href="#s6">函数极限与数列极限的桥</a>
+    <a class="sub" href="#s7">先对照：数列极限与函数极限，性质是&quot;同构&quot;的</a>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>复合函数求导 · 高等数学笔记</title>
+<meta name="description" content="复合函数求导是整章的必考点：考试不会考光秃秃的基本公式，一定考套了层的复合函数。核心就是链式法则 dydx=dydu⋅dudx，宋老师更爱叫它洋葱法则——从最外层一层一层往里剥，每层求导、最后全部相乘。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  导数与微分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 22 讲</div>
+    <h1 class="title"><span class="pnum">P022</span>复合函数求导</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>复合函数求导是整章的<strong>必考点</strong>：考试不会考光秃秃的基本公式，一定考套了层的复合函数。核心就是<mark>链式法则</mark> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>，宋老师更爱叫它<strong>洋葱法则</strong>——从最外层一层一层往里剥，每层求导、最后全部相乘。</p></div>
+    <div class="meta"><span>时长 21m57s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=3">00:03</a><span class="vv"><b>打五角星</b>：复合函数求导最重要，考试必考；复合函数如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，中间变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=59">00:59</a><span class="vv"><b>定理</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>u</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mi>u</mi><mo>=</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=158">02:38</a><span class="vv">结论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=216">03:36</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo></math></span> 是对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 求导，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 是对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=259">04:19</a><span class="vv"><b>改变观念</b>：谁对谁求导只是变量名，不要只会 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=297">04:57</a><span class="vv"><b>链式法则</b> chain：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=366">06:06</a><span class="vv">多层推广：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mi>u</mi><mo>)</mo><mo>,</mo><mi>u</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>,</mo><mi>t</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>⇒</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=440">07:20</a><span class="vv"><b>铁链子比喻</b>：一层套一层，链子串起来。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=496">08:16</a><span class="vv">课本例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></msup></math></span>（老师说做题其实不用记这个）。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=608">10:08</a><span class="vv"><b>洋葱法则</b> onion rule：从最外层一层一层往里求。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=677">11:17</a><span class="vv"><b>what 语言</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>→</mo><mn>2</mn><mi>u</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>→</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>u</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>→</mo><mn>1</mn><mo>/</mo><mi>u</mi></math></span>。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=861">14:21</a><span class="vv">例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=925">15:25</a><span class="vv">例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>2</mn><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1034">17:14</a><span class="vv">例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow><mrow><mn>2</mn><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">15</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1094">18:14</a><span class="vv">例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msqrt><mo>=</mo><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>2</mn><msqrt><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">16</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1206">20:06</a><span class="vv">例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mroot><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>4</mn><mi>x</mi></mrow><mrow><mn>3</mn><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>2</mn><mo>/</mo><mn>3</mn></mrow></msup></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">17</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1285">21:25</a><span class="vv">例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow></msup><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow></msup><mi mathvariant="normal">cos</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">为什么要打五角星：这是考试必考点</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=3">00:03</a>老师一上来就提醒：<strong>这部分打上一个五角星，最最重要。</strong>原因很现实——这一章叫「导数」，考试就考「求导」；而前面那些简单的基本公式（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 求导是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span>）太简单，不会直接考，<strong>真正考的一定是套了层的复合函数</strong>。所以复合函数求导，任何考试都要考到。</p>
+
+<p>先回想复合函数长什么样。比如</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></div>
+
+<p>把它拆开：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 塞进去，就得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>。这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 叫<strong>中间变量</strong>。带进去之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 最终只和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 有关，但中间隔了一层——这就是复合函数。</p>
+
+<div class="blk thm">
+  <span class="lbl">复合函数求导定理（链式法则）</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处可导，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>u</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 处可导，则复合函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处也可导，且</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></div>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=106">01:46</a>为什么定理要写全那两个条件</span>
+  <p>定理的两个前提不是在凑格式：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处可导」和「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>u</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 处可导」。老师把第一句拆开讲了：<q>咱这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 取定以后，这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 就是一个固定的值了；那这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 它是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 的函数，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 就是在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 这个地方可导。</q></p>
+  <p>说人话：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 必须先落到实处（是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在某个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 上的取值），「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在这一点的导数」才有意义，不然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 还在跑，导给谁看？换成变化率的语言——链式法则要的是两段<strong>局部</strong>变化率：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 变得多快、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 变得多快。两段都真实存在，才能乘起来。少任何一段，链子就断了。</p>
+</div>
+
+<h2 id="s2">定理在说什么：先对中间变量求，再乘里面</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=158">02:38</a>结论写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。这里两个导数要分清角色：</p>
+
+<dl class="kv">
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo></math></span></dt><dd>是<strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 求导</strong>。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 本来就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 的函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 在这里只是个变量名。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></dt><dd>是<strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导</strong>，这个我们比较熟。</dd>
+</dl>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=259">04:19</a>得改掉一个旧习惯：谁对谁求导只是变量名</span>
+  <p>以前大家的脑子里只有「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><mn>2</mn><mi>x</mi></math></span>。但复合函数求导要求你接受：<strong>「对谁求导」本质上只是换个变量名</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>u</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 求导也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>u</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>u</mi><mrow><mn>2</mn></mrow></msup></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 求导也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>u</mi></math></span>。</p>
+  <p>老师原话：「说白了不就是个变量名吗？你 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span> 求导，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span> 是不是就是个变量名而已。」一旦接受了这点，链式法则就不再是死记硬背，而是「<em>外层函数对它的自变量求，再乘内层对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求</em>」。</p>
+</div>
+
+<h2 id="s3">链式法则：把两个导数「链」起来</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=297">04:57</a>英文叫 chain rule（链式），因为它把两个微分像链子一样串起来：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></div>
+
+<p>左边是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导数」，右边是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 的导 × <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导」。中间的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></span> 像约分一样消掉了——虽然微分严格说不能随便约，但<strong>这个乘法结构正是链式法则的样子</strong>。</p>
+
+<h2 id="s4">多层复合：链子可以很长</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=366">06:06</a>如果复合不止两层，比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 的函数、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的函数、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 又是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，那么</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=440">07:20</a>老师的比喻很形象：「这仨式子就跟那个链子一样给它串在一起。」他本想从家里找条大铁链子挂脖子上，结果孩子只给了他一条小链子——但「一层套一层」的意思到了。链式的名字就是这么来的：<strong>有多少层中间变量，就乘多少段导数</strong>。</p>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=366">06:06</a>多层复合的「展开书写」：给自己留一条检查的路</span>
+  <p>层数一多，光靠脑子里数「外、中、里」很容易漏。稳当的做法是<strong>把中间变量一个个写出来、把连乘式摊平</strong>，最后再代回去。以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo></math></span> 为例：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>u</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>t</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>t</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></div>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>u</mi></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>t</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></div>
+  <p>按链式法则逐段相乘：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>t</mi><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></div>
+  <p>最后一代：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></mrow></mfrac><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>=</mo><mo form="prefix">−</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>，和直接剥洋葱的结果一致。</p>
+  <p><strong>这么写为什么更安全？</strong>看相邻两段的接口：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac></math></span> 的分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>，下一段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span> 的分子恰好也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>；再接 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>，一路首尾相接、最后收口到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，像约分一样串起来。写完只要检查「<em>接口对不对得上</em>」，漏层或写错变量立刻现形。熟练之后这一步当然可以省掉，直接心里剥。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 58 640 190" role="img" aria-label="多层复合函数的链式法则，y 经 u、t 到 x 逐段相乘">
+    <rect x="30" y="90" width="120" height="64" rx="10" class="m-box-a"></rect>
+    <text x="52" y="118" class="m-txt" font-size="13">y = f(u)</text>
+    <text x="44" y="140" class="m-sub" font-size="11">外层</text>
+    <rect x="240" y="90" width="120" height="64" rx="10" class="m-box-g"></rect>
+    <text x="258" y="118" class="m-txt" font-size="13">u = g(t)</text>
+    <text x="252" y="140" class="m-sub" font-size="11">中间层</text>
+    <rect x="450" y="90" width="120" height="64" rx="10" class="m-box-a"></rect>
+    <text x="468" y="118" class="m-txt" font-size="13">t = h(x)</text>
+    <text x="462" y="140" class="m-sub" font-size="11">最里层</text>
+    <line x1="150" y1="122" x2="238" y2="122" class="m-acc" stroke-width="2"></line>
+    <polygon points="238,122 228,118 228,126" class="m-fill-a"></polygon>
+    <line x1="360" y1="122" x2="448" y2="122" class="m-acc" stroke-width="2"></line>
+    <polygon points="448,122 438,118 438,126" class="m-fill-a"></polygon>
+    <text x="166" y="80" class="m-good" font-size="11.5">dy/du</text>
+    <text x="376" y="80" class="m-good" font-size="11.5">du/dt</text>
+    <text x="556" y="80" class="m-good" font-size="11.5">dt/dx</text>
+    <text x="236" y="200" class="m-txt" font-size="13.5">dy/dx = dy/du × du/dt × dt/dx</text>
+    <text x="70" y="232" class="m-sub" font-size="11.5">链子一节一节连起来：有几层中间变量，就乘几段导数</text>
+  </svg>
+  <figcaption><b>三层复合就是把三节链子串起来。</b>每一节是一个「某函数对它的直接自变量」的导数，相邻两节共用一个变量（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>），像约分一样衔接。最终 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导数 = 所有节相乘。<strong>层数再多也照此办理</strong>：从最外层一路乘到最里层对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导数。</figcaption>
+</figure>
+
+<h2 id="s5">洋葱法则：宋老师的「一层一层剥」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=608">10:08</a>老师话锋一转：「刚才讲的那些，从开头到现在你一个字也不用学——不用学！」乍一听吓人，其实他想引出一个<strong>更好用的说法</strong>：洋葱法则（onion rule）。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=677">11:17</a>核心就一句：复合函数求导，<strong>从最外层开始，一层一层往里剥，每层先求导，最后全部相乘</strong>。为了好记，老师让大家把所有内层都叫「what」（就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>）：</p>
+
+<ul class="tight">
+  <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 求导是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span>；做题时它不一定是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，可能是个整体 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>，所以记住：<strong>「what 平方求导 = 2 what」</strong>。</li>
+  <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>u</mi></math></span> → <strong>「sin what 求导 = cos what」</strong>。</li>
+  <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>u</mi></mrow></mfrac></math></span> → <strong>「ln what 求导 = what 的倒数」</strong>。</li>
+</ul>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=825">13:45</a>这个「what 语言」老师是给留学生讲课时想出来的，结果老外教材真叫它 onion rule（洋葱法则）——一层包一层，跟平常吃的洋葱一模一样。所以：<mark>复合函数求导 = 洋葱法则，从外往里一层层求，逐层相乘。</mark></p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=825">13:45</a>顺带交代：「洋葱法则」这名字是宋老师自己起的</span>
+  <p>老师自己承认这名字是编的：<q>老师你自己又在那瞎琢磨名字吗？真有这个洋葱法则吗？前面这个夹逼定理的时候，还给我们讲过一个汉堡定理，对不对？汉堡法则——现在又出现一个洋葱法则。这两个名字呢，是我给留学生上课的时候我想的啊。后来我看老外的教材，他们也这么叫，真的叫 onion rule。</q></p>
+  <p>所以要分清楚：<strong>课本上印的是「链式法则」，课堂上喊的是「洋葱法则」，指的是同一个东西</strong>。名字是特意起得顺口好记的，操作还是那一条——从外往里逐层求、逐层乘。别因为卷子上写的是「链式法则」就以为是没学过的知识点。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 22 640 198" role="img" aria-label="洋葱法则：从外层到内层逐层求导再相乘">
+    <rect x="30" y="50" width="180" height="160" rx="14" class="m-box-a"></rect>
+    <text x="48" y="78" class="m-txt" font-size="13">外层  e^( )</text>
+    <text x="50" y="100" class="m-sub" font-size="11">导数：e^( )</text>
+    <rect x="70" y="110" width="150" height="80" rx="12" class="m-box-g"></rect>
+    <text x="86" y="136" class="m-txt" font-size="12.5">中层  sin( )</text>
+    <text x="86" y="156" class="m-sub" font-size="11">导数：cos( )</text>
+    <rect x="104" y="166" width="110" height="44" rx="10" class="m-panel-a"></rect>
+    <text x="120" y="190" class="m-good" font-size="12">内层  √( )</text>
+    <text x="120" y="206" class="m-sub" font-size="10.5">导数：1/(2√ )</text>
+    <text x="250" y="120" class="m-acc" font-size="22">×</text>
+    <text x="250" y="150" class="m-acc" font-size="22">×</text>
+    <text x="300" y="100" class="m-txt" font-size="12">逐层求导后</text>
+    <text x="300" y="122" class="m-txt" font-size="12">全部相乘：</text>
+    <text x="300" y="150" class="m-good" font-size="12.5">e^(sin√x) · cos(√x)</text>
+    <text x="300" y="172" class="m-good" font-size="12.5">· 1/(2√x)</text>
+    <text x="300" y="206" class="m-sub" font-size="11.5">从外往里剥：外层→中层→内层，每层 × 起来</text>
+  </svg>
+  <figcaption><b>把复合函数想成一个洋葱：外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msup></math></span>、中层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>、内层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mo>⋅</mo></mrow></msqrt></math></span>、芯是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。</b>求导时从最外层下刀：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msup></math></span> 的导数还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span> 的导数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mo>⋅</mo></mrow></msqrt></math></span> 的导数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mo>(</mo><mn>2</mn><msqrt><mrow><mo>⋅</mo></mrow></msqrt><mo>)</mo></math></span>。三层导数和芯 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的导数（这里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>）<strong>全部相乘</strong>，就是最终答案。这就是「洋葱法则」——比记公式更不容易漏层。</figcaption>
+</figure>
+
+<h2 id="s6">下刀之前：先看清最外层是「复合」还是「四则」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=861">14:21</a>洋葱法则管的是「怎么剥」，但剥之前还有更前面的一步——<strong>看清这一整坨式子的最外层到底套着什么</strong>。同一堆字符，最外层是「一个函数」还是「两块相乘、相除」，做法完全不同。下面四行是最容易混的对照：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>式子</th><th>最外层是什么</th><th>第一刀怎么砍</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span></td><td>「神马的平方」——幂在最外面</td><td>先得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，再补里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span></td><td>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 神马」——对数在最外面</td><td>先得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，再补里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><mn>2</mn><mi>x</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td>两块相乘，外面没有东西包着</td><td>乘积法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></td><td>商，被一条分数线分成上下两块</td><td>商法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>u</mi></mrow><mrow><mi>v</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mi>u</mi><mo>'</mo><mi>v</mi><mo>−</mo><mi>u</mi><mi>v</mi><mo>'</mo></mrow><mrow><msup><mi>v</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span> 必须当成两道题</span>
+  <p>这两条是最经典的「长得像、做法完全不同」。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span> 的最外层是<strong>平方</strong>，所以第一刀按幂函数砍——「神马的平方求导 = 2 倍神马」，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，再对里层的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 补一刀 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，结果是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span> 的最外层是<strong>对数</strong>，第一刀按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 砍——「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 神马求导 = 神马的倒数」，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，再对里层的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 补一刀 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span>，结果是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。</p>
+  <p>两个答案不一样，根源就在「谁在最外面」。判断标准也只有一条：<strong>哪个函数是最后一步作用在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 上的</strong>，它就在最外层，就先对它下刀。所以做复合题的第一句话永远是「先找最外层是什么」——这句说对了，后面就不会用错法则。同理，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 外面没有任何函数包着，它根本不是复合结构的第一刀对象，必须先上乘积法则，把每一块内部再各自剥洋葱。</p>
+</div>
+
+<h2 id="s7">例题：一层一层剥（洋葱法则实战）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=861">14:21</a>下面这些才是考试会考的样子。统一用洋葱法则：<strong>找外层、找里层，每层求导相乘</strong>。前几道先热身，看清结构即可。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>题目</th><th>外层 → 里层</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msup><mo>→</mo><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=861">14:21</a></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>⋅</mo><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>→</mo><mn>2</mn><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mn>1</mn><mo>/</mo><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=925">15:25</a></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><msqrt><mrow><mi>x</mi></mrow></msqrt></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>(</mo><mo>⋅</mo><mo>)</mo><mo>→</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>)</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow><mrow><mn>2</mn><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span> <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1034">17:14</a></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msqrt></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msqrt><mo>→</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msqrt><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msqrt></mrow></mfrac></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>2</mn><msqrt><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span> <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1094">18:14</a></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1034">17:14</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：只有两层，先找最外层</span>
+    <p>扫一眼结构：最外层是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 套着一个「神马」，那个神马是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。按洋葱法则把口诀念一遍：</p>
+    <ol class="steps">
+      <li>最外层「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 神马」求导 = 神马的倒数 → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>；</li>
+      <li>里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 求导 → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>；</li>
+      <li>两层相乘 → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>⋅</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</li>
+    </ol>
+    <p>再化一步：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，所以</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <p><strong>回看要点</strong>：老师讲这道题只用了两句——「外层是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 神马，里层是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>」，因为它和后面那道三层的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo></math></span> 是同一件事，只是少了一层。<em>结果能化成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，纯粹因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">cos</mi></mrow><mrow><mi mathvariant="normal">sin</mi></mrow></mfrac></math></span> 正好是余切的定义</em>；写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 也不算错，但化成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cot</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 更整齐。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1206">20:06</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 的导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先看外层是「几分之一次方」，里层是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>」</span>
+    <p>把式子写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup></math></span>。用洋葱法则，<strong>外层</strong>是「某整体的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mn>3</mn></math></span> 次方」：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mo form="prefix">−</mo><mn>2</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>⋅</mo><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>'</mo></math></div>
+    <p><strong>里层</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导：常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 导数为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mn>4</mn><mi>x</mi></math></span>。乘进去：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mo form="prefix">−</mo><mn>2</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>4</mn><mi>x</mi><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>4</mn><mi>x</mi></mrow><mrow><mn>3</mn><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>2</mn><mo>/</mo><mn>3</mn></mrow></msup></mrow></mfrac></math></div>
+    <div class="trap">
+      <span class="lbl">这一步最容易漏</span>
+      <p><span class="bad">只写出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mo form="prefix">−</mo><mn>2</mn><mo>/</mo><mn>3</mn></mrow></msup></math></span> 就停手。</span>错在忘了乘<strong>里层导数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mi>x</mi></math></span>。洋葱法则是「每层都要求、最后相乘」，少乘一层就等于整个链式法则少了一节链子——这是复合函数求导最常见的失分点。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 6</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=1285">21:25</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow></msup></math></span> 的导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三层的洋葱，从外往里剥三层</span>
+    <p><strong>第一题</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo></math></span>，三层结构：外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>、中层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>、里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>。逐层：</p>
+    <ol class="steps">
+      <li>外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span> 导数 = <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></mfrac></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></mrow></mfrac></math></span>；</li>
+      <li>中层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span> 导数 = <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>；</li>
+      <li>里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>。</li>
+    </ol>
+    <p>三层全乘：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></mrow></mfrac><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>=</mo><mo form="prefix">−</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></div>
+    <p><strong>第二题</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow></msup></math></span>，也是三层：外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>⋅</mo><mo>)</mo></mrow></msup></math></span>、中层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mo>⋅</mo><mo>)</mo></math></span>、里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>x</mi></math></span>。注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>x</mi><mo>=</mo><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup></math></span> 的导数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mn>2</mn></mrow></msup><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mo>/</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow></msup><mo>⋅</mo><mi mathvariant="normal">cos</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo><mo>⋅</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msup><mi>e</mi><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow></msup><mi mathvariant="normal">cos</mi><mo>(</mo><mn>1</mn><mo>/</mo><mi>x</mi><mo>)</mo></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p><strong>关键观察</strong>：无论套几层，方法完全一样——<em>从外往里数，数到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 为止，每一层的导数乘起来</em>。老师原话：「甭管多少层，你按照咱们的洋葱法则就直接做。」</p>
+  </div>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=22&amp;t=496">08:16</a>课本那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></msup></math></span> 为什么不用记</span>
+  <p>课本常用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></msup></math></span> 当例题：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>u</mi></mrow></msup><mo>,</mo><mspace width="1em"></mspace><mi>u</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></msup><mo>⋅</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mi>e</mi><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></msup></math></span>。老师说这个「也不用学」——因为它和上面所有题是同一个套路，<strong>真正上考场遇到的是更花哨的复合</strong>，所以把洋葱法则练熟比背某个具体例子重要得多。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么链式法则「乘」而不是「加」</span>
+  <p>直观上可以这样想：当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi><mo>≠</mo><mn>0</mn></math></span> 时，
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div>
+  两端一起让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></math></span>（此时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>u</mi><mo>→</mo><mn>0</mn></math></span>），左边趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>，右边两段分别趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>，乘积就是链式法则。多层情形只是把这个等式<strong>反复套用</strong>：先拆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>u</mi></math></span>，再拆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>，再拆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，每一道「分数线」都对应一次相乘。所以它是「乘」，不是「加」——加号那是乘积法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo></math></span>，别串台。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p><strong>复合函数求导 = 洋葱法则</strong>：从最外层一层一层往里剥，每层求导、最后全部相乘。</p>
+
+  <h3>核心公式</h3>
+  <p><div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></div> 多层：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span>（链子一节节连）。</p>
+
+  <h3>what 语言（做题默念）</h3>
+  <ul class="tight">
+    <li>what 平方求导 = 2 what</li>
+    <li>sin what 求导 = cos what</li>
+    <li>ln what 求导 = what 的倒数</li>
+    <li>e^what 求导 = e^what；cos what 求导 = -sin what</li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li><strong>最外层认错</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span> 按幂砍、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span> 按对数砍，先定外层再下刀。</li>
+    <li><strong>漏乘里层导数</strong>：每层都要乘，少一层就错（例 5 漏掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mi>x</mi></math></span>）。</li>
+    <li>别和乘积法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></span> 的「加号」混——链式是「乘」，乘积是「加」。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数的定义（差商极限）</li>
+      <li><a href="../P020-求导公式/index.html">求导公式</a> 求导公式（基本初等函数导数，洋葱法则每层都要用到）</li>
+      <li><a href="../P015-连续函数运算 反函数复合函数的连续/index.html">连续函数运算 反函数复合函数的连续</a> 反函数与复合函数的连续（复合函数结构）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P023-基本求导法则与公式/index.html">基本求导法则与公式</a> 基本求导法则与公式（总表汇总）</li>
+      <li><a href="../P024-23高阶导数/index.html">23高阶导数</a> 高阶导数（对导数再求导，多层复合会再现）</li>
+      <li><a href="../P025-隐函数求导对数求导/index.html">隐函数求导对数求导</a> 隐函数求导 · 对数求导（复合函数求导的进阶用法）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo></math></span> 是<strong>加</strong>（乘积法则）；复合求导是<strong>乘</strong>（链式法则）——别串台。</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo></math></span> 是对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 求导，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 是对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导；「对谁求导」只是变量名。</li>
+      <li>多层复合：有几层中间变量就乘几段，最里层要对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求到底。</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 22 讲</span><a href="../P021-反函数求导/index.html">← P021</a><a href="../index.html">全部目录</a><a href="../P023-基本求导法则与公式/index.html">P023 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">为什么要打五角星：这是考试必考点</a>
+    <a href="#s2">定理在说什么：先对中间变量求，再乘里面</a>
+    <a href="#s3">链式法则：把两个导数「链」起来</a>
+    <a href="#s4">多层复合：链子可以很长</a>
+    <a href="#s5">洋葱法则：宋老师的「一层一层剥」</a>
+    <a href="#s6">下刀之前：先看清最外层是「复合」还是「四则」</a>
+    <a href="#s7">例题：一层一层剥（洋葱法则实战）</a>
+  </aside>
+</div>
+</body>
+</html>

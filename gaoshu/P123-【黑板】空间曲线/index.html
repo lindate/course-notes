@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】空间曲线 · 高等数学笔记</title>
+<meta name="description" content="空间曲线只有两套东西：一般方程（两个曲面相交）和参数方程（x、y、z 都由一个参数控制）。这一节唯一需要动手练的是空间曲线在坐标面上的投影：先从方程组里消掉投影方向上那个变量得到投影柱面，再把它和投影面联立。老师原话是这一段在三重积分、曲面积分里「挺重要」。新授课见 [[74]]，用到的曲面知识见 ">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 123 讲</div>
+    <h1 class="title"><span class="pnum">P123</span>【黑板】空间曲线</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>空间曲线只有两套东西：<strong>一般方程</strong>（两个曲面相交）和<strong>参数方程</strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都由一个参数控制）。这一节唯一需要动手练的是<mark>空间曲线在坐标面上的投影</mark>：先从方程组里<strong>消掉投影方向上那个变量</strong>得到<strong>投影柱面</strong>，再把它和<strong>投影面</strong>联立。老师原话是这一段在三重积分、曲面积分里「挺重要」。新授课见 <a href="../P074-曲面基本问题 旋转曲面 柱面/index.html">曲面基本问题 旋转曲面 柱面</a>，用到的曲面知识见 <a href="../P122-【黑板】曲面/index.html">【黑板】曲面</a>。</p></div>
+    <div class="meta"><span>时长 24m00s</span><span class="w" title="考试权重">●●●○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=0">00:00</a><span class="vv">本节定位：<b>以理解为主、很少出题</b>，但后面的曲线积分要用。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=66">01:06</a><span class="vv"><b>空间曲线的定义</b>：两个曲面相交得到曲线；两个平面相交得到的是直线（书脊）。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=116">01:56</a><span class="vv"><b>例 1</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>=</mo><mn>6</mn></math></span>——圆柱面被一张平面<mark>斜着切一刀</mark>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=183">03:03</a><span class="vv">怎么读那两个方程：一个缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>（沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴长），一个缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>（沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴长）。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=259">04:19</a><span class="vv"><b>例 2</b>：上半球面 + 圆柱面。老师的比喻是「<b>拿烟囱朝半个西瓜上怼了一下</b>」。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=461">07:41</a><span class="vv"><b>参数方程</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都是一个参数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的函数；曲线的「点」随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 走。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=583">09:43</a><span class="vv"><b>例 3（螺旋线）</b>：沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴匀速上升、同时绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴匀速旋转。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=635">10:35</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>v</mi><mi>t</mi></math></span> 为什么最简单：只看高度，它一直在匀速往上走。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=691">11:31</a><span class="vv"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 怎么来：把运动<mark>投影到底面圆</mark>上，就变成了绕圈圈。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=779">12:59</a><span class="vv">为什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span> 越来越大还能绕圈：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 是<b>周期函数</b>，过了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span> 就转回来了。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=892">14:52</a><span class="vv"><b>投影</b>：课本大半段都略过，只有最后这个例子要讲——<mark>它在三重积分里是刚需</mark>。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=1273">21:13</a><span class="vv">「<b>故事的两个版本</b>」：同一个圆，写成「交线」和写成「投影」是两件事。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=123&amp;t=1396">23:16</a><span class="vv">投影到底面上为什么是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>；以及这个立体图在三重积分里怎么用。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、空间曲线：两个曲面相交</h2>
+
+<p>这一节的定位，老师讲得比曲面那节还要轻松：<q>下一个内容叫空间曲线，这部分就更是以理解为主。后边其实一方面这部分很少出题——不过后面的曲线积分是有用的，因为曲线积分是对空间的曲线进行求积分；但是后边曲线积分里的曲线又相对来说比较简单，所以这部分内容大家稍微了解了解就行。</q></p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 空间曲线的一般方程</span>
+  <p>空间里的一条曲线，用<strong>两个曲面方程联立</strong>来表示：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mi>G</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div>
+  <p>组成它的两个曲面可以都是平面、都是二次曲面，也可以一个平面配一张曲面。</p>
+</div>
+
+<p>老师是用他自己那本书讲这个定义的：<q>空间的一条曲线，它是由两个曲面相交得到的，大家就理解了。那咱经常说的，我这不是书的这两个面吗？虽然是个平面，但它也是特殊的曲面——这两个平面相交，不就是书脊的部分吗？就是直线。而直线也是曲线的一种特殊状况。</q></p>
+
+<p><mark>这段话把上一节 <a href="../P121-【黑板】直线及其方程/index.html">【黑板】直线及其方程</a> 的「直线 = 两个平面联立」收编成了本节的一个特例</mark>，所以从逻辑上说，本节是上一节的推广。理解了这一点，下面两个例子就都不难了。</p>
+
+<div class="why">
+  <span class="lbl">为什么空间曲线要写成「两个方程」，而不是「一个方程」</span>
+  <p>先数一下自由度。一个三元方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 只给了一个条件，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 可以自由取、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 被追着算出来，所以自由度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>——描出来的是一张<strong>面</strong>。再加一个方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，条件变成两个，自由度降到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>——描出来的才是<strong>线</strong>。这正好解释了老师那句话里的两个层次：<q>两个平面相交不就是书脊的部分吗，就是直线</q>，而直线只是曲线里最特殊的一种。</p>
+  <p>那有人会想：既然两个方程里都有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，我能不能把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 消掉，写成一个只含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>？<strong>能消，但消出来的不是曲线。</strong>按 <a href="../P122-【黑板】曲面/index.html">【黑板】曲面</a> 的口诀，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，所以它是一条<strong>沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴无限延伸的柱面</strong>——一张面，不是一条线。这就是为什么消元之后必须再补一句话（「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 等于什么」或者「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>」），才能把面收成线。</p>
+  <p><mark>所以「两个方程」不是啰嗦，而是维度的必需品：一个方程 = 一张面，两个方程 = 一条线，三个方程 = 一个点。</mark>下一小节的投影之所以要「消元 + 联立」两步，根子就在这里。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q">方程组 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>=</mo><mn>6</mn></mtd></mtr></mtable></mrow></math></span> 表示怎样的曲线？</span></p>
+  <div class="sol">
+    <span class="lbl">思路：分别认出两张曲面，再说它们相交得到什么</span>
+    <p>老师说这题<q>就纯画图啦</q>，所以分两步读。</p>
+    <p><strong>第一个方程：</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span>。按 <a href="../P122-【黑板】曲面/index.html">【黑板】曲面</a> 的口诀——<mark>缺哪个变量就沿哪个轴延伸</mark>——它缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，所以是一条沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴无限延伸的<strong>圆柱面</strong>。老师形容它：<q>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span> 方加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 方等于一，它没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi></math></span> 嘛，我们就沿着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi></math></span> 轴上下移动，所以它这个图是一个圆柱面。</q></p>
+    <p><strong>第二个方程：</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>=</mo><mn>6</mn></math></span>。它缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，所以是一张沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴方向延伸的<strong>平面</strong>。它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上的截距是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span>（令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>），在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上的截距是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>（令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>）。</p>
+    <p><strong>两者相交：</strong>一张平面去切一个「烟囱」。老师用的比喻是：<q>也就是说上面的这个烟囱，拿着这个平面是不是切一刀啊？说白了就是切一刀。</q>因为这张平面是<strong>斜着</strong>切的，所以切口不是圆，而是一条<strong>椭圆</strong>。</p>
+    <div class="trap">
+      <span class="lbl">为什么不是圆</span>
+      <p>圆柱面的横截面是圆（因为方程里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 就是圆），但这个平面并不垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴——它带着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>=</mo><mn>6</mn></math></span> 这样的倾斜。斜着切圆柱面，切口一定是椭圆，这一点和「切一根火腿肠」的直觉一致。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 265" role="img" aria-label="圆柱面被一张斜平面切出一个椭圆">
+    <ellipse cx="150" cy="200" rx="46" ry="15" fill="none" class="m-line" stroke-width="1.4"></ellipse>
+    <ellipse cx="150" cy="80" rx="46" ry="15" fill="none" class="m-line" stroke-width="1.4"></ellipse>
+    <line x1="104" y1="200" x2="104" y2="80" class="m-line" stroke-width="1.4"></line>
+    <line x1="196" y1="200" x2="196" y2="80" class="m-line" stroke-width="1.4"></line>
+
+    <path d="M 98 130 L 186 101 L 202 151 L 114 179 Z" class="m-panel-a"></path>
+    <path d="M 98 130 L 186 101 L 202 151 L 114 179 Z" fill="none" class="m-line" stroke-width="1.2" stroke-dasharray="4 3"></path>
+
+    <ellipse cx="150" cy="140" rx="46" ry="14" transform="rotate(-18 150 140)" fill="none" class="m-acc" stroke-width="2.2"></ellipse>
+    <text x="228" y="136" class="m-acc" font-size="12">交线：椭圆</text>
+
+    <text x="16" y="42" class="m-txt" font-size="12">① 圆柱面：x ² + y ² = 1（缺 z）</text>
+    <text x="16" y="62" class="m-sub" font-size="11.5">沿 z 轴无限延伸 —— 像一根烟囱</text>
+    <text x="16" y="86" class="m-txt" font-size="12">② 平面：2x + 3z = 6（缺 y）</text>
+    <text x="16" y="106" class="m-sub" font-size="11.5">x 轴截距 3，z 轴截距 2，沿 y 轴延伸</text>
+
+    <line x1="150" y1="250" x2="210" y2="250" class="m-line" stroke-width="1.3"></line>
+    <polygon points="216,250 204,245 204,255" class="m-fill"></polygon>
+    <text x="220" y="254" class="m-sub" font-size="11.5">x</text>
+    <line x1="150" y1="250" x2="186" y2="228" class="m-line" stroke-width="1.3"></line>
+    <polygon points="190,225 178,226 184,234" class="m-fill"></polygon>
+    <text x="192" y="222" class="m-sub" font-size="11.5">y</text>
+    <line x1="150" y1="250" x2="150" y2="222" class="m-line" stroke-width="1.3"></line>
+    <polygon points="150,216 145,228 155,228" class="m-fill"></polygon>
+    <text x="130" y="226" class="m-sub" font-size="11.5">z</text>
+
+    <rect x="330" y="36" width="294" height="196" rx="6" class="m-panel-hi"></rect>
+    <text x="342" y="58" class="m-fill-a" font-size="11.5">两个曲面相交 = 一条曲线</text>
+    <line x1="342" y1="70" x2="612" y2="70" class="m-thin" stroke-width="1"></line>
+    <text x="342" y="92" class="m-sub" font-size="11.5">两个平面相交 → 直线（书脊）</text>
+    <text x="342" y="114" class="m-sub" font-size="11.5">平面 + 圆柱面 → 椭圆</text>
+    <text x="342" y="136" class="m-sub" font-size="11.5">两个曲面 → 一般曲线</text>
+    <line x1="342" y1="150" x2="612" y2="150" class="m-thin" stroke-width="1"></line>
+    <text x="342" y="172" class="m-txt" font-size="11.5">读方程的固定动作：</text>
+    <text x="342" y="194" class="m-sub" font-size="11.5">先分别认出两张面（看缺谁）</text>
+    <text x="342" y="216" class="m-sub" font-size="11.5">再问它们交出来是什么</text>
+  </svg>
+  <figcaption><b>读「两个方程联立」的通用动作，就是先分开认、再合起来想。</b>左边那张图的圆柱面缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>（沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴长成一根烟囱），虚线画出的那张平面缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>（沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴延伸）；两者相交出来的那条<em>橙色斜椭圆</em>就是曲线本身。<mark>注意它为什么是椭圆而不是圆：切它的那张平面是斜的。</mark>右边那一列是这类题的标准读法——认出两边各是什么面，比记住结论有用得多。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">方程组 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>z</mi><mo>=</mo><msqrt><mrow><msup><mi>a</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mtd></mtr><mtr><mtd><msup><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>−</mo><mfrac><mrow><mi>a</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>a</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></mtd></mtr></mtable></mrow></math></span> 表示怎样的曲线？</span></p>
+  <div class="sol">
+    <span class="lbl">思路：认出「上半球面」和「圆柱面」，再看它们的交</span>
+    <p><strong>第一个方程：</strong>两边平方就看清了——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>a</mi><mrow><mn>2</mn></mrow></msup></math></span>，这是球心在原点、半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 的球面。又因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 取的是<strong>正的根号</strong>，所以只有上半部分：<mark>上半球面</mark>。</p>
+    <p><strong>第二个方程：</strong>它缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，所以在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上是一个圆——圆心在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>a</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mn>0</mn><mo stretchy="true">)</mo></mrow></math></span>、半径也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>a</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，然后沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上下拉成一个<strong>圆柱面</strong>。有一个细节值得看：把原点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 代进去，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mrow><mo stretchy="true">(</mo><mn>0</mn><mo>−</mo><mfrac><mrow><mi>a</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>a</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></math></span> 成立，所以<strong>这个圆柱面恰好经过原点</strong>。</p>
+    <p>老师把这幅图画成了一个人人都懂的样子：<q><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi><mi>Y</mi></math></span> 没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi></math></span>，就拿着它上下移动——也就相当于你拿了半个西瓜，然后拿了一个烟囱（因为它不就是个烟囱吗，不是个圆柱面就是烟囱），朝那个西瓜上嘚儿给怼了一下，所以它的切面大概就是这样的一个面。</q></p>
+    <p>他还专门补了一句关于作图的话：<q>我画这个横截面其实不准确，它是两个曲面相交交出来的就是这个曲线。</q><mark>草图的准确度不重要，「哪两个面、交在哪」才是要画的。</mark></p>
+  </div>
+</div>
+
+<h2 id="s2">二、参数方程：把整条曲线交给一个参数</h2>
+
+<p>空间曲线的第二种表示法是<strong>参数方程</strong>。老师的说明很朴素：<q>这个参数方程就是说，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的参数方程、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的参数方程、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的参数方程——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 其实是空间一个点的坐标，那么这三个坐标都是由另外一个参数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 来控制的，然后形成了一条曲线。</q></p>
+
+<div class="blk def">
+  <span class="lbl">空间曲线的参数方程</span>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>t</mi><mo>)</mo></mtd></mtr><mtr><mtd><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo></mtd></mtr><mtr><mtd><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>t</mi><mo>)</mo></mtd></mtr></mtable></mrow></math></div>
+  <p>给一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，就得到曲线上的一个<strong>点</strong>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 跑一遍，点就描出整条曲线。<strong>它和上一节直线的参数式是同一件事</strong>（<a href="../P121-【黑板】直线及其方程/index.html">【黑板】直线及其方程</a>），只不过这里三个函数可以任意，不一定是线性。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q">一个点沿着圆柱面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>a</mi><mrow><mn>2</mn></mrow></msup></math></span>、以角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴旋转，同时以速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴正方向匀速上升，求它的轨迹（螺旋线）的参数方程。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把两条运动拆开——竖直方向归 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，水平方向归 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></span>
+    <p>老师先把场景说清楚：<q>首先有一个圆柱面，说白了吧就是一根烟囱一样的东西；有一个点，就是螺旋地上升——首先它沿着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴朝上走的速度是固定的，是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span>；另外一个是沿着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴旋转的过程，旋转的角速度是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>。</q></p>
+    <p><strong>第一步，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>。</strong>这一步最简单，因为竖直方向的运动是独立的：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>z</mi><mo>=</mo><mi>v</mi><mi>t</mi></math></div>
+    <p>老师的话是：<q>因为它朝上的速度是非常固定的，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 坐标是很固定的，就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mi>t</mi></math></span>——假设时间是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，因为它朝上速度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span>，其实如果你只看它的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 坐标，那它就一直朝上走，匀速的。</q><mark>这类题的第一步永远是「先找那个只受一个因素影响的坐标」。</mark></p>
+    <p><strong>第二步，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>。</strong>关键在于「把它投影到底面圆上看」：<q>这个螺旋线呢是一个立体的图，但是如果我们只看它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span> 轴和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 轴上的那个点——因为立体的看它是这样朝上走，如果把它投影到这个圆上的话，它是不是一直在转圈圈啊？</q></p>
+    <p>转圈圈的半径是固定的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>，角速度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>，所以转过的角度就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>。于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">cos</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><mi>v</mi><mi>t</mi></math></div>
+    <p>老师给这个「匀速转」又加了一个比喻：<q>这个角速度它也是个匀速的，就跟那个驴子拉磨一样，它是匀速的。</q></p>
+    <div class="trap">
+      <span class="lbl">最容易卡住的一问：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span> 越来越大，还能「绕圈」吗</span>
+      <p>老师主动把这个问题提了出来：<q>老师，你这个东西对吗？这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span> 这个角度是不是越来越大呀？它越来越大，它能是绕圈圈吗？</q>答案：<q>能啊，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 是两个周期函数啊，它一旦过了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>、就是转了一圈以后，是不是又回去了呀？</q></p>
+      <p><span class="bad">错的理解：</span>「角度一直增大，所以点会越转越远」。<br>
+      <span class="good">对的理解：</span>「角度增大，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 只取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>——点在圆上重复地转，转了几圈看不出区别」。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 260" role="img" aria-label="螺旋线：点沿圆柱面一边绕 z 轴旋转一边匀速上升">
+    <ellipse cx="150" cy="212" rx="52" ry="16" fill="none" class="m-thin" stroke-width="1.3" stroke-dasharray="5 4"></ellipse>
+    <ellipse cx="150" cy="62" rx="52" ry="16" fill="none" class="m-thin" stroke-width="1.3" stroke-dasharray="5 4"></ellipse>
+    <line x1="98" y1="212" x2="98" y2="62" class="m-thin" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <line x1="202" y1="212" x2="202" y2="62" class="m-thin" stroke-width="1.2" stroke-dasharray="5 4"></line>
+
+    <path d="M 150.0 196.0 L 169.9 194.1 L 186.8 194.4 L 198.0 196.5 L 202.0 199.5 L 198.0 202.5 L 186.8 204.6 L 169.9 204.9 L 150.0 203.0 L 130.1 198.7 L 113.2 192.1 L 102.0 183.7 L 98.0 174.5 L 102.0 165.3 L 113.2 156.9 L 130.1 150.3 L 150.0 146.0 L 169.9 144.1 L 186.8 144.4 L 198.0 146.5 L 202.0 149.5 L 198.0 152.5 L 186.8 154.6 L 169.9 154.9 L 150.0 153.0 L 130.1 148.7 L 113.2 142.1 L 102.0 133.7 L 98.0 124.5 L 102.0 115.3 L 113.2 106.9 L 130.1 100.3 L 150.0 96.0 L 169.9 94.1 L 186.8 94.4 L 198.0 96.5 L 202.0 99.5 L 198.0 102.5 L 186.8 104.6 L 169.9 104.9 L 150.0 103.0 L 130.1 98.7 L 113.2 92.1 L 102.0 83.7 L 98.0 74.5 L 102.0 65.3 L 113.2 56.9 L 130.1 50.3 L 150.0 46.0" fill="none" class="m-acc" stroke-width="2.2"></path>
+    <polygon points="150,38 144,50 156,50" class="m-fill-a"></polygon>
+
+    <line x1="150" y1="228" x2="150" y2="46" class="m-thin" stroke-width="1" stroke-dasharray="4 4"></line>
+    <text x="132" y="42" class="m-sub" font-size="11.5">z</text>
+    <text x="138" y="230" class="m-sub" font-size="11.5">O</text>
+
+    <rect x="320" y="64" width="304" height="150" rx="6" class="m-panel-hi"></rect>
+    <text x="332" y="86" class="m-fill-a" font-size="11.5">z = v t（匀速上升）</text>
+    <text x="332" y="108" class="m-fill-a" font-size="11.5">x = a cos ωt，y = a sin ωt</text>
+    <line x1="332" y1="120" x2="612" y2="120" class="m-thin" stroke-width="1"></line>
+    <text x="332" y="142" class="m-sub" font-size="11.5">竖直部分只看 z：速度 v，所以 z = vt</text>
+    <text x="332" y="164" class="m-sub" font-size="11.5">水平部分投到底面圆：半径 a、转过 ωt</text>
+    <text x="332" y="186" class="m-sub" font-size="11.5">sin、cos 周期 → 角度再大也只在圆上转</text>
+    <text x="332" y="206" class="m-sub" font-size="11.5">t 越大，点越高（螺旋上升）</text>
+
+    <text x="16" y="246" class="m-sub" font-size="11.5">开始点：从底面圆上出发，一边转一边升高</text>
+    <text x="228" y="246" class="m-sub" font-size="11.5">底面圆 x ² + y ² = a ²（虚线）</text>
+  </svg>
+  <figcaption><b>螺旋线 = 一个竖直匀速运动 + 一个水平匀速转圈，两者互不干扰。</b>橙色曲线就是轨迹：它在虚线画出的圆柱面上盘绕，每转一圈高度就增加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>/</mo><mo>ω</mo></math></span>。<em>解题的关键不在记住方程，而在于认出「两个运动可以拆开算」</em>——竖直方向只看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，水平方向投到底面圆上看，两边各自都是一个最简单的匀速运动。这就是为什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>v</mi><mi>t</mi></math></span> 那么好求。</figcaption>
+</figure>
+
+<h2 id="s3">三、空间曲线在坐标面上的投影（本节的重点）</h2>
+
+<p>这一部分课本写了很多，老师直接做了取舍：<q>最后一部分是空间曲线在坐标面上的投影。整个这部分的课文我们都不想给大家说，但是呢我们唯独就想说一个例子，就是最后这个例子——这个最后的例子在三重积分、在曲面积分的部分还挺重要。所以最后这个例子咱真的给大家仔细地讲一讲。</q></p>
+
+<div class="blk thm">
+  <span class="lbl">投影的两步流程（背下来，后面天天用）</span>
+  <ol class="steps">
+    <li><strong>消去投影方向上那个变量，得到投影柱面。</strong>要投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上，就消掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>；要投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mi>O</mi><mi>z</mi></math></span> 面，就消掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>；余同。消完之后剩下的是<strong>两个变量的方程</strong>——它就是那张「投影柱面」。</li>
+    <li><strong>把投影柱面和投影面联立。</strong>投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上，投影面就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>，于是投影曲线的方程是两个式子：<mark>投影柱面 + <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span></mark>。</li>
+  </ol>
+  <p>为什么要消掉一个变量？因为投影就是把曲线<strong>压扁</strong>到一张坐标面上，压扁之后，那个方向的坐标信息全部丢失（一律变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么投影是「两步」，而不是「扔掉一个变量」</span>
+  <p>先看一个错误的理解：有人会以为「投影到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上」就是「把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 从两个方程里删掉，剩下一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的关系式」。但删掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 之后得到的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>——按 <a href="../P122-【黑板】曲面/index.html">【黑板】曲面</a>，它缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，是一张<strong>沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的柱面</strong>，是面不是线。</p>
+  <p>投影的真实动作是：<strong>把曲线上的每一个点，沿着投影方向「竖直按下去」，按到投影面上。</strong>按下去之后，所有点都跑到了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 这张面上，所以投影曲线必须满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>；同时它们的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 关系没变，所以还要满足柱面方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>H</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>。</p>
+  <p><mark>两条缺一不可：<strong>柱面方程负责「形状」，投影面方程负责「落在哪张面上」。</strong></mark>这也正是 <a href="../P121-【黑板】直线及其方程/index.html">【黑板】直线及其方程</a> 里「两个方程定一条线」的又一次应用——投影曲线是一条线，所以它当然要用两个方程写。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q">设曲线由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>4</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 围成，求它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上的投影。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先认出两张曲面、求出交线，再「消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 得柱面、联立 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 得投影」</span>
+    <p><strong>第一步，认曲面。</strong></p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>4</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>：两边平方是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>4</mn></math></span>，再加上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 取正根号，是<strong>上半球面</strong>（半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>）。老师说这个<q>咱讲过两次了，就不啰嗦了</q>。</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>：两边平方是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>3</mn><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow></math></span>。老师说<q>这个东西大家又不熟，你是个啥玩意儿来着？</q>然后用了 <a href="../P122-【黑板】曲面/index.html">【黑板】曲面</a> 里那套切一刀的办法判断：
+        <ul class="tight">
+          <li>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 取常数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mfrac><mrow><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>，横截面是<strong>圆</strong>；</li>
+          <li>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>：得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mo form="prefix">±</mo><msqrt><mrow><mn>3</mn></mrow></msqrt><mspace width="1em"></mspace><mi>y</mi></math></span>，是两条<strong>直线</strong>；</li>
+          <li>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span>：同理也是两条直线。</li>
+        </ul>
+        横切是圆、竖切是直线——所以它是<strong>圆锥面</strong>。又因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 取的是正根号，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，<mark>所以只有上半部分那个锥</mark>。
+      </li>
+    </ul>
+    <p><strong>第二步，求交线。</strong>两条曲线在交线上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 相等，所以把两个根号里的东西直接令相等：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>4</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>4</mn><mo>=</mo><mn>4</mn><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></div>
+    <p>再代回去求高度：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt></math></span>。所以<mark>交线是悬在半空里的一个圆</mark>：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt></mtd></mtr></mtable></mrow></math></div>
+    <p>老师在这里讲了一段非常值钱的「读法对比」。他说光看这个结果<q>有些同学说，老师这玩意儿瞎子都能看出来——你不是说了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 吗，你不是说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 等于根三吗？你这么写出来那谁都能明白</q>。于是他<strong>把同一个式子重新讲了一遍「故事」</strong>：</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 是什么面？——<strong>圆柱面</strong>（缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，上下移动出来的）；</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt></math></span> 是什么面？——<strong>一张平面</strong>，横着切一刀；</li>
+      <li>两者一联立，就是「一根烟囱被平着切了一刀」，切出来的当然是一个<strong>悬在半空的圆</strong>。</li>
+    </ul>
+    <p><strong>第三步，做投影。</strong>这一步才是题目真正要问的东西。</p>
+    <ol class="steps">
+      <li><strong>消去 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span></strong>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt></mtd></mtr></mtable></mrow></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 扔掉，剩下的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 就是<strong>投影柱面</strong>（一根沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的圆柱面）。</li>
+      <li><strong>与投影面联立</strong>：投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上，投影面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>，于是</li>
+    </ol>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>z</mi><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div>
+    <p>这就是投影：<strong>还是那个圆，只不过从「悬在半空」落到了「地面上」</strong>。</p>
+    <div class="trap">
+      <span class="lbl">最容易混的一处：交线圆 ≠ 投影圆</span>
+      <p>两者的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 关系完全一样（都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span>），唯一的区别在那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>：交线在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt></math></span>，投影在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>。所以老师会特意说：<q>我也没说他写错了，我也没说我写错了——我这个地方求的这个圆，就是半空的这个圆；他呢，是这个题目把这个圆在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi><mi>O</mi><mi>Y</mi></math></span> 面上做的投影。</q></p>
+      <p><span class="bad">只写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 交卷。</span>这是<strong>投影柱面</strong>，不是投影曲线——它是一张面，不是一条线。<br>
+      <span class="good">写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>z</mi><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></span>。</span><mark>投影曲线一定是「两个方程」：柱面 + 投影面。</mark></p>
+    </div>
+    <p>老师最后交代了这个例子的用途：<q>这个图咱给大家这么仔细地讲了以后，我们在讲三重积分、先一后二还是先二后一的时候，这个东西是能用到的。就是这个立体的图，如果你画不出来、想象不出来的话，好多三重积分的题目你都做不出来。</q>——<mark>所以这一小节的产出不是一道题的答案，而是一幅必须能在脑子里画出来的立体图。</mark></p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="上半球面与圆锥面的交线圆，以及它在 xOy 面上的投影圆">
+    <line x1="150" y1="200" x2="300" y2="232" class="m-line" stroke-width="1.3"></line>
+    <polygon points="306,233 294,229 295,237" class="m-fill"></polygon>
+    <text x="308" y="238" class="m-sub" font-size="11.5">x</text>
+    <line x1="150" y1="200" x2="250" y2="168" class="m-line" stroke-width="1.3"></line>
+    <polygon points="256,166 244,164 246,172" class="m-fill"></polygon>
+    <text x="256" y="162" class="m-sub" font-size="11.5">y</text>
+    <line x1="150" y1="200" x2="150" y2="40" class="m-line" stroke-width="1.3"></line>
+    <polygon points="150,34 145,46 155,46" class="m-fill"></polygon>
+    <text x="132" y="44" class="m-sub" font-size="11.5">z</text>
+
+    <path d="M 22 200 A 128 128 0 0 0 278 200" fill="none" class="m-line" stroke-width="1.4"></path>
+    <ellipse cx="150" cy="200" rx="128" ry="36" fill="none" class="m-thin" stroke-width="1.2" stroke-dasharray="5 4"></ellipse>
+    <text x="16" y="58" class="m-txt" font-size="11.5">上半球面 z = √(4 − x ² − y ²)</text>
+
+    <line x1="150" y1="200" x2="86" y2="89" class="m-good" stroke-width="1.6"></line>
+    <line x1="150" y1="200" x2="214" y2="89" class="m-good" stroke-width="1.6"></line>
+    <text x="122" y="128" class="m-good" font-size="11.5">圆锥面</text>
+    <text x="96" y="146" class="m-good" font-size="11.5">z ² = 3(x ² + y ²)</text>
+
+    <ellipse cx="150" cy="89" rx="64" ry="18" fill="none" class="m-acc" stroke-width="2.2"></ellipse>
+    <text x="220" y="80" class="m-acc" font-size="11.5">交线圆</text>
+
+    <line x1="86" y1="89" x2="86" y2="200" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="214" y1="89" x2="214" y2="200" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <ellipse cx="150" cy="200" rx="64" ry="18" fill="none" class="m-good" stroke-width="2.2"></ellipse>
+
+    <text x="16" y="266" class="m-txt" font-size="11.5">绿色：投影圆 x ² + y ² = 1，z = 0（在地面上）</text>
+    <text x="16" y="286" class="m-sub" font-size="11.5">蓝色：交线圆 x ² + y ² = 1，z = √3（悬在半空）；虚线是竖直投影线</text>
+
+    <rect x="316" y="36" width="308" height="196" rx="6" class="m-panel-hi"></rect>
+    <text x="328" y="58" class="m-fill-a" font-size="11.5">投影两步走</text>
+    <line x1="328" y1="70" x2="612" y2="70" class="m-thin" stroke-width="1"></line>
+    <text x="328" y="92" class="m-sub" font-size="11.5">① 消 z：4 − x ² − y ² = 3x ² + 3y ²</text>
+    <text x="328" y="114" class="m-sub" font-size="11.5">   得 x ² + y ² = 1（投影柱面）</text>
+    <text x="328" y="136" class="m-sub" font-size="11.5">② 求高度：z = √3（交线）</text>
+    <text x="328" y="158" class="m-sub" font-size="11.5">③ 与 z = 0 联立 → 投影圆</text>
+    <line x1="328" y1="172" x2="612" y2="172" class="m-thin" stroke-width="1"></line>
+    <text x="328" y="194" class="m-txt" font-size="11.5">交线是两个曲面联立；</text>
+    <text x="328" y="216" class="m-txt" font-size="11.5">投影是「投影柱面 + 投影面」。</text>
+  </svg>
+  <figcaption><b>这张图就是本节唯一必须记住的画面。</b>半球面（浅色圆弧）和圆锥面（两条斜线并向上张开）相交，交出来的是<em>蓝色那个悬在半空的圆</em>；把它的每一点沿竖直方向压到地面上，得到的就是<strong>绿色那个投影圆</strong>——两者在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 方向上的形状完全一样，差的只是高度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>。<mark>虚线画的就是「竖直投影线」，它提醒你投影的方向是沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的。</mark>右边那三步流程，是这一小节唯一的操作规范。</figcaption>
+</figure>
+
+<h2 id="s4">四、易错清单</h2>
+
+<div class="blk trap">
+  <span class="lbl">一 · 把「投影柱面」当成了「投影曲线」</span>
+  <p>消掉一个变量之后得到的是<strong>一张曲面</strong>（柱面），不是曲线。投影曲线必须再和投影面联立一次——这就是 <a href="../P121-【黑板】直线及其方程/index.html">【黑板】直线及其方程</a> 里「两个方程定一条线」的同一件事。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">二 · 投影到哪张面就消哪个变量，容易搞反</span>
+  <p>口诀：<strong>投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>；投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mi>O</mi><mi>z</mi></math></span> 面消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>；投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mi>O</mi><mi>x</mi></math></span> 面消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>。</strong>理由很直白——被压扁的那个方向的坐标，在投影里一律变成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以要把它消掉。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">三 · 忘了根号只取正号带来的限制</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>4</mn><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 是<strong>上半</strong>球面而不是整球；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 是圆锥面的<strong>上半支</strong>。老师说得很含蓄：<q>原来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi></math></span> 是个正的根下，说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi></math></span> 的取值范围大于等于零，说明什么？上。</q>丢掉这个限制，图形就画多了一半。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">四 · 把「两个曲面相交」的曲线当成平面图形</span>
+  <p>两个曲面相交得到的曲线，一般<strong>不能</strong>用一条只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的方程写出来（那会变成一张柱面）。要写就写两个方程，或者用参数方程。这也是为什么投影要做「消元 + 联立」两步。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>空间曲线 = 两个曲面相交；要投影，就先<strong>消掉投影方向的变量</strong>得到投影柱面，再<strong>和投影面联立</strong>。</p>
+
+  <h3>两种写法</h3>
+  <ul class="tight">
+    <li>一般方程：两个曲面方程联立——<strong>看不出点，也看不出方向</strong>。</li>
+    <li>参数方程：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>x</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>——<strong>给一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 得到一个点</strong>；直线的参数式是它的特例。</li>
+  </ul>
+
+  <h3>投影的三步流程</h3>
+  <div class="chain">
+    <span class="n"><b>联立</b> 两个曲面</span><span class="ar">→</span>
+    <span class="n"><b>消元</b> 去掉投影方向的变量</span><span class="ar">→</span>
+    <span class="n"><b>得投影柱面</b></span><span class="ar">→</span>
+    <span class="n"><b>联立投影面</b> 得投影曲线</span>
+  </div>
+  <p>投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面：消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，再联立 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>。往另外两张面上投，换一个字母即可。</p>
+
+  <h3>螺旋线的方程</h3>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">cos</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">sin</mi><mo>ω</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>v</mi><mi>t</mi></math></span>。<strong>竖直方向只看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>（匀速）；水平方向投到底面圆（匀速转圈）。</strong>两个运动互不干扰，拆开算就行。</p>
+
+  <h3>两个坑</h3>
+  <ol class="tight">
+    <li><strong>投影柱面 ≠ 投影曲线</strong>：前者是一张面，后者要再加「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>」。</li>
+    <li>根号只取正号 ⇒ 只有上半部分；别把半球面画成整球、半锥画成整锥。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P074-曲面基本问题 旋转曲面 柱面/index.html">曲面基本问题 旋转曲面 柱面</a> 曲面基本问题·旋转曲面·柱面（本页的新授课版本）</li>
+      <li><a href="../P122-【黑板】曲面/index.html">【黑板】曲面</a> 【黑板】曲面（认曲面：缺谁沿谁、符号怎么分布）</li>
+      <li><a href="../P121-【黑板】直线及其方程/index.html">【黑板】直线及其方程</a> 【黑板】直线及其方程（直线是曲线的一种特殊情形）</li>
+      <li><span class="cur">圆锥面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>3</mn><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow></math></span> 的读法；上半球面</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P124-【黑板】平面点集/index.html">【黑板】平面点集</a> 【黑板】平面点集</li>
+      <li><a href="../P075-平面点集 多元函数概念 极限 连续/index.html">平面点集 多元函数概念 极限 连续</a> 平面点集·多元函数概念·极限·连续</li>
+      <li><span class="cur">曲线积分（对空间曲线积分）、三重积分（积分区域靠这些曲面围成）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><strong>投影柱面</strong>（一张面，两个变量的方程）与<strong>投影曲线</strong>（柱面 + 投影面）</li>
+      <li>投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mi>O</mi><mi>z</mi></math></span> 面消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，投到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mi>O</mi><mi>x</mi></math></span> 面消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></li>
+      <li>交线（在半空，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><mn>3</mn></mrow></msqrt></math></span>）与投影（在地面，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>）——形状同、高度不同</li>
+      <li>「两个曲面相交得曲线」与「两个平面相交得直线」是同一句话的特例关系</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 123 讲</span><a href="../P122-【黑板】曲面/index.html">← P122</a><a href="../index.html">全部目录</a><a href="../P124-【黑板】平面点集/index.html">P124 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、空间曲线：两个曲面相交</a>
+    <a href="#s2">二、参数方程：把整条曲线交给一个参数</a>
+    <a href="#s3">三、空间曲线在坐标面上的投影（本节的重点）</a>
+    <a href="#s4">四、易错清单</a>
+  </aside>
+</div>
+</body>
+</html>

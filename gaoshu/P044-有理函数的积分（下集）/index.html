@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>有理函数的积分（下）：待定系数法与总流程 · 高等数学笔记</title>
+<meta name="description" content="有理函数的积分只有一条流水线：假分式先做多项式除法 → 分母因式分解 → 设部分分式 → 逐项积分。第三步是待定系数法的主场，设的「形状」由分母因式的类型决定，而系数可以用比较系数或代入特值两套手法定出来。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 4 章  不定积分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 44 讲</div>
+    <h1 class="title"><span class="pnum">P044</span>有理函数的积分（下）：待定系数法与总流程</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>有理函数的积分只有一条流水线：<strong>假分式先做多项式除法 → 分母因式分解 → 设部分分式 → 逐项积分</strong>。第三步是待定系数法的主场，设的「形状」由分母因式的类型决定，而系数可以用<strong>比较系数</strong>或<strong>代入特值</strong>两套手法定出来。</p></div>
+    <div class="meta"><span>时长 47m13s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=11">00:11</a><span class="vv"><b>热身</b>：分母是平方差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>5</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>3</mn><mo>)</mo></math></span>，顺着已有的分解直接拆开积。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=143">02:23</a><span class="vv"><b>凑微法</b>：分子「往分母原函数的样子上凑」，二次分母一次出对数、一次出反正切。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=406">06:46</a><span class="vv"><b>待定系数法登场</b>：分母已经因式分解好、分子是一次式，这种题就该设字母。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=691">11:31</a><span class="vv"><b>例一</b>：一次因式乘二次不可约因式，二次那一项的分子必须设成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mi>x</mi><mo>+</mo><mi>C</mi></math></span>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1127">18:47</a><span class="vv"><b>例二</b>：分母含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span>，拆成三项、分子全是常数。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1557">25:57</a><span class="vv">课本同款题：同样是三项，系数靠「比较系数」定。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1659">27:39</a><span class="vv"><b>难度上限</b>：一个一次因式 + 一个二次不可约因式，做到这里就算很难了。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1743">29:03</a><span class="vv"><b>根式换元</b>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></msqrt></math></span> 令成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，消掉根号，问题回到有理函数积分。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1951">32:31</a><span class="vv"><b>例三</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在分母上，立方根整体换元后是假分式。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=2321">38:41</a><span class="vv"><b>例四</b>：同时出现两个不同次的根号，换元指数取最小公倍数。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=2749">45:49</a><span class="vv"><b>收尾提醒</b>：根式换元只管根式，三角换元那套不能拿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 蒙混过去。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">总流程：有理函数积分只有一条路</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=11">00:11</a>这一集接着上一集收尾。老师开场先用一道很简单的题找手感：分母已经是平方差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>5</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>3</mn><mo>)</mo></math></span>，那就顺着这个分解往下走，直接按老办法拆开积分。题目本身不需要新工具，但它提前把本集的主线亮了出来——<strong>分母能不能分解、能分解成什么样子，决定了后面走哪条路。</strong></p>
+
+<p>把这一章用过的手法收拢起来，有理函数的积分从来不是「见一道想一道」，而是一条固定的流水线：</p>
+
+<div class="chain">
+  <span class="n"><b>看真假</b> 分子次数 ≥ 分母次数？</span>
+  <span class="ar">→</span>
+  <span class="n"><b>假分式</b> 多项式除法削出整式</span>
+  <span class="ar">→</span>
+  <span class="n"><b>分母分解</b> 拆成一次 / 二次不可约</span>
+  <span class="ar">→</span>
+  <span class="n"><b>部分分式</b> 设字母拆成简单块</span>
+  <span class="ar">→</span>
+  <span class="n"><b>逐项积分</b> 落成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> / <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi></math></span> / 幂</span>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 200" role="img" aria-label="有理函数积分总流程：真假分式分流后汇合到部分分式与逐项积分">
+    <rect x="14" y="74" width="104" height="52" rx="6" class="m-panel-s"></rect>
+    <text x="66" y="96" text-anchor="middle" class="m-txt" font-size="12.5">有理函数</text>
+    <text x="66" y="114" text-anchor="middle" class="m-sub" font-size="11">P(x) / Q(x)</text>
+
+    <line x1="118" y1="100" x2="140" y2="100" class="m-line" stroke-width="1.4"></line>
+    <polygon points="146,100 136,95 136,105" class="m-fill"></polygon>
+
+    <rect x="146" y="74" width="102" height="52" rx="6" class="m-panel"></rect>
+    <text x="197" y="96" text-anchor="middle" class="m-txt" font-size="12.5">比次数</text>
+    <text x="197" y="114" text-anchor="middle" class="m-sub" font-size="11">分子高就先除</text>
+
+    <line x1="248" y1="92" x2="272" y2="48" class="m-acc" stroke-width="1.4"></line>
+    <line x1="248" y1="108" x2="272" y2="152" class="m-acc" stroke-width="1.4"></line>
+    <text x="252" y="60" class="m-acc" font-size="11">假</text>
+    <text x="252" y="146" class="m-acc" font-size="11">真</text>
+
+    <rect x="272" y="22" width="130" height="52" rx="6" class="m-panel-hi" stroke-width="1.6"></rect>
+    <text x="337" y="44" text-anchor="middle" class="m-txt" font-size="12.5">多项式除法</text>
+    <text x="337" y="62" text-anchor="middle" class="m-sub" font-size="11">整式 + 真分式</text>
+
+    <rect x="272" y="126" width="130" height="52" rx="6" class="m-panel"></rect>
+    <text x="337" y="148" text-anchor="middle" class="m-txt" font-size="12.5">分母因式分解</text>
+    <text x="337" y="166" text-anchor="middle" class="m-sub" font-size="11">一次 / 二次不可约</text>
+
+    <line x1="402" y1="48" x2="426" y2="88" class="m-acc" stroke-width="1.4"></line>
+    <line x1="402" y1="152" x2="426" y2="112" class="m-acc" stroke-width="1.4"></line>
+    <text x="408" y="94" class="m-sub" font-size="11">汇合</text>
+
+    <rect x="426" y="74" width="106" height="52" rx="6" class="m-panel-hi" stroke-width="1.6"></rect>
+    <text x="479" y="96" text-anchor="middle" class="m-txt" font-size="12.5">部分分式</text>
+    <text x="479" y="114" text-anchor="middle" class="m-sub" font-size="11">待定系数法设字母</text>
+
+    <line x1="532" y1="100" x2="552" y2="100" class="m-line" stroke-width="1.4"></line>
+    <polygon points="558,100 548,95 548,105" class="m-fill"></polygon>
+
+    <rect x="558" y="74" width="70" height="52" rx="6" class="m-panel"></rect>
+    <text x="593" y="96" text-anchor="middle" class="m-txt" font-size="12.5">逐项积分</text>
+    <text x="593" y="114" text-anchor="middle" class="m-sub" font-size="11">ln / arctan</text>
+  </svg>
+  <figcaption><b>四个环节，一个都不能跳。</b>假分式先除，真分式直接进「分母因式分解」；两条路最后都汇到部分分式和逐项积分。<mark>待定系数法是这条流水线的发动机</mark>——前面靠凑微法能做的题它都能做，而凑微法做不了的高次真分式，只能靠它拆。</figcaption>
+</figure>
+
+<p>流水线上每一步都有它存在的理由，不只是「习惯动作」：</p>
+
+<dl class="kv">
+  <dt>先比次数</dt>
+  <dd>真分式才可能被拆成「分母的因子各自做分母」的那几块。次数不对，怎么设都还原不回去。</dd>
+  <dt>再分解分母</dt>
+  <dd>部分分式设成什么形状，完全由分母的因式类型决定。分母没分解，就没有可参照的形状。</dd>
+  <dt>逐项积分收尾</dt>
+  <dd>每一块都落到三种基本积分上：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>u</mi><mo>'</mo></mrow><mrow><mi>u</mi></mrow></mfrac></math></span> 出对数、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>u</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></mrow></mfrac></math></span> 出反正切、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msup><mi>u</mi><mrow><mo form="prefix">−</mo><mn>2</mn></mrow></msup></math></span> 出分式。</dd>
+</dl>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=406">06:46</a>为什么假分式不能直接设部分分式</span>
+  <p>拿一个最小的例子试一下：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>。如果不管次数，硬设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>A</mi></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>B</mi></mrow><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>，通分后分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>A</mi><mo>+</mo><mi>B</mi><mo>)</mo><mi>x</mi><mo>+</mo><mo>(</mo><mi>B</mi><mo>−</mo><mi>A</mi><mo>)</mo></math></span>，它的最高次项只有一次；而原式分子是二次的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span>。<strong>一次式无论怎么取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>,</mo><mi>B</mi></math></span>，都不可能恒等于一个二次多项式</strong>——不是系数解不出来，而是这个恒等式根本不成立。</p>
+  <p>正确的处理是先做除法：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>=</mo><mo>(</mo><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mn>2</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>2</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>，后面那块才是真分式，才有资格拆。这就是老师那句「假分式先给它处理成真分式」的全部含义：<mark>不是流程讲究，是数学上不做这一步就无解。</mark></p>
+</div>
+
+<h2 id="s2">待定系数法：设什么，怎么定</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=406">06:46</a>进入本集的正题时，老师强调了一个前提：<strong>「分母已经因式分解完了，分子是一个一次表达式」</strong>，这种题最适合用待定系数法。它比凑微法直接，因为不用猜——按规矩把字母摆上去，剩下的只是解方程。</p>
+
+<p>设的「形状」是死规矩，与因式类型一一对应（上一集已经列过，这里是本集反复要用的对照表）：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>分母含的因式</th><th>拆出来的块</th><th>分子设成</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><mo>)</mo></math></span>（一次）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>A</mi></mrow><mrow><mi>x</mi><mo>−</mo><mi>a</mi></mrow></mfrac></math></span></td><td>常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>k</mi></mrow></msup></math></span>（一次的重根）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>A</mi><mn>1</mn></msub></mrow><mrow><mi>x</mi><mo>−</mo><mi>a</mi></mrow></mfrac><mo>+</mo><mo>⋯</mo><mo>+</mo><mfrac><mrow><msub><mi>A</mi><mi>k</mi></msub></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>k</mi></mrow></msup></mrow></mfrac></math></span></td><td>每块都是常数</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>p</mi><mi>x</mi><mo>+</mo><mi>q</mi></math></span>（二次不可约）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>B</mi><mi>x</mi><mo>+</mo><mi>C</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>p</mi><mi>x</mi><mo>+</mo><mi>q</mi></mrow></mfrac></math></span></td><td>一次式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mi>x</mi><mo>+</mo><mi>C</mi></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1127">18:47</a>第二行最容易漏项：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span> 不是只写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>C</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 一项，而要写出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>B</mi></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>C</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 两项。老师课上专门停下来对比这两种分母：<strong>同样是二次的分母，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span> 的做法完全不一样</strong>——前者的分子一律设常数，只是要多设几项；后者的分子要设一次式。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1127">18:47</a>为什么同样「二次」，两种分母的设法不同</span>
+  <p>关键不在「几次」，而在<strong>这个因式能不能再分解</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span> 还能拆成两个一次因式，所以它的项会被拆成一整套「一次幂 + 二次幂」；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span> 在实数范围里拆不动了，只能整体作为一类。</p>
+  <p>更实用的解释是：<strong>分子设到「比该因式低一次」为止</strong>。分母因式是一次，分子就设常数（零次）；分母因式是二次，分子就设一次式。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span> 的每一块分母分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>1</mn></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span>，所以两块都设常数；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span> 是一整块二次，分子就必须带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。设少了，通分以后系数对不上；设多了，字母之间会互相抵消、解不唯一。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=691">11:31</a>至于「为什么敢猜它能拆成这个样子」，老师说得实在：<q>其实这部分是有理论支持的，它是有一个定理的</q>，只是课程涉及的题目难度到不了需要证明分解存在性的程度。所以我们把规矩记死、把题目做顺即可。</p>
+
+<h2 id="s3">定系数的两套手法</h2>
+
+<p>设好形状之后，把两边同乘原分母，就得到一个<strong>关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的恒等式</strong>——分母约掉了，只剩下分子之间的等式。这个恒等式对所有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 成立，于是有两条路可以走。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">预备</span><span class="ex-q">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 拆开，两套手法各走一遍。</span></p>
+  <div class="sol">
+    <span class="lbl">第一步 · 设形状</span>
+    <p>分母有一个一次因式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span>，和一个一次因式的平方 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span>，所以设成三块、分子全为常数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>B</mi></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>C</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span>，得到恒等式</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mo>=</mo><mi>A</mi><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>B</mi><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mi>C</mi><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></div>
+    <span class="lbl">手法一 · 代入特值（快，但有条件）</span>
+    <p>既然是恒等式，代任何 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 都对。挑「让别的项归零」的值最省事：</p>
+    <ul class="tight">
+      <li>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>：前两块都变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>=</mo><mn>2</mn><mi>C</mi></math></span>，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>。</li>
+      <li>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>：只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>=</mo><mn>4</mn><mi>A</mi></math></span>，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac></math></span>。</li>
+      <li>还差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span>。前两个根已经用完了，随手代一个好算的值，比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>：右边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>−</mo><mi>B</mi><mo>+</mo><mi>C</mi></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>−</mo><mi>B</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>=</mo><mn>1</mn></math></span>，解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>4</mn></mfrac></math></span>。</li>
+    </ul>
+    <span class="lbl">手法二 · 比较系数（慢，但万能）</span>
+    <p>把右边展开、按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的幂整理：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>+</mo><mi>B</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mi>C</mi><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>=</mo><mo>(</mo><mi>A</mi><mo>+</mo><mi>B</mi><mo>)</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mo>(</mo><mi>C</mi><mo>−</mo><mn>2</mn><mi>A</mi><mo>)</mo><mi>x</mi><mo>+</mo><mo>(</mo><mi>A</mi><mo>−</mo><mi>B</mi><mo>+</mo><mi>C</mi><mo>)</mo></math></div>
+    <p>左边是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>0</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mn>1</mn></math></span>。比较三档系数：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>+</mo><mi>B</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>C</mi><mo>−</mo><mn>2</mn><mi>A</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>A</mi><mo>−</mo><mi>B</mi><mo>+</mo><mi>C</mi><mo>=</mo><mn>1</mn></math></div>
+    <p>由前两式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>=</mo><mo form="prefix">−</mo><mi>A</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mn>2</mn><mi>A</mi></math></span>，代入第三式：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>+</mo><mi>A</mi><mo>+</mo><mn>2</mn><mi>A</mi><mo>=</mo><mn>4</mn><mi>A</mi><mo>=</mo><mn>1</mn></math></span>，于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>B</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>C</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></div>
+    <p>两种手法结果一致——这不是巧合，恒等式的系数本来就被唯一确定。</p>
+    <div class="trap">
+      <span class="lbl">两套手法怎么选</span>
+      <p>分母因式<strong>互不相同</strong>时（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>3</mn><mo>)</mo></math></span>），代入特值几乎一击必中：每个根都让其他项消失。但一旦出现<strong>平方因式</strong>，可用的「根」只有一个，凑不出全部字母——像上面必须再补一个随便的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>。所以：<mark>代入特值适合手快，比较系数是永远有效的底牌。</mark></p>
+      <p>另一个常犯的错误是忘了「代入特值等价于比较系数」的前提：<strong>两边必须是同一个恒等式</strong>，也就是必须先乘掉分母、约掉公因式。直接拿带分母的式子代值，会得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>=</mo><mn>0</mn></math></span> 这类废话。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 244" role="img" aria-label="定系数的两套手法：比较系数与代入特值">
+    <rect x="14" y="14" width="612" height="102" rx="8" class="m-panel"></rect>
+    <text x="30" y="38" class="m-txt" font-size="12.5">手法一 · 比较系数（万能底牌）</text>
+    <text x="30" y="60" class="m-math" font-size="12">1 = A(x−1)² + B(x+1)(x−1) + C(x+1)</text>
+    <text x="30" y="80" class="m-sub" font-size="11.5">展开整理 → (A+B)x² + (C−2A)x + (A−B+C)</text>
+    <text x="30" y="100" class="m-sub" font-size="11.5">左边是常数：x² 系数 0，x 系数 0，常数项 1</text>
+    <text x="30" y="112" class="m-acc" font-size="11.5">A+B=0，C−2A=0，A−B+C=1 → A=1/4, B=−1/4, C=1/2</text>
+
+    <rect x="14" y="128" width="612" height="102" rx="8" class="m-panel-hi" stroke-width="1.6"></rect>
+    <text x="30" y="152" class="m-txt" font-size="12.5">手法二 · 代入特值（互异因式时最快）</text>
+    <text x="30" y="174" class="m-math" font-size="12">令 x = 1：1 = 2C → C = 1/2（其余两项归零）</text>
+    <text x="30" y="194" class="m-math" font-size="12">令 x = −1：1 = 4A → A = 1/4（只剩一项）</text>
+    <text x="30" y="214" class="m-math" font-size="12">再令 x = 0：A − B + C = 1 → B = −1/4（补一个普通值）</text>
+  </svg>
+  <figcaption><b>同一个恒等式，两种读法。</b>比较系数是「逐档对齐」：把两边的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、常数项系数分别相等；代入特值是「挑点消项」：用根让别的项归零。<b>它们之所以都成立，是因为这是恒等式——对所有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 都相等。</b>注意第二套手法<b>必须有足够的点</b>：平方因式只能供出一个根，剩下的字母得靠普通点补齐。</figcaption>
+</figure>
+
+<h2 id="s4">例一：一次因式乘二次不可约因式</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=691">11:31</a>这是课上第一个正式例题，也是本集最典型的结构：分母里一个是<strong>一次因式</strong>，一个是<strong>在实数范围里拆不动的二次因式</strong>。老师点名提醒：二次那一块的分子必须是一次式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mi>x</mi><mo>+</mo><mi>C</mi></math></span>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=691">11:31</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：一次因式配常数分子，二次不可约配一次分子</span>
+    <p>按形状设两块：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>B</mi><mi>x</mi><mo>+</mo><mi>C</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+    <p>两边乘掉分母，只留下分子之间的恒等式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mo>=</mo><mi>A</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo><mo>+</mo><mo>(</mo><mi>B</mi><mi>x</mi><mo>+</mo><mi>C</mi><mo>)</mo><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo></math></div>
+    <p>右边展开并按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的幂整理：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>A</mi><mo>+</mo><mi>B</mi><mi>x</mi><mo>+</mo><mn>2</mn><mi>B</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>C</mi><mo>+</mo><mn>2</mn><mi>C</mi><mi>x</mi><mo>=</mo><mo>(</mo><mi>A</mi><mo>+</mo><mn>2</mn><mi>B</mi><mo>)</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mo>(</mo><mi>B</mi><mo>+</mo><mn>2</mn><mi>C</mi><mo>)</mo><mi>x</mi><mo>+</mo><mo>(</mo><mi>A</mi><mo>+</mo><mi>C</mi><mo>)</mo></math></div>
+    <p>左边是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，所以三档系数分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>+</mo><mn>2</mn><mi>B</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>B</mi><mo>+</mo><mn>2</mn><mi>C</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>A</mi><mo>+</mo><mi>C</mi><mo>=</mo><mn>1</mn></math></div>
+    <p>由前两式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mi>B</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mi>C</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mn>4</mn><mi>C</mi></math></span>；代入第三式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>C</mi><mo>+</mo><mi>C</mi><mo>=</mo><mn>1</mn></math></span>，得</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>C</mi><mo>=</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>B</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>2</mn><mn>5</mn></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>A</mi><mo>=</mo><mfrac><mn>4</mn><mn>5</mn></mfrac></math></div>
+    <p>于是原积分拆成两块，分别处理。第一块是标准对数型：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>4</mn><mo>/</mo><mn>5</mn></mrow><mrow><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mn>4</mn><mn>5</mn></mfrac><mo>⋅</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>|</mo><mo>=</mo><mfrac><mn>2</mn><mn>5</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>|</mo></math></div>
+    <p>第二块的分子是一次式，把它拆成「一次项 + 常数」两部分，一次项凑分母的导数、常数项出反正切：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mo form="prefix">−</mo><mfrac><mn>2</mn><mn>5</mn></mfrac><mi>x</mi><mo>+</mo><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo><mo>+</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <p>合起来：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mn>2</mn><mn>5</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>|</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo><mo>+</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>C</mi></math></div>
+    <div class="trap">
+      <span class="lbl">绝对值去留要看清楚</span>
+      <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn></math></span> 恒为正，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo></math></span> 里的绝对值可以直接去掉；但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span> 时是负的，<mark>它的绝对值必须留着</mark>。这正是上一集讲的「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>u</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span> 型不要绝对值、一次型要绝对值」的复用。</p>
+      <p>另一个高频错误是二次因式只设常数分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>C</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>。那样通分后分子是 <span class="mi miwb"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn><mo>)</mo><mo>+</mo><mi>C</mi><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>=</mo><mo>(</mo><mi>A</mi><mo>)</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>2</mn><mi>C</mi><mi>x</mi><mo>+</mo><mo>(</mo><mi>A</mi><mo>+</mo><mi>C</mi><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的系数只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>C</mi></math></span> 一个自由度，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span> 系数又只能靠 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>——方程没有解。加上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mi>x</mi></math></span> 这一档，三个字母才配得上三档系数。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s5">例二：分母含一次项的平方</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1127">18:47</a>第二个例题的分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span>：有一个一次因式，还有一个「一次项的平方」。老师把它作为独立一类来讲——<strong>它和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span> 那种二次不可约因式处理方式不一样</strong>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1557">25:57</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：平方因式拆两项，分子都是常数</span>
+    <p>设</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>A</mi></mrow><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>B</mi></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>C</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>通分后只留分子：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mo>=</mo><mi>A</mi><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>B</mi><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mi>C</mi><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></div>
+    <p>展开：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>A</mi><mo>+</mo><mi>B</mi><mo>)</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mo>(</mo><mi>C</mi><mo>−</mo><mn>2</mn><mi>A</mi><mo>)</mo><mi>x</mi><mo>+</mo><mo>(</mo><mi>A</mi><mo>−</mo><mi>B</mi><mo>+</mo><mi>C</mi><mo>)</mo></math></div>
+    <p>比较系数得</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>+</mo><mi>B</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>C</mi><mo>−</mo><mn>2</mn><mi>A</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>A</mi><mo>−</mo><mi>B</mi><mo>+</mo><mi>C</mi><mo>=</mo><mn>1</mn></math></div>
+    <p>由第一式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>=</mo><mo form="prefix">−</mo><mi>A</mi></math></span>，由第二式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>=</mo><mn>2</mn><mi>A</mi></math></span>，代入第三式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>A</mi><mo>=</mo><mn>1</mn></math></span>：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>B</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>C</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></div>
+    <p>三项各自求原函数：前两项是对数，第三项是幂函数。</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn><mo>/</mo><mn>4</mn></mrow><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>−</mo><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn><mo>/</mo><mn>4</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn><mo>/</mo><mn>2</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>最后一块注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mspace width="0.25em"></mspace><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mo form="prefix">−</mo><mn>2</mn></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup></math></span>，符号来自负指数：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>|</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>|</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>+</mo><mi>C</mi></math></div>
+    <div class="note">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1557">25:57</a>课上那句「这个题是课本上的题」</span>
+      <p>同一个结构在课本里换了样子出现：分母写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn><mo>)</mo></math></span>，分解以后仍然是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></math></span> 之类的完全平方式，拆三项、比较系数，套路一模一样。<strong>所以要认清的不是某一道题，而是「分母里有几重根，就拆几项」这条规矩。</strong></p>
+    </div>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1659">27:39</a>到这里，老师给本节的难度画了一条线：一个一次因式加一个二次因式（或平方因式），就是同学们要面对的最复杂结构。<q>这部分的题目还可以更复杂一点哈，但是我们同学做的题呢就是大概到这个类型就算挺麻烦的了。</q></p>
+
+<h2 id="s6">根式换元：换元之后又回到本页</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1743">29:03</a>接下来几道题的被积函数里带着根号，部分分式用不上，因为根号底下不是「多项式之商」。办法是<strong>第二换元积分法里的根式换元</strong>：把整个根号令成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，根号消失，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 都用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 表示出来，题目就退化成有理函数积分——<strong>又回到本页的流水线。</strong></p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=1951">32:31</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把立方根整块设成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 提前算好</span>
+    <p>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot></math></span>，两边立方得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>3</mn></mrow></msup><mo>−</mo><mn>2</mn></math></span>，于是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></div>
+    <p>代进去，分母的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>t</mi></math></span>，根号不见了：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>3</mn><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>1</mn><mo>+</mo><mi>t</mi></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></div>
+    <p>被积函数是<strong>假分式</strong>（分子二次、分母一次），按流程先做除法：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mo>(</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>t</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>+</mo><mn>1</mn></math></span>，即</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>1</mn><mo>+</mo><mi>t</mi></mrow></mfrac><mo>=</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mi>t</mi></mrow></mfrac></math></div>
+    <p>逐项积分：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mspace width="0.25em"></mspace><mn>3</mn><mrow><mo stretchy="true">(</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mi>t</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mn>3</mn><mrow><mo stretchy="true">(</mo><mfrac><mrow><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac><mo>−</mo><mi>t</mi><mo>+</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>|</mo><mo stretchy="true">)</mo></mrow><mo>+</mo><mi>C</mi></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=2005">33:25</a>到这里还没完——<strong>题目变量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，必须回代</strong>：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mn>3</mn><mn>2</mn></mfrac><mo>(</mo><mi>x</mi><mo>+</mo><mn>2</mn><msup><mo>)</mo><mrow><mn>2</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>−</mo><mn>3</mn><mo>(</mo><mi>x</mi><mo>+</mo><mn>2</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>+</mo><mn>3</mn><mi mathvariant="normal">ln</mi><mrow><mo stretchy="true">|</mo><mn>1</mn><mo>+</mo><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot><mo stretchy="true">|</mo></mrow><mo>+</mo><mi>C</mi></math></div>
+    <div class="trap">
+      <span class="lbl">回代与绝对值</span>
+      <p>课上老师特意停下来提醒：<q>还是那个问题你得给他回代</q>。<span class="bad">换元算完直接交 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的答案</span>等于没做完。另外这里的根是<strong>三次根（奇次）</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>t</mi></math></span> 的符号不受保证，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 里的绝对值要留着；如果换元的是偶次根（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></msqrt></math></span>，根号本身非负），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>≥</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mi>t</mi><mo>&gt;</mo><mn>0</mn></math></span>，绝对值才可以省。</p>
+    </div>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=2321">38:41</a>两个不同次根号同时出现，指数取什么</span>
+  <p>课上最后一道题里同时出现了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>=</mo><msup><mi>x</mi><mrow><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot><mo>=</mo><msup><mi>x</mi><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup></math></span>。要让两个根号同时消失，换元 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>t</mi><mrow><mi>m</mi></mrow></msup></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi></math></span> 必须同时被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span> 整除——取<strong>最小公倍数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn></math></span></strong>。令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>6</mn></mrow></msup></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>=</mo><msup><mi>t</mi><mrow><mn>3</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot><mo>=</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>6</mn><msup><mi>t</mi><mrow><mn>5</mn></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>；若分母正好是这两个根号相乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>t</mi><mrow><mn>5</mn></mrow></msup></math></span>，整块就塌成一个常数：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mi>x</mi></mrow></msqrt><mspace width="1em"></mspace><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>6</mn><msup><mi>t</mi><mrow><mn>5</mn></mrow></msup></mrow><mrow><msup><mi>t</mi><mrow><mn>3</mn></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mo largeop="true" movablelimits="true">∫</mo><mspace width="0.25em"></mspace><mn>6</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mn>6</mn><mroot><mrow><mi>x</mi></mrow><mrow><mn>6</mn></mrow></mroot><mo>+</mo><mi>C</mi></math></div>
+  <p>所以规律是：<mark>换元指数 = 各根指数的公倍数，取最小的那个</mark>。取大了也能做，只是白添计算。</p>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=44&amp;t=2749">45:49</a>根式换元 ≠ 三角换元</span>
+  <p>换元法这一路有两支。本页的根式换元负责「代数根号」：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></msqrt></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mroot><mrow><mi>x</mi><mo>+</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 这类，换完就变成有理函数。而<strong>三角换元</strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><msup><mi>a</mi><mn>2</mn></msup><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msqrt></math></span> 令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>t</mi></math></span> 那一套）靠三角函数恒等式消根号，是另一支，<strong>不能也令成一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 硬做</strong>。看见根号先分类：能化成有理函数的走根式换元，属于三角换元三型的才动三角。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>看真假</b> 分子次数 ≥ 分母就先除</span>
+    <span class="ar">→</span>
+    <span class="n"><b>分母分解</b> 一次 / 一次平方 / 二次不可约</span>
+    <span class="ar">→</span>
+    <span class="n"><b>设形状</b> 分子次数 = 该因式次数 − 1</span>
+    <span class="ar">→</span>
+    <span class="n"><b>定系数</b> 代特值 / 比较系数</span>
+  </div>
+
+  <h3>要背的 · 定系数两套手法</h3>
+  <ul class="tight">
+    <li><strong>代入特值</strong>：用分母的根让别的项归零，顺手、最快；但平方因式只供一个根，剩下的字母要<strong>补一个普通值</strong>。</li>
+    <li><strong>比较系数</strong>：展开后让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、常数项三档系数分别相等；万能，永远能用。</li>
+    <li>两者结果必然一致，互相可以当验算。</li>
+  </ul>
+
+  <h3>要背的 · 两道结果</h3>
+  <ul class="tight">
+    <li><span class="mi miwb"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mn>2</mn><mn>5</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mn>1</mn><mo>+</mo><mn>2</mn><mi>x</mi><mo>|</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mi mathvariant="normal">ln</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn><mo>)</mo><mo>+</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>C</mi></math></span></li>
+    <li><span class="mi miwb"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>|</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>|</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>+</mo><mi>C</mi></math></span></li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>二次不可约因式的分子是<strong>一次式</strong>，只设常数会解不出方程；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mi>k</mi></msup></math></span> 要拆成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 项。</li>
+    <li>换元之后<strong>必须回代成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></strong>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 的绝对值去留看内部符号（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>u</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></math></span> 去、一次式留）。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P043-有理函数的积分（上集）/index.html">有理函数的积分（上集）</a> 有理函数的积分（上）：真假分式与四种拆法</li>
+      <li><span class="cur">多项式除法、因式分解、解线性方程组</span></li>
+      <li><a href="../P040-第一换元积分法/index.html">第一换元积分法</a> 第一换元积分法（凑 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>/</mo><mi>u</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi></math></span>）</li>
+      <li><a href="../P041-第二换元积分法/index.html">第二换元积分法</a> 第二换元积分法（根式换元的出处）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P045-定积分的定义/index.html">定积分的定义</a> 定积分的定义（积分从「求原函数」走向「求一个数」）</li>
+      <li><a href="../P048-牛顿-莱布尼兹定理/index.html">牛顿-莱布尼兹定理</a> 牛顿–莱布尼兹公式（不定积分成果的最终用途）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>1</mn></math></span>：前者拆多项、分子常数；后者一项、分子一次式。</li>
+      <li>代入特值不是「随便代」：要先约掉分母，且必须凑够方程个数。</li>
+      <li>根式换元只处理代数根号，三角换元那三型别硬套。</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 44 讲</span><a href="../P043-有理函数的积分（上集）/index.html">← P043</a><a href="../index.html">全部目录</a><a href="../P045-定积分的定义/index.html">P045 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">总流程：有理函数积分只有一条路</a>
+    <a href="#s2">待定系数法：设什么，怎么定</a>
+    <a href="#s3">定系数的两套手法</a>
+    <a href="#s4">例一：一次因式乘二次不可约因式</a>
+    <a href="#s5">例二：分母含一次项的平方</a>
+    <a href="#s6">根式换元：换元之后又回到本页</a>
+  </aside>
+</div>
+</body>
+</html>

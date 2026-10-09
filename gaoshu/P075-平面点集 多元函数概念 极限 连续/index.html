@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>平面点集 · 多元函数 · 二重极限 · 连续 · 高等数学笔记</title>
+<meta name="description" content="一元函数往一个点逼近，只有左边、右边两条路；到了二元，逼近一个点的方式有无穷多种——直线的、折线的、抛物线的都算。二重极限要求所有走法都通到同一个数。于是「证明极限不存在」变得异常便宜：随便挑两条路，走出两个不同的数就够了。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 9 章  多元函数微分法及其应用</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 75 讲</div>
+    <h1 class="title"><span class="pnum">P075</span>平面点集 · 多元函数 · 二重极限 · 连续</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>一元函数往一个点逼近，只有<strong>左边、右边</strong>两条路；到了二元，逼近一个点的方式有<mark>无穷多种</mark>——直线的、折线的、抛物线的都算。二重极限要求<strong>所有走法都通到同一个数</strong>。于是「证明极限不存在」变得异常便宜：随便挑两条路，走出两个不同的数就够了。</p></div>
+    <div class="meta"><span>时长 41m24s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=0">00:00</a><span class="vv">第 9 章开篇。平面点集这一段<b>概念多、理论弱</b>，老师自己说「稍微理解理解就行」。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=124">02:04</a><span class="vv">第一个概念 <b>δ 邻域</b>：到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 距离小于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 的点组成的圆面；为什么边界画虚线。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=196">03:16</a><span class="vv"><b>去心 δ 邻域</b>：规定距离大于零，等于把圆心掏掉。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=282">04:42</a><span class="vv"><b>内点、外点、边界点</b>：三种点全靠「能不能找到一个邻域」来定义。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=448">07:28</a><span class="vv">边界点到底属不属于集合？用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>1</mn></math></span> 对比着讲。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=573">09:33</a><span class="vv"><b>开集</b>（全是内点）与<b>闭集</b>（边界也收进来）；课本说「没有半开半闭」。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=703">11:43</a><span class="vv"><b>连通集 → 区域 → 闭区域 → 有界集</b>：一串串着下来的定义。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=838">13:58</a><span class="vv">三个判定例子：圆环、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1004">16:44</a><span class="vv"><b>二元函数</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是两个彼此无关的自变量；定义域必须写成集合。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1180">19:40</a><span class="vv">二元函数的图是一张<b>曲面</b>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 的图像是一个平面。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1357">22:37</a><span class="vv"><b>二重极限</b>：逼近方式从两个方向变成无穷多种，这是本节真正的难点。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1576">26:16</a><span class="vv">反例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>：沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 逼近，结果随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 变。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1932">32:12</a><span class="vv">能直接算的极限：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mi>y</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span>，还是第一重要极限那一套。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=2020">33:40</a><span class="vv"><b>连续与间断</b>，连做两道例题，收尾讲三条性质。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">从一元到多元：定义域从「一段」变成一个「区域」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=0">00:00</a>第九章是多元函数微分学。它的内容「超级超级重要并且巨多、特别长」，但开头这一小段——<strong>平面点集</strong>——是个例外。老师原话是它「特别鸡肋」：「讲了吧也没啥用，不讲吧你又嫌我不讲」。所以这一节的正确定位是：<mark>概念要认清、名字要对得上号、考试基本不考</mark>。后面真正吃重的是极限、偏导、全微分。</p>
+
+<p>为什么讲多元之前非要先讲点集？因为一元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的自变量取值范围是一条数轴上的区间；而二元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 都是自变量，<strong>它的定义域是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上的一个区域</strong>。要谈「区域」，就得先有描述区域的词汇：邻域、内点、边界、开集、闭集、连通、有界。这些词以后会被反复借用，所以先把它们发下去。</p>
+
+<h3 id="s2">邻域：把「附近」变成能算的东西</h3>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=124">02:04</a>定义 · δ 邻域与去心 δ 邻域</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 是平面上一点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>&gt;</mo><mn>0</mn></math></span>。到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的距离<strong>小于</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 的全体点，叫做 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的 <strong>δ 邻域</strong>，记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>,</mo><mo>δ</mo><mo>)</mo></math></span>：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>U</mi><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>,</mo><mo>δ</mo><mo>)</mo><mo>=</mo><mo>{</mo><mspace width="1em"></mspace><mi>P</mi><mo>∣</mo><mspace width="0.25em"></mspace><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo><mspace width="1em"></mspace><mo>}</mo></math></div>
+  <p>如果把这个邻域的「心」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 挖掉，就得到<strong>去心 δ 邻域</strong>（记作带圈的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi></math></span>），用集合写就是距离<strong>大于零</strong>且小于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span>：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>{</mo><mspace width="1em"></mspace><mi>P</mi><mo>∣</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>&lt;</mo><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo><mspace width="1em"></mspace><mo>}</mo></math></div>
+</div>
+
+<p>「大于零」这个条件必须写，而且它的作用只有一个——<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 自己排除掉</strong>。因为距离本身一定非负，所以「大于零」正好等价于「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>P</mi><mn>0</mn></msub></math></span>」。老师把这个动作说成「把这个心给他掏走了」。</p>
+
+<div class="why">
+  <span class="lbl">为什么邻域画虚线，而区域边界画实线</span>
+  <p>看图时最容易忽略的是<strong>线的虚实</strong>，而它恰恰携带了信息：邻域的定义里写的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span>，<strong>不含等号</strong>，所以那个圆是「开」的，圆周上的点不属于邻域，必须画虚线。</p>
+  <p>这个习惯会一直用下去：严格小于 / 严格大于 ⇒ 画虚线（边界取不到）；带等号 ⇒ 画实线（边界取得到）。后面判断开集、闭集、平面区域、积分区域，一路都靠这条规矩。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=953">15:53</a>老师举 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 时，也专门停下来强调：「这个线得画虚线，因为是大于零，没说等于零」。</p>
+</div>
+
+<h3 id="s3">内点、外点、边界点：三种点，一张表</h3>
+
+<p>点集的分类说白了就是「这个点站在集合的什么位置」。但数学不能靠感觉，所有判断都要落到一句可检验的话上，那就是——<strong>能不能找到一个足够小的邻域</strong>。老师原话：「你不能说在里边啊，数学必须有明确的定义」。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>点的类型</th><th>用邻域写的定义</th><th>它是否必属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span></th><th>大白话</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>内点</strong></td>
+        <td>存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><mi>P</mi><mo>,</mo><mo>δ</mo><mo>)</mo><mo>⊆</mo><mspace width="0.25em"></mspace><mi>E</mi></math></span></td>
+        <td>一定属于</td>
+        <td>周围一圈全是自己人</td>
+      </tr>
+      <tr>
+        <td><strong>外点</strong></td>
+        <td>存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><mi>P</mi><mo>,</mo><mo>δ</mo><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 无交集</td>
+        <td>一定不属于</td>
+        <td>周围一圈全是外人</td>
+      </tr>
+      <tr>
+        <td><strong>边界点</strong></td>
+        <td>任意邻域内既有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点，也有非 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点</td>
+        <td>可能属于，也可能不属于</td>
+        <td>骑在墙头上</td>
+      </tr>
+      <tr>
+        <td><strong>聚点</strong></td>
+        <td>任意去心邻域内都含有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的点</td>
+        <td>可能属于，也可能不属于</td>
+        <td>课上明确跳过，不用管</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>表里第一条最值得琢磨。内点的定义只要求「<strong>存在</strong>一个邻域」，那么这个邻域取多大？答案是想取多小就取多小。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=333">05:33</a>所以有同学问「这个点离边界很近，它还是内点吗」，老师的回答是：「也是。这时候你这个邻域取小一点不就行了吗？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span> 只要存在一个正数就够了。」<strong>「存在」这个词的松紧，全看你能不能把那个东西缩到足够小</strong>——这个味道和一元的极限定义里「存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>」是一模一样的。</p>
+
+<div class="why">
+  <span class="lbl">边界点为什么「不一定属于集合」——同一圈线，两种归属</span>
+  <p>很多人卡在这里：边界点明明就画在边界上，怎么还说它属不属于不一定？关键在于<strong>边界点是由集合 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 定义的，不由画法定义</strong>。同一个圆周，配不同的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，身份就不同：</p>
+  <ul class="tight">
+    <li>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>1</mn></msub><mo>=</mo><mo>{</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>∣</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>}</mo></math></span>：圆周上的点满足定义，<strong>属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>1</mn></msub></math></span></strong>。这时候的边界整条都在集合里。</li>
+    <li>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub><mo>=</mo><mo>{</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>∣</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>1</mn><mo>}</mo></math></span>：圆周上的点不满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&lt;</mo><mn>1</mn></math></span>，<strong>不属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub></math></span></strong>。但它们的任意邻域里既有圆内的点（属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub></math></span>）又有圆外的点（不属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub></math></span>），所以它们照样是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub></math></span> 的边界点。</li>
+  </ul>
+  <p>老师特意换了一支颜色的笔，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>E</mi><mn>2</mn></msub></math></span> 外头那一圈点画出来：「这些点是边界，但它属不属于原来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>？不属于。」<strong>所以「边界点的全体」才叫边界，而边界和集合本身是两回事，可能相交也可能不相交。</strong></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="平面点集：内点、外点、边界点以及 δ 邻域">
+    <ellipse cx="330" cy="150" rx="205" ry="92" class="m-area"></ellipse>
+    <ellipse cx="330" cy="150" rx="205" ry="92" fill="none" class="m-line" stroke-width="1.6"></ellipse>
+    <line x1="40" y1="268" x2="620" y2="268" class="m-line" stroke-width="1.4"></line>
+    <polygon points="630,268 620,264 620,272" class="m-fill"></polygon>
+    <line x1="72" y1="286" x2="72" y2="44" class="m-line" stroke-width="1.4"></line>
+    <polygon points="72,38 68,48 76,48" class="m-fill"></polygon>
+    <circle cx="240" cy="140" r="48" fill="none" class="m-box-a" stroke-width="1.4"></circle>
+    <circle cx="500" cy="99" r="36" fill="none" class="m-box-a" stroke-width="1.4"></circle>
+    <circle cx="590" cy="120" r="28" fill="none" class="m-box-a" stroke-width="1.4"></circle>
+    <line x1="232" y1="198" x2="240" y2="190" class="m-thin" stroke-width="1"></line>
+    <line x1="546" y1="166" x2="536" y2="153" class="m-thin" stroke-width="1"></line>
+    <circle cx="240" cy="140" r="4.2" class="m-fill-g"></circle>
+    <circle cx="500" cy="99" r="4.2" class="m-fill-v"></circle>
+    <circle cx="590" cy="120" r="4.2" class="m-fill-w"></circle>
+    <text x="140" y="118" class="m-txt" font-size="12">内点 P₁</text>
+    <text x="386" y="74" class="m-txt" font-size="12">边界点 P₃</text>
+    <text x="516" y="88" class="m-txt" font-size="12">外点 P₂</text>
+    <text x="166" y="186" class="m-math" font-size="13">E</text>
+    <text x="196" y="208" class="m-sub" font-size="11.5">δ 邻域</text>
+    <text x="548" y="174" class="m-sub" font-size="12">边界</text>
+    <text x="612" y="288" class="m-sub" font-size="12">x</text>
+    <text x="52" y="46" class="m-sub" font-size="12">y</text>
+    <text x="54" y="284" class="m-sub" font-size="11.5">O</text>
+  </svg>
+  <figcaption><b>同一个区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，三类点一眼分得开，靠的全是「邻域」。</b>绿色点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>1</mn></msub></math></span> 外面的虚线圆整只都落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 里，所以它是<strong>内点</strong>；黄色点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>2</mn></msub></math></span> 外面的虚线圆完全碰不到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，所以它是<strong>外点</strong>；紫色点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>3</mn></msub></math></span> 骑在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span> 的边界线上，<em>任何</em>一个小圆都会被边界切成两半——一半在里一半在外，所以它是<strong>边界点</strong>。注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>3</mn></msub></math></span> 的那个小圆：正是「切两半」这件事定义了边界点，而不是「它看起来在线上」。</figcaption>
+</figure>
+
+<h3 id="s4">开集、闭集，以及「没有半开半闭」</h3>
+
+<p>有了内点和边界，下面两个概念一句话就能说完：</p>
+
+<dl class="kv">
+  <dt>开集</dt>
+  <dd>所有点都是内点的集合，<strong>也就是不含任何边界点的集合</strong>。例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>&lt;</mo><mn>1</mn></math></span>（圆的内部）。</dd>
+  <dt>闭集</dt>
+  <dd>边界<strong>全部</strong>包含在集合里的集合。例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span>（圆面，含圆周）。</dd>
+</dl>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=703">11:43</a>接下来老师专门堵了一个口子：一元函数里有「半开半闭区间」，那二元里能不能有「半开半闭集」？<strong>不能。</strong>课本上直接说「既非开集也非闭集」，没有「半开半闭」这个名目。理由是边界是一个整体：要么整条边界都收进来（闭），要么至少有一个边界点没收进来（那就不是闭集；而它也不是开集，因为开集不许有边界点）。所以一个集合要么开、要么闭、要么两者都不是，<strong>「半开半闭」这个词在多元里不存在</strong>。</p>
+
+<p>课本给的判定例子是圆环 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>&lt;</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span>：内圈是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>&gt;</mo><mn>1</mn></math></span>，取不到，画虚线；外圈是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span>，取得到，画实线。它含有边界点（外圈那一整条），所以不是开集；它的边界又不全属于它（内圈那条不属于），所以也不是闭集——<mark>既非开也非闭</mark>。另外它是<strong>有界</strong>的，因为整个圆环可以被一个足够大的圆吞掉。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 222" role="img" aria-label="开集、闭集与既非开也非闭的圆环对比">
+    <circle cx="110" cy="122" r="60" class="m-area"></circle>
+    <circle cx="110" cy="122" r="60" fill="none" class="m-acc" stroke-width="1.6" stroke-dasharray="6 4"></circle>
+    <circle cx="320" cy="122" r="60" class="m-area"></circle>
+    <circle cx="320" cy="122" r="60" fill="none" class="m-line" stroke-width="1.8"></circle>
+    <circle cx="520" cy="122" r="66" class="m-area"></circle>
+    <circle cx="520" cy="122" r="66" fill="none" class="m-line" stroke-width="1.8"></circle>
+    <circle cx="520" cy="122" r="36" class="m-hole"></circle>
+    <circle cx="520" cy="122" r="36" fill="none" class="m-acc" stroke-width="1.6" stroke-dasharray="6 4"></circle>
+    <text x="52" y="36" class="m-txt" font-size="12">开集 x² + y² &lt; 1</text>
+    <text x="262" y="36" class="m-txt" font-size="12">闭集 x² + y² ≤ 1</text>
+    <text x="470" y="36" class="m-txt" font-size="12">1 &lt; x² + y² ≤ 2</text>
+    <text x="40" y="206" class="m-sub" font-size="11.5">边界画虚线、取不到</text>
+    <text x="264" y="206" class="m-sub" font-size="11.5">边界画实线、取得到</text>
+    <text x="424" y="206" class="m-sub" font-size="11.5">内虚外实 → 既非开也非闭</text>
+  </svg>
+  <figcaption><b>虚实线就是「取不取得到」的记号，读图先读线型。</b>左图整条圆周都取不到，集合里一个边界点都没有，所以是<strong>开集</strong>；中图圆周全收进来，所以是<strong>闭集</strong>；右图的内圈取不到、外圈取得到，两头都不满足，于是<strong>既非开也非闭</strong>——这里没有「半开半闭」这个说法。再看第三个图的有界性：整个圆环能被一个足够大的圆罩住，所以它<em>有界</em>，课本叫它「有界闭区域」的正例就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>≤</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span> 那一版。</figcaption>
+</figure>
+
+<h3 id="s5">连通、区域、有界</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=703">11:43</a>剩下的概念是串着长出来的，一条链就能记完：</p>
+
+<div class="chain">
+  <span class="n"><strong>连通集</strong> 集合里任意两点都能用一条<em>折线</em>连起来</span>
+  <span class="ar">→</span>
+  <span class="n"><strong>区域</strong> = 连通的开集</span>
+  <span class="ar">→</span>
+  <span class="n"><strong>闭区域</strong> = 区域 + 它的边界</span>
+</div>
+
+<p>老师讲连通时顺手开了个玩笑：「联通、移动、电信——联通集说白了就是<strong>连在一块儿的</strong>」。判断方法很具体：在集合里随便点两个点，能不能在集合内部画一条折线把这两点接上？能，就连通；不能，就不连通。至于有界：存在一个以原点为圆心、半径足够大的圆，把整个集合装进去，就叫做<strong>有界集</strong>；装不进去就是无界集。</p>
+
+<p>课本的三个例子值得逐个过一遍，它们把「有界 / 无界」与「开 / 闭」两个维度都覆盖了：</p>
+
+<ol class="steps">
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>≤</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span>。</span>这是两个圆周之间的圆环，内外圈都带等号，都画实线。它有界（被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span> 罩住），而且包含全部边界，所以是<strong>有界闭区域</strong>。</li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=906">15:06</a>判断方向的办法是「先画 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 那条线，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mo form="prefix">−</mo><mi>x</mi></math></span>，然后<strong>试一个点</strong>」。老师当时顺手代了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>0</mn><mo>&gt;</mo><mn>0</mn></math></span> 成立，所以是含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 的上半部分。因为严格大于，线画虚线，得到的是<strong>无界的开区域</strong>。</li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>。</span>同一个半平面，只是把边界那条直线收进来了：线画实线，得到的是<strong>无界的闭区域</strong>。</li>
+</ol>
+
+<div class="note">
+  <span class="lbl">这一节的心态</span>
+  <p>老师反复说这一段「理解就好」，因为后面几乎用不到其中大部分名词。但有两个东西必须留下来：<strong>一是虚实线代表取不取得到</strong>，二是<strong>邻域是描述「附近」的最小工具</strong>——它在下一节讲极限时就要派上大用场。</p>
+</div>
+
+<h2 id="s6">二元函数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是两个平等且互不相关的自变量</h2>
+
+<div class="blk def">
+  <span class="lbl">定义 · 二元函数</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上的一个点集。如果对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 中每一点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，按照某个对应法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span>，都有<strong>唯一确定</strong>的实数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 与之对应，就说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 是定义在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 上的<strong>二元函数</strong>，记作</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>∈</mo><mspace width="0.25em"></mspace><mi>D</mi></math></div>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 叫<strong>定义域</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 的取值范围叫<strong>值域</strong>。三个及以上的自变量就叫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 元函数。</p>
+</div>
+
+<p>这里最需要扭过来的一个观念是：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是没有关系的两个自变量</strong>。老师原话：「我们原来这个脑子老觉得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，那么现在是多元函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是两个独立的变量，相互之间没有关系。」它们俩平等地站在同一层，一起决定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>。<mark>这一步脑子不转过来，后面求偏导、求全微分都会别扭。</mark></p>
+
+<div class="why">
+  <span class="lbl">为什么求定义域「和一元函数完全一样」，但写法不一样</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1053">17:33</a>老师说：「多元函数的定义域没有任何新的东西，和一元函数的完全一样，你就按照一元函数去做题就行。」要限制的地方还是那几处——对数要求真数为正、分母要求不为零、偶次根号要求被开方数非负、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 要求自变量落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>。</p>
+  <p>差别只在<strong>答案的形态</strong>：一元函数的定义域要写成区间（集合），二元函数就得写成<strong>平面点集的集合表达式</strong>。例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi>x</mi><mo>+</mo><mi>y</mi><mo>)</mo></math></span> 要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>，这个条件本身没错，但如果只写一句「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>」，形式上就是错的——标准答案要写成点集：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>D</mi><mo>=</mo><mo>{</mo><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>∣</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn><mspace width="1em"></mspace><mo>}</mo></math></div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1113">18:33</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi mathvariant="normal">arcsin</mi><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><mo>)</mo><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>2</mn><mi>y</mi></mrow></mfrac></math></span> 的定义域。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把每一处「不允许」翻译成一条不等式，再取交集</span>
+    <p>这个函数由两块拼成，每块各提一个要求：</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 的口子要求整个自变量落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn><mo>≤</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span>；</li>
+      <li>分母不能为零：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>2</mn><mi>y</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi></math></span>。</li>
+    </ul>
+    <p>最后按点集写出来：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>D</mi><mo>=</mo><mo>{</mo><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>∣</mo><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn><mo>≤</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>y</mi><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mi>x</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi><mspace width="1em"></mspace><mo>}</mo></math></div>
+    <p><strong>两道不等式之间用逗号连起来，表示「同时成立」</strong>，这就是二元函数定义域的通用写法。老师这句总结很实在：「二元函数的定义域完事，就这么简单，和一元函数完全一样。」</p>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">只写不等式，不写点集。</span>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>」描述的是一个条件，「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>∣</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn><mo>}</mo></math></span>」才是一个集合。二元函数的定义域是一个<strong>点集</strong>，所以答案必须是集合形式——这和一元函数里「写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>1</mn></math></span>」要改写成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span>」是同一件事。</p>
+    </div>
+  </div>
+</div>
+
+<h3 id="s7">二元函数的图形：一张曲面</h3>
+
+<p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 中每个点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 对应的函数值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 当作高度竖起来，所有点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></math></span> 连成一片，就得到二元函数的图形。老师用了个很形象的说法——它长得像「一个大帽子」或者一个「碗」。<strong>定义域横躺在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上，图像是它正上方的一张曲面。</strong></p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1238">20:38</a>那一定是曲面吗？平面行不行？老师说：「也行，因为平面也是曲面的一种特殊类型。」他随手举了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>1</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 随便取，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，图形就是过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 平行于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面的那个平面。<strong>常数函数对应水平平面</strong>——这个特例以后讲偏导数、全微分时会反复被拿来当「最简单的例子」。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="二元函数的定义域是 xOy 面上的区域，图像是它上方的一张曲面">
+    <line x1="200" y1="250" x2="88" y2="166" class="m-line" stroke-width="1.4"></line>
+    <polygon points="82,162 94,164 88,176" class="m-fill"></polygon>
+    <line x1="200" y1="250" x2="620" y2="250" class="m-line" stroke-width="1.4"></line>
+    <polygon points="630,250 620,246 620,254" class="m-fill"></polygon>
+    <line x1="200" y1="250" x2="200" y2="56" class="m-line" stroke-width="1.4"></line>
+    <polygon points="200,44 195,58 205,58" class="m-fill"></polygon>
+    <polygon points="200,250 380,250 280,200 100,200" class="m-area"></polygon>
+    <polygon points="200,250 380,250 280,200 100,200" fill="none" class="m-line" stroke-width="1.4"></polygon>
+    <path d="M 100,122 Q 190,92 280,122 L 380,172 L 200,172 Z" class="m-area"></path>
+    <path d="M 100,122 Q 190,92 280,122 L 380,172 L 200,172 Z" fill="none" class="m-acc" stroke-width="1.6"></path>
+    <line x1="100" y1="200" x2="100" y2="122" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="280" y1="200" x2="280" y2="122" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="380" y1="250" x2="380" y2="172" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <text x="186" y="242" class="m-sub" font-size="11.5">定义域 D（一个平面区域）</text>
+    <text x="420" y="106" class="m-acc" font-size="12">曲面 z = f(x, y)</text>
+    <text x="450" y="152" class="m-sub" font-size="11.5">同一张曲面上每一点</text>
+    <text x="450" y="168" class="m-sub" font-size="11.5">都有一个高度</text>
+    <text x="614" y="268" class="m-sub" font-size="12">x</text>
+    <text x="70" y="166" class="m-sub" font-size="12">y</text>
+    <text x="152" y="48" class="m-sub" font-size="12">z</text>
+    <text x="182" y="268" class="m-sub" font-size="11.5">O</text>
+  </svg>
+  <figcaption><b>「定义域在下面，图像在上面」是读多元函数图的第一句话。</b>下面那个平行四边形是定义域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span>，它躺在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上；上面那片带弧度的面是函数图像，它的每一点都在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 中某点<strong>正上方</strong>，高度就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>。三条竖直虚线把两个角连了起来，就是为了让你看见这层对应关系。<em>注意这是一张 2D 画出来的「立体感」图</em>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴向右、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴斜向左上、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴竖直向上，是空间直角坐标系最常见的画法。</figcaption>
+</figure>
+
+<h2 id="s8">二重极限：难的不是算，是「怎么逼近都行」</h2>
+
+<div class="blk def">
+  <span class="lbl">定义 · 二重极限</span>
+  <p>设函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 的某去心邻域内有定义。如果当点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> <strong>以任意方式</strong>趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 都趋于同一个常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，就说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 时的<strong>二重极限</strong>，记作</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></div>
+</div>
+
+<p>这个定义里真正的新东西只有四个字：<strong>任意方式</strong>。老师的说法很直白：「课本上那个精确定义我也不准备仔细讲，大家就这么理解就行」，但理解必须到位。</p>
+
+<p>为什么一元函数的极限没这个麻烦？因为在一元里，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 只能在一条数轴上跑，趋向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 时<strong>只有两个方向</strong>——从左边来，或者从右边来。而在平面上朝 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 逼近，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 也能跟着一起变，于是路径多到说不清：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1519">25:19</a>「以任何方式，直线的逼近、弯弯曲曲的逼近。」</p>
+
+<div class="said">
+  <span class="lbl">视频原话（大意）</span>
+  <p><q>上课时有个同学站起来说：我捡了 1 万块钱，是谁的呀？同学说，是我的。哎过来，谁抢啊？又是我的。我同学都去抢，大家呼啦一下都去了——<strong>四面八方去抢</strong>。宋老师也去抢，前面挡着几个同学，我一看直接过不去，我还得拐着弯绕过去。</q></p>
+  <p><q>所以在平面上朝 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 逼近，是<strong>从各个方向、以任何方式</strong>逼近——直着走也行，弯弯曲曲地走也行。这个比一元函数要复杂很多。</q></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="沿不同路径趋近原点，xy 比 x²+y² 的值跟着变">
+    <line x1="40" y1="210" x2="620" y2="210" class="m-line" stroke-width="1.4"></line>
+    <polygon points="630,210 620,206 620,214" class="m-fill"></polygon>
+    <line x1="180" y1="286" x2="180" y2="44" class="m-line" stroke-width="1.4"></line>
+    <polygon points="180,38 176,48 184,48" class="m-fill"></polygon>
+    <path d="M 90,129 Q 180,291 270,129" fill="none" class="m-good" stroke-width="1.8"></path>
+    <line x1="100" y1="290" x2="280" y2="110" class="m-acc" stroke-width="1.8"></line>
+    <line x1="160" y1="250" x2="245" y2="80" class="m-vio" stroke-width="1.8"></line>
+    <circle cx="180" cy="210" r="4.4" class="m-fill-a"></circle>
+    <rect x="340" y="44" width="280" height="124" class="m-panel"></rect>
+    <text x="96" y="118" class="m-good" font-size="12">y = x²</text>
+    <text x="286" y="112" class="m-acc" font-size="12">y = x</text>
+    <text x="252" y="74" class="m-vio" font-size="12">y = 2x</text>
+    <text x="356" y="70" class="m-txt" font-size="12">同一个点，不同走法：</text>
+    <text x="356" y="96" class="m-sub" font-size="12">沿 y = x：比值 → 1/2</text>
+    <text x="356" y="122" class="m-sub" font-size="12">沿 y = 2x：比值 → 2/5</text>
+    <text x="356" y="148" class="m-sub" font-size="12">沿 y = x²：比值 → 0</text>
+    <text x="356" y="194" class="m-fill-w" font-size="12">结果不唯一 → 极限不存在</text>
+    <text x="168" y="228" class="m-sub" font-size="11.5">O</text>
+    <text x="612" y="232" class="m-sub" font-size="12">x</text>
+    <text x="160" y="46" class="m-sub" font-size="12">y</text>
+  </svg>
+  <figcaption><b>「趋近方式的任意性」是本节唯一真正的新难点，这张图就是它的全部含义。</b>三条路径都通向原点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi></math></span>：蓝线是直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span>，紫线是更陡的直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn><mi>x</mi></math></span>，绿线是一条抛物线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>。沿它们算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mn>2</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>/</mo><mn>5</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 三个<em>互不相同</em>的数。<b>点只有一个，答案却有无数个——这就是极限不存在的意思。</b>注意绿线：它说明「把直线方向都试一遍」也还不够，因为直线之外还有曲线。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q">证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></munder><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 不存在。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：不去算极限，而是「找两条路走出两个数」</span>
+    <p>先沿着最简单的直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 逼近。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 不是原点，可以直接用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 这个表达式；把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 代进去：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1675">27:55</a>再换一条路，沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn><mi>x</mi></math></span> 逼近（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mo>(</mo><mn>2</mn><mi>x</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>4</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>5</mn></mrow></mfrac></math></div>
+    <p>同一个点、同一个函数，沿两条不同的路逼近，结果一个是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>、一个是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn></mrow><mrow><mn>5</mn></mrow></mfrac></math></span>。<strong>两者不相等，所以极限不存在。</strong></p>
+    <p>课上还把一般情形写了出来：沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>）逼近时</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>k</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>k</mi><mrow><mn>2</mn></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>k</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>k</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>这个式子说明得更彻底：<strong>结果是一个随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 变化的数</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>1</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>2</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>2</mn><mn>5</mn></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>3</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn></mrow><mrow><mn>1</mn><mn>0</mn></mrow></mfrac></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 甚至变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>。<span class="t">只要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 不同答案就不同，极限自然不存在。</span></p>
+    <div class="note">
+      <span class="lbl">为什么这样写就够了</span>
+      <p>定义说的是「任意方式都趋于同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>」。要否掉它，只需要<strong>举出一个反例</strong>：找到两条路径，让结果不同。所以这类题的完整逻辑是——<em>「否命题只需要一个反例」</em>。这也解释了为什么证明「存在」那么难（要管住所有路径），而证明「不存在」这么便宜（挑两条就够）。</p>
+    </div>
+  </div>
+</div>
+
+<div class="trap">
+  <span class="lbl">这一节最要命的误解</span>
+  <p><span class="bad">错误推论：沿两种不同方式逼近，极限相等，所以二重极限存在。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=1836">30:36</a>老师专门把这句话拎出来当反例：「我们同学做题时说，老师我记住了，沿着两种不同的方式逼近如果极限相等，那原来的二元函数极限就存在——<strong>这是错的</strong>。」</p>
+  <p>道理简单：你只检查了两条路，剩下无穷多条路你一条都没查。老师还替学生追问了一层：「那如果沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 带进去，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 随便取，极限都一样，是不是就说明所有方式都对了？」答案还是不行——「这光是直线啊，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 你能随便取，也是各个方向的直线，<strong>那还有曲线呢</strong>？二次函数是曲线，三次函数不是曲线吗？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>.</mo><mn>5</mn></math></span> 次的呢？还有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 呢？」</p>
+  <p><strong>一句话：找到两条路结果不同 ⇒ 极限一定不存在；两条路结果相同 ⇒ 什么也说明不了。</strong>这是一个单向的判据。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>2</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 提出来，凑第一重要极限</span>
+    <p>分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></math></span>，分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，差一个因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>。上下同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，可以乘）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac><mo>⋅</mo><mspace width="0.25em"></mspace><mi>y</mi></math></div>
+    <p>现在看关键的一点：当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac></math></span> 是标准的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>□</mo></mrow><mrow><mo>□</mo></mrow></mfrac></math></span> 型，极限为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>；而另一个因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span>。两个因子分别有极限，乘起来就是答案：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>2</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>=</mo><mn>2</mn></math></div>
+    <div class="why">
+      <span class="lbl">为什么这里能「把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 当成一个整体」</span>
+      <p>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 是一个<strong>二维的趋近过程</strong>：不管 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 谁先谁后、以什么速度趋近，只要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 始终在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 附近，乘积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 就一定趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。这正是「任意方式」帮我们的地方——<strong>凡是由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 组合出来的中间量，只要它能被一条「必定趋于某值」的链条卡住，就可以整体处理</strong>。老师评价这类题时说得很轻松：「二元函数的极限就这么一丢丢，并且也不是我们这部分的重点。」</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s9">连续与间断</h2>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=2020">33:40</a>定义 · 多元函数的连续</span>
+  <p>如果当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> <strong>以任意方式</strong>趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 时，都有</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></div>
+  <p>就叫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 处<strong>连续</strong>；否则叫<strong>间断</strong>。</p>
+</div>
+
+<p>这个定义和一元函数的连续长得一模一样——把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span> 换成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span>。所以老师用一元来对照着讲：「一元函数连续性比较简单，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 朝 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 逼近时<strong>只有两个方向</strong>，从左边或者从右边。」二元就麻烦了：从各个方向、以任何方式、四面八方向这个点逼近，<strong>所有走法的极限值都必须等于这一点的函数值</strong>。</p>
+
+<p>间断这一块，老师的态度是「过一眼就行」：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=2239">37:19</a>一元函数的间断点要分第一类（可去、跳跃）和第二类（无穷、振荡），而「多元函数的间断点就挺乏味的，没那么多好讲的」。真正要记的是一条结论：</p>
+
+<div class="blk thm">
+  <span class="lbl">结论 · 多元初等函数</span>
+  <p>多元初等函数在它的<strong>定义域内</strong>处处连续。</p>
+</div>
+
+<p>这条结论价值很大：它意味着求一个初等函数的二重极限时，只要那个点<strong>落在定义域内部</strong>，把坐标直接代进去就是答案。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q">求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></mrow></munder><mfrac><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac></math></span>，以及 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></munder><mfrac><mrow><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">第一题：能直接代就代</span>
+    <p>点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 落在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac></math></span> 的定义域内部（分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>=</mo><mn>2</mn><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>），由初等函数的连续性，直接代入：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></mrow></munder><mfrac><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mn>2</mn></mrow><mrow><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=75&amp;t=2289">38:09</a>写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></mrow></munder></math></span> 或者分开写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>2</mn></math></span> 都行，课本上两种记号都在用。</p>
+    <span class="lbl">第二题：分母趋于零，先有理化</span>
+    <p>这一题就不能代了：分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，代进去是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>0</mn></mrow><mrow><mn>0</mn></mrow></mfrac></math></span>。看到根号差，第一反应是<strong>分子有理化</strong>——上下同乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>+</mo><mn>1</mn></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>(</mo><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mi>y</mi><mo>(</mo><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><mi>x</mi><mi>y</mi><mo>(</mo><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac></math></div>
+    <p>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，可以约掉：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></munder><mfrac><mrow><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>+</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <div class="note">
+      <span class="lbl">两道题的分界</span>
+      <p>第一题之所以能直接代，是因为极限点<strong>在定义域内</strong>；第二题的点在分母为零处，属于「定义域外」，所以必须先把式子化成能代的形式。<strong>判断顺序永远是：先看能不能直接代，不能代再想办法化简。</strong></p>
+    </div>
+  </div>
+</div>
+
+<p>这一小节最后一句总结，老师说得非常干脆：「多元函数的连续性，你就记住一个关键点——<strong>从四面八方以任何方式逼近，它的极限值都等于它的定义值</strong>。」</p>
+
+<p>最后是课本上的三条性质，老师只带读了一遍，说「理解就行，因为多元函数我们很少做证明题，大部分都是计算题」：</p>
+
+<ul class="tight">
+  <li><strong>有界性与最大值最小值定理</strong>：在有界闭区域上的多元连续函数，必然有界，并且一定能取到最大值和最小值。</li>
+  <li><strong>介值定理</strong>：在有界闭区域上的多元连续函数，一定能取到介于最大值与最小值之间的任何值。</li>
+</ul>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><strong>邻域</strong> 距离小于 δ</span><span class="ar">→</span>
+    <span class="n"><strong>三类点</strong> 内 / 外 / 边界</span><span class="ar">→</span>
+    <span class="n"><strong>开集闭集</strong> 看边界收不收</span><span class="ar">→</span>
+    <span class="n"><strong>区域</strong> 连通的开集</span>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>邻域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>P</mi><msub><mi>P</mi><mn>0</mn></msub><mo>|</mo><mo>&lt;</mo><mo>δ</mo></math></span> <strong>严格小于</strong> ⇒ 画虚线；带等号 ⇒ 画实线。</li>
+    <li>内点必属于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>E</mi></math></span>，外点必不属于；<mark>边界点属不属于不一定</mark>。</li>
+    <li>二元函数的图是<strong>曲面</strong>；常数函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 的图是水平平面。</li>
+    <li>连续：任意方式逼近的极限 = 该点函数值。间断不必细分类。</li>
+    <li>多元初等函数在<strong>定义域内</strong>连续 ⇒ 极限点落在定义域内部时可直接代入。</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>求定义域<strong>必须写成点集</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>∣</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn><mo>}</mo></math></span>，不能只写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>&gt;</mo><mn>0</mn></math></span>。</li>
+    <li>「两条路径极限相同」<strong>推不出</strong>极限存在——直线之外还有曲线，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 全试完也不够。</li>
+  </ul>
+
+  <h3>反向判据（本节唯一的计算套路）</h3>
+  <p>要找两条路径让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 的值不同。沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>k</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>k</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 变 ⇒ <strong>极限不存在</strong>。</p>
+  <p>能直接算的题：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 凑成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mo>(</mo><mi>x</mi><mi>y</mi><mo>)</mo></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac><mo>⋅</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>=</mo><mn>2</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msqrt><mrow><mi>x</mi><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mi>y</mi></mrow></mfrac></math></span> 有理化后 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>。</p>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P007-函数极限定义/index.html">函数极限定义</a> 函数极限的定义（一元：只有左右两个方向）</li>
+      <li><a href="../P013-连续/index.html">连续</a> 连续（一元连续的三个条件）</li>
+      <li><a href="../P011-极限存在准则第一第二重要极限/index.html">极限存在准则第一第二重要极限</a> 第一重要极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>t</mi></mrow><mrow><mi>t</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span></li>
+      <li><span class="cur">平面直角坐标系与集合的写法</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P076-偏导数/index.html">偏导数</a> 偏导数（把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 当常数，就退回一元）</li>
+      <li><a href="../P077-高阶偏导数/index.html">高阶偏导数</a> 高阶偏导数</li>
+      <li><a href="../P078-全微分/index.html">全微分</a> 全微分（可微与连续、偏导存在的关系）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>点集的「开 / 闭」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≠</mo></math></span> 函数的「连续 / 间断」，两套词不要混用</li>
+      <li>二元极限<strong>不存在</strong>可以靠两条路径证明；<strong>存在</strong>不行</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>→</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></mrow></munder></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>→</mo><mn>2</mn></math></span> 是同一个意思，只是记号不同</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 75 讲</span><a href="../P074-曲面基本问题 旋转曲面 柱面/index.html">← P074</a><a href="../index.html">全部目录</a><a href="../P076-偏导数/index.html">P076 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">从一元到多元：定义域从「一段」变成一个「区域」</a>
+    <a class="sub" href="#s2">邻域：把「附近」变成能算的东西</a>
+    <a class="sub" href="#s3">内点、外点、边界点：三种点，一张表</a>
+    <a class="sub" href="#s4">开集、闭集，以及「没有半开半闭」</a>
+    <a class="sub" href="#s5">连通、区域、有界</a>
+    <a href="#s6">二元函数：x 和 y 是两个平等且互不相关的自变量</a>
+    <a class="sub" href="#s7">二元函数的图形：一张曲面</a>
+    <a href="#s8">二重极限：难的不是算，是「怎么逼近都行」</a>
+    <a href="#s9">连续与间断</a>
+  </aside>
+</div>
+</body>
+</html>

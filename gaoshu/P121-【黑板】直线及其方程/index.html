@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】直线及其方程 · 高等数学笔记</title>
+<meta name="description" content="直线这一节也只有一个主角——方向向量 ⃗s=(m,n,p)。整页题型都能压成一句话：找一个点、找一个方向向量，代进点向式。方向向量有三条来路：题目直接给、两个平面法向量叉乘、从「平行 / 垂直」这句话里读出来。配上四张夹角公式、两张位置关系表，考试里直线部分的题基本就都在射程内了。新授课见 [[72">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 121 讲</div>
+    <h1 class="title"><span class="pnum">P121</span>【黑板】直线及其方程</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>直线这一节也只有<strong>一个主角</strong>——方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mo>(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo>,</mo><mi>p</mi><mo>)</mo></math></span>。整页题型都能压成一句话：<mark>找一个点、找一个方向向量，代进点向式</mark>。方向向量有三条来路：<strong>题目直接给</strong>、<strong>两个平面法向量叉乘</strong>、<strong>从「平行 / 垂直」这句话里读出来</strong>。配上四张夹角公式、两张位置关系表，考试里直线部分的题基本就都在射程内了。新授课见 <a href="../P072-曲面方程 平面方程 直线方程/index.html">曲面方程 平面方程 直线方程</a>，姊妹页（平面）见 <a href="../P120-【黑板】平面及其方程/index.html">【黑板】平面及其方程</a>。</p></div>
+    <div class="meta"><span>时长 1h13m</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=0">00:00</a><span class="vv"><b>一般式</b>：两个平面联立，交出来的就是一条直线——书的「书脊」就是这条交线。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=106">01:46</a><span class="vv"><b>点向式</b>：一个点 + 一个方向向量定死一条直线；<mark>方向向量不唯一</mark>（朝这也行、朝那也行，取多长都行）。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=225">03:45</a><span class="vv">记号约定：方向向量永远用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span>、法向量永远用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>；同方向就是对应坐标成比例。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=333">05:33</a><span class="vv"><b>例 1</b>：过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>、方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span>——先写完「点减坐标」再比上方向向量。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=480">08:00</a><span class="vv">分母出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 完全允许：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 时写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mn>0</mn></mrow></mfrac></math></span>，它的意思是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub></math></span>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=620">10:20</a><span class="vv"><b>参数式</b>怎么来的，以及老师那个「3D 打印机」的比喻（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 越大点越往外跑）。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=756">12:36</a><span class="vv"><b>例 2（反着写）</b>：由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>=</mo><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mi>z</mi><mo>=</mo><mn>1</mn><mo>+</mo><mi>t</mi></math></span> 倒推点向式——缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的那个变量要补成「减零比零」。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=874">14:34</a><span class="vv"><b>例 3</b>：一般式化点向式。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub></math></span>，再令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 切一刀找点。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=1164">19:24</a><span class="vv"><mark>「令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>」不是万能的</mark>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 本身是一张平面，直线若与它平行就切不上。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=1507">25:07</a><span class="vv"><b>两直线的夹角</b>：用两个方向向量，<mark>分子加绝对值</mark>——空间的直线不一定相交。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=1569">26:09</a><span class="vv"><b>两直线的四种位置关系</b>：平行、垂直、重合、斜交，以及「异面垂直」这个新情况。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=2024">33:44</a><span class="vv"><b>直线与平面的夹角</b>：方向向量配法向量，这里换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>——四个夹角公式里唯一的例外。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=2536">42:16</a><span class="vv"><b>直线与平面的位置关系</b>：垂直 ⟺ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>；平行与「落在平面上」靠代点区分。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=121&amp;t=3037">50:37</a><span class="vv"><b>四道例题</b>：垂直平面、平行交线、求交点、垂直相交，以及最后的<b>平面束</b>（了解即可）。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、三种式子，一张速查卡</h2>
+
+<p>直线部分的开场和平面部分一模一样：先把「用方程表示一个图形」这件事办完。老师的原话是：<q>下面我们看一下直线，首先我们这里讲的直线是空间的直线——我们之前学的都是平面上的直线。</q>注意这个前提，因为后面每一个「没想到」的结论，根子都在「空间」这两个字上。</p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 直线的三种表示</span>
+  <dl class="kv">
+    <dt>一般式</dt>
+    <dd>两个平面方程联立，也就是用大括号把两张平面的方程括起来。两个曲面相交得曲线，两个<strong>平面</strong>相交得<strong>直线</strong>——「书的书脊」就是这么来的。
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><msub><mi>A</mi><mn>1</mn></msub><mi>x</mi><mo>+</mo><msub><mi>B</mi><mn>1</mn></msub><mi>y</mi><mo>+</mo><msub><mi>C</mi><mn>1</mn></msub><mi>z</mi><mo>+</mo><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><msub><mi>A</mi><mn>2</mn></msub><mi>x</mi><mo>+</mo><msub><mi>B</mi><mn>2</mn></msub><mi>y</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>z</mi><mo>+</mo><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div></dd>
+    <dt>点向式（对称式）</dt>
+    <dd>过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>,</mo><msub><mi>z</mi><mn>0</mn></msub><mo>)</mo></math></span>、方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mo>(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo>,</mo><mi>p</mi><mo>)</mo></math></span> 的直线：它把「一个点 + 一个方向」直接写成了式子。</dd>
+    <dt>参数式</dt>
+    <dd>把点向式的三个分式统统令成同一个参数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，也就是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的函数。</dd>
+  </dl>
+</div>
+
+<p>三种式子的地位并不平等，老师说得很清楚：<q>我们在做题的时候用的比较多的是点向式，我们的书也叫对称式方程。</q>为什么？因为<strong>一般式只是「直线的出身」，点向式才是「直线的身份证」</strong>——它把决定直线的两样东西（点、方向）明明白白摆在式子里，一眼就能读出来。</p>
+
+<div class="blk def">
+  <span class="lbl">核心公式 · 点向式（对称式）</span>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><mrow><mi>m</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mi>p</mi></mrow></mfrac></math></div>
+  <p>老师的记法是一句话：<q>你先把这个减这个点——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 减 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 减 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 减 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mn>0</mn></msub></math></span> 先写完，然后比上、等于、比上、等于、比上，方向向量写在分母上。</q></p>
+</div>
+
+<p>推导只有两行，但值得扫一眼：在直线上再取一点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></math></span>，那么向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><msub><mi>P</mi><mn>0</mn></msub><mi>P</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mo>(</mo><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub><mo>,</mo><mspace width="1em"></mspace><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub><mo>)</mo></math></span> 与方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> <strong>平行</strong>；而「两个向量平行」在坐标语言里就是<strong>对应坐标成比例</strong>（<a href="../P119-【黑板】数量积与向量积/index.html">【黑板】数量积与向量积</a> 的核心翻译）——写成分式，就是点向式。</p>
+
+<p>还有一条约定俗成的记号要记牢，老师专门点了一下：<q>方向向量我们都是用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 来表示的，永远都是用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span>；法向量都用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>——这是个约定俗成的，你最好是用这个标号，你用其他的标号我们不认识。</q>这条记号在整章里都没变过：<mark>看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 就想「平行」，看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 就想「垂直」</mark>。</p>
+
+<div class="why">
+  <span class="lbl">为什么方向向量是「不唯一」的，而这件事反而帮了我们</span>
+  <p>老师说这一段时连着问了两次同一个问题：<q>那有同学又有问题了——老师啊，你看这条直线，我沿着那是个方向向量；我朝这边是不是也是个方向向量啊？我这个方向向量取这么长是个方向向量，我取这么长是不是也是个方向向量啊？</q>答案是：<q>方向向量不唯一。</q></p>
+  <p>把这句话翻译成做题的自由度，有两条：</p>
+  <ul class="tight">
+    <li><strong>方向可以反。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>4</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>3</mn><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>4</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span> 描述的是同一条直线。所以算完叉乘觉得数字难看，可以整体变号。</li>
+    <li><strong>长度可以缩。</strong>叉乘出来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>6</mn><mo>,</mo><mn>3</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mn>2</mn><mo>)</mo></math></span>，就取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn><mo>)</mo></math></span>——往后每一步的分母都小了一截。<em>这是本页例 8 里老师当场做的事</em>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 算出来带七分之几，向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn><mn>2</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>6</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>,</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mn>4</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>，提出公因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>6</mn></mrow><mrow><mn>7</mn></mrow></mfrac></math></span> 之后取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn><mo>)</mo></math></span>，干净得多。</li>
+  </ul>
+  <p><mark>同理，直线上的点也不唯一。</mark>老师用例 3 演示时，他求出的点和课本给的点完全不一样，他对着镜头说：<q>老师你求错了？老师你点求错了——直线上的点是不是唯一呀？</q>——不唯一，两个都对。所以答案是点向式时，<strong>别拿自己的答案去跟课本的答案死磕「一不一样」</strong>，要检查的是「点在不在线上、方向对不对」。</p>
+</div>
+
+<p>写法上有唯一一处「和平时不一样」的地方，老师专门示范了一遍：<q>这个点向式大家在写的时候其实是很痛苦的，我们没太写过这种仨式子一块写的式子——你最好刚开始学的时候仿照我的写法：这个点呢，你先把这个「点减坐标」的式子捣鼓完了。</q>也就是说，<strong>先把三个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>x</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>y</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>z</mi><mn>0</mn></msub></math></span> 抄成套，再回头把方向向量填到分母上</strong>；反过来做，很容易把某一项的方向向量填错位。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q">求过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>、且以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span> 为方向向量的直线方程，并写出它的参数式。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：点有了、方向向量有了，先套点向式，再令三个分式等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 得参数式</span>
+    <p>先写点的三个差（这一步单独做完，别急着写分母）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>−</mo><mn>1</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>−</mo><mn>2</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>−</mo><mn>3</mn></math></div>
+    <p>再把方向向量放分母，得到点向式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>2</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>3</mn></mrow><mrow><mn>4</mn></mrow></mfrac></math></div>
+    <p>令三个分式都等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，逐个解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，就是参数式：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>t</mi></mtd></mtr><mtr><mtd><mi>y</mi><mo>=</mo><mn>2</mn><mo>+</mo><mn>2</mn><mi>t</mi></mtd></mtr><mtr><mtd><mi>z</mi><mo>=</mo><mn>3</mn><mo>+</mo><mn>4</mn><mi>t</mi></mtd></mtr></mtable></mrow><mspace width="2em"></mspace><mrow><mo stretchy="true">(</mo><mi>t</mi><mo>∈</mo><mrow><mrow><mi>R</mi></mrow></mrow><mo stretchy="true">)</mo></mrow></math></div>
+    <p>老师说参数式的一个额外好处是：<q>参数式方程它有个好处——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 三个坐标都有了，那这样的话就相当于那个点有了。</q><mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的系数就是方向向量</mark>，这是参数式自带的赠品，读一遍就能验算。</p>
+  </div>
+</div>
+
+<div class="trap">
+  <span class="lbl">这一步最容易错：分母上的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 不是「无意义」</span>
+  <p>老师主动把这个坑挑明了：<q>假设过一个点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，它的方向向量是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>，沿着这个方向过一点的直线——方向向量是放分母的，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——耶？零又放分母了，是不是错了呀？</q>答案是：<q>没问题，它那个零放分母其实是一样的——它不是个分母，它其实是一个比。</q></p>
+  <p>点向式里的三条式子，本质上是三个<strong>比</strong>相等，而不是三个分数相除。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mn>0</mn></mrow></mfrac></math></span> 完全合法，它说的是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 成正比」，而唯一能这么成正比的数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> ——也就是<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub></math></span>：这条直线的高度被钉死了</mark>。</p>
+  <p><span class="bad">错的说法：</span>「分母为零，这个式子里这一项要删掉」。<br>
+  <span class="good">对的说法：</span>「这一项照写，它表示对应的那个坐标恒等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mn>0</mn></msub></math></span>」。</p>
+</div>
+
+<p>把三个分式统统令成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，就得到参数式：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>m</mi><mi>t</mi></mtd></mtr><mtr><mtd><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>n</mi><mi>t</mi></mtd></mtr><mtr><mtd><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub><mo>+</mo><mi>p</mi><mi>t</mi></mtd></mtr></mtable></mrow><mspace width="2em"></mspace><mrow><mo stretchy="true">(</mo><mi>t</mi><mo>∈</mo><mrow><mrow><mi>R</mi></mrow></mrow><mo stretchy="true">)</mo></mrow></math></div>
+
+<div class="said">
+  <span class="lbl">老师解释参数式用的那个比喻</span>
+  <p>他把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 讲成了「3D 打印机」：<q>如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>0</mn></math></span>，是不是就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span> 那个点啊？如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 越来越大，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是不是也越来越大？他就从一个点开始，用那个 3D 打印机——里边装上那种材料，然后就开始打印，从这个点开始得得得得，打印出来好多点，是不是连起来就是一条直线啊？</q></p>
+  <p>他还补了另一半：<q>这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 如果取负的，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是不是越来越小啊？那就朝那个方向嘚嘚嘚地去打印。</q><mark>所以参数式里那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>∈</mo><mrow><mrow><mi>R</mi></mrow></mrow></math></span> 是不用写的限制之外的全部自由</mark>——它把「直线无限延伸」这件事，变成了「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 随便走」。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">已知直线的参数式为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>=</mo><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mi>z</mi><mo>=</mo><mn>1</mn><mo>+</mo><mi>t</mi></math></span>，求它的点向式。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：反着来——把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 一条条「解出来」，凑成三个「等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>」的式子</span>
+    <p>这一步有个必须处理的意外：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 里没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></strong>。老师说：<q>这个地方有个问题，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，它必须有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，你不能没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，那就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</q>所以要先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 改写成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>2</mn><mo>=</mo><mn>0</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mi>t</mi></math></span>」：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>t</mi><mo>=</mo><mfrac><mrow><mi>x</mi><mo>−</mo><mn>2</mn></mrow><mrow><mn>0</mn></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>t</mi><mo>=</mo><mi>y</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>t</mi><mo>=</mo><mi>z</mi><mo>−</mo><mn>1</mn></math></div>
+    <p>再把它们连起来，得到点向式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>2</mn></mrow><mrow><mn>0</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>0</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></mfrac></math></div>
+    <p>对照着读：<mark>点 = <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，方向向量 = <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></mark>。老师特意问了一句：<q>如果按照你刚才那个写法，那个点和方向向量你能写出来吗？写不出来啊；那我这样搞了以后能写出来不？点、方向向量是不是很清楚啊？</q></p>
+    <p>这道题的价值在于它把「分母为零」从「怪事」变成了「工具」：<strong>方向向量的某个分量为零，正好对应参数式里某个坐标是常数。</strong></p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="直线三种式子的关系：点加方向向量给点向式，点向式给参数式，一般式要先叉乘出方向向量">
+    <text x="16" y="26" class="m-txt" font-size="12">三种式子的关系：谁给谁</text>
+    <line x1="16" y1="36" x2="624" y2="36" class="m-thin" stroke-width="1"></line>
+
+    <rect x="16" y="52" width="196" height="76" rx="6" class="m-panel-a"></rect>
+    <text x="28" y="74" class="m-txt" font-size="12">一个点 P0(x0, y0, z0)</text>
+    <text x="28" y="96" class="m-txt" font-size="12">一个方向向量 s = (m, n, p)</text>
+    <text x="28" y="118" class="m-sub" font-size="11.5">两者齐了，直线唯一</text>
+
+    <line x1="212" y1="90" x2="258" y2="90" class="m-acc" stroke-width="1.6"></line>
+    <polygon points="264,90 254,85 254,95" class="m-fill-a"></polygon>
+
+    <rect x="266" y="52" width="200" height="76" rx="6" class="m-panel-hi"></rect>
+    <text x="278" y="74" class="m-txt" font-size="12">点向式（对称式）</text>
+    <text x="278" y="96" class="m-math" font-size="11.5">(x−x0)/m = (y−y0)/n</text>
+    <text x="278" y="116" class="m-math" font-size="11.5">= (z−z0)/p</text>
+
+    <line x1="366" y1="128" x2="366" y2="158" class="m-acc" stroke-width="1.6"></line>
+    <polygon points="366,164 361,154 371,154" class="m-fill-a"></polygon>
+    <text x="374" y="148" class="m-sub" font-size="11.5">三式同等于 t</text>
+
+    <rect x="266" y="164" width="200" height="66" rx="6" class="m-panel-s"></rect>
+    <text x="278" y="186" class="m-txt" font-size="12">参数式</text>
+    <text x="278" y="208" class="m-math" font-size="11.5">x=x0+mt, y=y0+nt, z=z0+pt</text>
+    <text x="278" y="226" class="m-sub" font-size="11.5">t 的系数 = 方向向量</text>
+
+    <rect x="16" y="164" width="196" height="66" rx="6" class="m-panel-s"></rect>
+    <text x="28" y="186" class="m-txt" font-size="12">两个平面的一般式联立</text>
+    <text x="28" y="208" class="m-sub" font-size="11.5">只给了「出身」，没给点</text>
+    <text x="28" y="226" class="m-sub" font-size="11.5">也不能直接看出方向</text>
+
+    <line x1="114" y1="164" x2="114" y2="136" class="m-warn" stroke-width="1.6"></line>
+    <polygon points="114,130 109,140 119,140" class="m-fill-w"></polygon>
+    <text x="120" y="154" class="m-warn" font-size="11.5">先叉乘 s = n1 × n2，再切一刀找点</text>
+
+    <line x1="486" y1="52" x2="486" y2="230" class="m-thin" stroke-width="1"></line>
+    <text x="498" y="74" class="m-txt" font-size="12">方向向量从哪来？</text>
+    <text x="498" y="98" class="m-sub" font-size="11.5">① 题目直接给</text>
+    <text x="498" y="120" class="m-sub" font-size="11.5">② 两个法向量叉乘</text>
+    <text x="498" y="142" class="m-sub" font-size="11.5">③ 从「平行 / 垂直」读出</text>
+    <line x1="498" y1="156" x2="624" y2="156" class="m-thin" stroke-width="1"></line>
+    <text x="498" y="178" class="m-txt" font-size="12">实际常用哪个？</text>
+    <text x="498" y="200" class="m-sub" font-size="11.5">点向式：答案写在它</text>
+    <text x="498" y="222" class="m-sub" font-size="11.5">参数式：一有交点就用</text>
+  </svg>
+  <figcaption><b>这一节的骨架就是左边那条箭头链。</b>「一个点 + 一个方向向量」是直线的全部要素，点向式是它的直接翻译，参数式是点向式的另一种读法（把三个比统统叫成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>）。<em>右边那条红色箭头是这一讲真正的工作量所在</em>：一般式只告诉你「这条直线是哪两张面交出来的」，点和方向都得自己补——补方向用叉乘（本页例 3），补点用「拿坐标平面切一刀」（本页例 3 与第 1164 秒那段警告）。</figcaption>
+</figure>
+
+<h2 id="s2">二、一般式 → 点向式：求方向向量的标准套路</h2>
+
+<p>这是直线部分最重要的一个机械动作。题目给的是两个平面，要求化成点向式，缺两样东西：<strong>方向向量</strong>和<strong>一个点</strong>。方向向量完全不用愁，因为它有一条现成的公式：</p>
+
+<div class="blk thm">
+  <span class="lbl">核心公式 · 交线的方向向量</span>
+  <p>由两个平面联立决定的直线，其方向向量等于这两个平面<strong>法向量的向量积</strong>：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub></math></div>
+  <p>理由：交线同时躺在两张平面上，所以它与两个法向量都垂直；而「同时垂直于两个向量的向量」，正是它们的叉乘。</p>
+</div>
+
+<p>老师说这一步是「比较确定的」：<q>这个题比较确定的是求它的方向向量——这个平面和这个平面相交形成了这条直线，我们现在要求这个直线的方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span>，那么就是要它的法向量和它的法向量，你能看出来这个方向向量和这个法向量、和这个法向量是不是都垂直啊？所以用它两个的法向量做这个叉乘，这个是比较明确的。</q></p>
+
+<p>他还顺手给自己画的立体图打了个预防针，这句话对空间想象力一般的同学很有用：<q>我这个立体图画的还可以哈——所以我们现在就是这部分的题目，大家画的图都是帮助大家想象的，都不是很严格，你换一个图和我画的可以不一样。</q><mark>草图和课本答案可以不一样，只要「哪个向量垂直于哪个面」这件事没画错就行。</mark></p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q">把一般式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mn>2</mn><mi>x</mi><mo>−</mo><mi>y</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>+</mo><mn>4</mn><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></span> 化为点向式与参数式。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：两件事——先叉乘求方向向量，再拿坐标平面切一刀找点</span>
+    <p><strong>第一步，读法向量。</strong>系数直接读，不用算：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>。</p>
+    <p><strong>第二步，叉乘。</strong></p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>3</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>逐项核对（中间项<strong>取负</strong>，这是叉乘唯一的失分点）：第一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mo form="prefix">−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>3</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>4</mn></math></span>；第二项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>3</mn><mo>−</mo><mn>2</mn><mo>=</mo><mn>1</mn></math></span>，取负得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>；第三项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mo>−</mo><mn>2</mn><mo>=</mo><mo form="prefix">−</mo><mn>3</mn></math></span>。老师看了一眼结果：<q>我一看这个结果呢，也没什么特别好化简的了，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 我就取做这个。</q></p>
+    <p><strong>第三步，找点。</strong>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 代回去，两个方程立刻瘦成两个未知数：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>y</mi><mo>+</mo><mi>z</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mo form="prefix">−</mo><mi>y</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>+</mo><mn>4</mn><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div>
+    <p>两式相加消掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>z</mi><mo>+</mo><mn>5</mn><mo>=</mo><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>；再代回第一式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>。于是得到点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>。老师口算完自己也笑了：<q>再整一下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，口算倒还行。</q></p>
+    <p><strong>第四步，写式子。</strong></p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>0</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>+</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>4</mn></mrow></mfrac></mrow><mrow><mo form="prefix">−</mo><mn>3</mn></mrow></mfrac></math></div>
+    <p>令三个分式等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，得到参数式：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mn>4</mn><mi>t</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>−</mo><mi>t</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>−</mo><mn>3</mn><mi>t</mi></math></div>
+    <p>老师把他的结果和课本一对：<q>不好意思，和我求的不一样——老师你点求错了？</q>其实没求错。后面他解释得很清楚：<q>直线上的点是不唯一的，方向向量也不唯一，所以最后你的答案是不唯一的。</q><strong>这道题的正确答案是一整族，不是一个。</strong></p>
+  </div>
+</div>
+
+<div class="trap">
+  <span class="lbl">「令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>」为什么不是万能的</span>
+  <p>老师在这一段问了一个非常好的问题：<q>我现在有个问题哈——所有的题目，令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>、令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span>、令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>，一定都能求出来吗？</q></p>
+  <p>他的答案是：<q>其实绝大部分的题目都可以，但是这个地方我请大家仔细地想一想：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 到底是个什么东西？</q>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是一张<strong>平面</strong>（也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mi>O</mi><mi>z</mi></math></span> 面）。所以「令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>」这个动作的几何含义是：<mark>拿一张坐标平面去「切」这条直线，切出来的那一点就是我们要的点。</mark></p>
+  <p>那么问题来了：如果这条直线<strong>与这张平面平行</strong>呢？老师用了一个特别形象的比喻：<q>假设这个阴影的面就是现在黑板的这个面，这条直线呢就很笔直地站在了这个黑板的前面、和这个黑板是平行的——那么这个黑板（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 的面）和我在的这条直线有交点吗？没有。所以在这种情况之下令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>，你能求出交点吗？求不出来。</q></p>
+  <p><span class="bad">错的说法：</span>「求直线上的点，随便令一个变量为零就行」。<br>
+  <span class="good">对的说法：</span>「三条坐标平面里总有一张切得上——试 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>，切不上换 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span>，再切不上换 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>」。</p>
+  <p>那为什么三张里一定有切得上的？老师给的理由很干脆：<q><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 是三个坐标平面——空间中的一条直线，你怎么样能让这个直线和这三个面都不相交？你是直线，不可能啊，它总得和一个面相交啊。</q>（严格地说，与某一根轴平行的直线仍会与另两张坐标面相交，所以三选一总能成功。）</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 280" role="img" aria-label="两个平面的法向量叉乘得到交线的方向向量">
+    <path d="M 40 168 L 250 214 L 560 150 L 350 104 Z" class="m-panel-s"></path>
+    <path d="M 40 168 L 250 214 L 560 150 L 350 104 Z" fill="none" class="m-line" stroke-width="1.4"></path>
+    <path d="M 120 96 L 330 142 L 610 82 L 400 36 Z" class="m-panel-a"></path>
+    <path d="M 120 96 L 330 142 L 610 82 L 400 36 Z" fill="none" class="m-line" stroke-width="1.4"></path>
+
+    <line x1="96" y1="176" x2="520" y2="118" class="m-acc" stroke-width="2.6"></line>
+    <polygon points="528,117 516,113 516,123" class="m-fill-a"></polygon>
+    <text x="534" y="112" class="m-acc" font-size="12">直线（交线）</text>
+    <text x="150" y="150" class="m-fill-a" font-size="12">s</text>
+
+    <line x1="300" y1="158" x2="262" y2="34" class="m-good" stroke-width="2"></line>
+    <polygon points="260,28 255,39 265,38" class="m-fill-g"></polygon>
+    <text x="206" y="26" class="m-good" font-size="12">n1</text>
+
+    <line x1="300" y1="158" x2="392" y2="270" class="m-warn" stroke-width="2"></line>
+    <polygon points="394,274 392,262 385,268" class="m-fill-w"></polygon>
+    <text x="398" y="272" class="m-warn" font-size="12">n2</text>
+
+    <circle cx="300" cy="158" r="3" class="m-fill-a"></circle>
+
+    <rect x="392" y="118" width="240" height="78" rx="6" class="m-panel-hi"></rect>
+    <text x="404" y="140" class="m-fill-a" font-size="11.5">s ⊥ n1，s ⊥ n2</text>
+    <text x="404" y="162" class="m-fill-a" font-size="11.5">s = n1 × n2</text>
+    <text x="404" y="184" class="m-sub" font-size="11.5">方向一次到位，不用求交线</text>
+
+    <text x="16" y="248" class="m-txt" font-size="12">点怎么来：拿 x=0 / y=0 / z=0 去切这条直线，哪张面切得上就用哪张</text>
+    <text x="16" y="268" class="m-sub" font-size="11.5">切不上说明直线与那张坐标面平行，换一张再切——三张里总有一张能切上</text>
+  </svg>
+  <figcaption><b>「一般式 → 方向向量」这一步为什么可以一叉乘就完。</b>两张平面各自在图上，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub></math></span> 分别垂直于自己的平面；那条交线同时躺在两张平面上，所以它的方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 既垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub></math></span>、又垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub></math></span>。<em>同时垂直于两个向量的那个向量，正是它们的向量积</em>——这就是全部理由，不需要背。图下方那两行是配套的动作：方向向量一叉乘就有，点要靠坐标平面去切。</figcaption>
+</figure>
+
+<h2 id="s3">三、两条直线：夹角与四种位置关系</h2>
+
+<p>两条直线的夹角，用的是它们的<strong>方向向量</strong>。这一点和两个平面的夹角（用两个法向量）是同构的，理由也一样：直线无限延伸，夹角只有一个客观的值，所以公式的分子要加绝对值。</p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 两直线的夹角</span>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo stretchy="true">|</mo></mrow></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo stretchy="true">|</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mo>θ</mo><mo>∈</mo><mrow><mo stretchy="true">[</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">]</mo></mrow></math></div>
+</div>
+
+<div class="why">
+  <span class="lbl">空间里的两条直线，为什么先要强调「不一定相交」</span>
+  <p>老师这一段的开场很关键：<q>两个直线的夹角，这个是比较好理解的——但是呢这个是空间的直线，这个和我们平面的其实不太一样的，因为我们画图只能这么画。其实空间的直线的夹角就像我这两个胳膊一样，它的确有个夹角，但是呢它是不一定相交的啊，这点大家注意。</q></p>
+  <p>这句话纠正的是一个从平面几何带过来的直觉。在平面里，「两条直线相交」是默认的；在空间里，两条直线可以<strong>根本不在同一个平面上</strong>——它们照样有夹角，因为<mark>夹角是由方向决定的，与位置无关</mark>。这正是「用方向向量的夹角来定义两条直线的夹角」这句话的必要性所在。</p>
+  <p>顺着这条线，后面「垂直」也有了新情况。老师说：<q>空间的直线它不一定相交啊，你比方说我这个胳膊和这个胳膊的确是垂直的，但是它根本就不在一个平面上——所以我们这里说的垂直，一般指的是异面垂直。</q>他紧接着补上边界：<q>那老师那我们俩就刚好相交、就在一个平面上呢？这个也行啊，所以异面垂直也可能是同面垂直。</q><mark>所以「垂直」这个词在空间里是纯粹的向量条件（点乘为零），不附带「有没有交点」的暗示。</mark></p>
+</div>
+
+<p>位置的分类一共四种，老师是按「哪些是特殊的」这个语气讲的：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>位置关系</th><th>向量条件</th><th>还要补一步吗</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>平行</strong>（不重合）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub></math></span>，即对应分量成比例</td>
+        <td>要：再验证一条上的点<strong>不</strong>满足另一条</td>
+      </tr>
+      <tr>
+        <td><strong>垂直</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn></math></span></td>
+        <td>不用；可以是异面垂直，也可以是同面垂直</td>
+      </tr>
+      <tr>
+        <td><strong>重合</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub></math></span>，<strong>且</strong>一条上的点也满足另一条</td>
+        <td>方向平行只是<em>前提</em>，判断的关键在「点」</td>
+      </tr>
+      <tr>
+        <td><strong>斜交</strong>（既不平行也不垂直）</td>
+        <td>方向不平行，且不属于上面几种</td>
+        <td>还可以细分：相交的叫共面斜交，不交的叫异面</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>老师讲「重合」时把判断逻辑说得特别直白：<q>两个直线重合是什么意思呢？首先它两个的方向向量仍然是平行的，这个没问题吧——那怎么能知道两个直线是重合的呢？判断方法就是任取一条直线上的一点，它也符合另一条直线，就叫两个直线是重合的。</q><mark>所以「方向平行」和「重合」差着一步：平行只比方向，重合还要比点。</mark></p>
+
+<p>第四种他讲得很随意，但里面藏着一个重要的词：<q>因为咱们不管讲的垂直、平行还是重合，这都是很特殊的；人家这两个直线就是斜不拉几的，对吧，那就斜交呗。那么斜交呢大家也注意，它其实是有两种：一种是异面的，一种是同面的。</q>——也就是说，<strong>不平行不垂直，只排在「斜」这一档里；至于它们到底相交还是异面，是另一个问题</strong>。老师对出题偏好说得很实在：<q>斜交呢我们出题一般不太出，我们比较喜欢出这种比较特殊的。</q></p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q">求直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>L</mi><mn>1</mn></msub><mo>:</mo><mfrac><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>4</mn></mrow><mrow><mo form="prefix">−</mo><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>+</mo><mn>3</mn></mrow><mrow><mn>1</mn></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>L</mi><mn>2</mn></msub><mo>:</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>+</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac></math></span> 的夹角。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：读出两个方向向量 → 先判平行、再判垂直 → 都不是就套夹角公式</span>
+    <p>方向向量直接读分母：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>。</p>
+    <p><strong>第一步，先看平行。</strong>老师把这个顺序说成了条件反射：<q>这两个方向向量大家拿到手以后，第一眼你先判断它是怎么着——平行？因为平行是不是用肉眼可以看出来？就是它的对应分量是不是成比例。</q><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>:</mo><mn>2</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mo>:</mo><mo form="prefix">−</mo><mn>2</mn><mo>=</mo><mn>2</mn><mo>:</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>:</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，三组比例根本不一致，<strong>不平行</strong>。</p>
+    <p><strong>第二步，再看垂直。</strong>口算点乘：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>4</mn><mo>)</mo><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo><mo>+</mo><mn>1</mn><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>2</mn><mo>+</mo><mn>8</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>9</mn><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></div>
+    <p>不是零，所以<strong>不垂直</strong>。老师算到这一步的评语是：<q>不是平行、不是垂直，就是斜交，那这个夹角咱就正常地求呗。</q></p>
+    <p><strong>第三步，套公式。</strong>模长：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn><mn>6</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mo>=</mo><mn>3</mn><msqrt><mrow><mn>2</mn></mrow></msqrt></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>4</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mo>=</mo><mn>3</mn></math></span>。</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mn>9</mn></mrow><mrow><mn>3</mn><msqrt><mrow><mn>2</mn></mrow></msqrt><mo>⋅</mo><mspace width="0.25em"></mspace><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>9</mn></mrow><mrow><mn>9</mn><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></div>
+    <p>老师算完还自嘲了一句「算出来是一个二分之根二，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 就是一个四分之派」——<mark>这类题只要方向向量读对，剩下的全是口算</mark>；真正容易翻车的是第一步读分母时漏抄负号。</p>
+  </div>
+</div>
+
+<h2 id="s4">四、直线与平面的夹角：四个夹角公式里唯一的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span></h2>
+
+<p>这是全讲最需要「看图」的一处。先看定义。老师讲的时候是先描述做法、再给严格定义：<q>假设这是一个平面，有这么一条直线。首先这个直线和平面的夹角，它其实有一个严格的定义——从这条直线上任意取一点，向这个平面作垂线，这不是有一个垂点吗？有一个交点，然后你把它连起来，那么这儿的夹角其实就是直线和平面的夹角。</q></p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 直线与平面的夹角</span>
+  <p>直线与它<strong>在该平面上的投影</strong>之间的夹角，叫直线与平面的夹角。</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo stretchy="true">|</mo></mrow></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mo>θ</mo><mo>∈</mo><mrow><mo stretchy="true">[</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">]</mo></mrow></math></div>
+  <p>用的是直线的<strong>方向向量</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 与平面的<strong>法向量</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>——一边一个。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么这里换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>，而不是继续用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span></span>
+  <p>关键在于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 的夹角<strong>和我们要的那个角互余</strong>。老师是一边画三角形一边说的：<q>我们要求的直线与平面的夹角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 是这个角，但是这个向量（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span>）和这个向量（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>）的夹角是不是这个角啊？——它们两个是互余的。我要求的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>，那么因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 是互余，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span> 是不是就等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>φ</mo></math></span> 啊？</q></p>
+  <p>翻译成一句更好记的话：<strong>法向量垂直平面，所以「方向向量与法向量的夹角」总比「线面角」多出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span>；换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span> 就是把多出来的那 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 补回去。</strong></p>
+  <p>老师对这个公式还有个可爱的小插曲：<q>不好意思，我这个公式和我们书上的刚好反了</q>——然后他给出了本节最有价值的一句总结：<q>到目前为止，我们讲的所有的夹角公式都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>，只有这个地方是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>。</q><mark>四个夹角公式里，唯一的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span> 就是「线面角」，这条就是最好的记忆点。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="直线与平面的夹角：方向向量与法向量的夹角与线面角互余，所以公式用正弦">
+    <path d="M 80 190 L 340 222 L 580 158 L 320 126 Z" class="m-area"></path>
+    <path d="M 80 190 L 340 222 L 580 158 L 320 126 Z" fill="none" class="m-line" stroke-width="1.5"></path>
+    <text x="500" y="186" class="m-txt" font-size="11.5">平面 π</text>
+
+    <line x1="150" y1="64" x2="500" y2="198" class="m-acc" stroke-width="2.2"></line>
+    <polygon points="506,200 494,197 496,187" class="m-fill-a"></polygon>
+    <text x="132" y="58" class="m-acc" font-size="12">直线 L（方向向量 s）</text>
+
+    <line x1="330" y1="133" x2="530" y2="161" class="m-thin" stroke-width="1.4" stroke-dasharray="5 4"></line>
+    <text x="470" y="146" class="m-sub" font-size="11.5">投影（在平面内）</text>
+
+    <line x1="330" y1="133" x2="292" y2="44" class="m-good" stroke-width="2.2"></line>
+    <polygon points="290,38 285,49 295,48" class="m-fill-g"></polygon>
+    <text x="252" y="34" class="m-good" font-size="12">n（法向量）</text>
+
+    <path d="M 372 143 Q 362 131 372 121" fill="none" class="m-vio" stroke-width="1.3"></path>
+    <text x="378" y="136" class="m-vio" font-size="12">θ</text>
+
+    <path d="M 300 96 Q 288 104 282 86" fill="none" class="m-good" stroke-width="1.3"></path>
+    <text x="256" y="86" class="m-good" font-size="12">φ</text>
+
+    <rect x="344" y="16" width="288" height="90" rx="6" class="m-panel-hi"></rect>
+    <text x="356" y="38" class="m-fill-a" font-size="11.5">sin θ = |s · n| / (|s| |n|)</text>
+    <text x="356" y="60" class="m-sub" font-size="11.5">四个夹角公式里唯一的 sin</text>
+    <text x="356" y="80" class="m-sub" font-size="11.5">分子加绝对值 → 0 ≤ θ ≤ π/2</text>
+    <text x="356" y="98" class="m-sub" font-size="11.5">因为 θ + φ = 90°，互余</text>
+
+    <circle cx="330" cy="133" r="3.4" class="m-fill-a"></circle>
+    <text x="16" y="238" class="m-txt" font-size="12">φ 是方向向量与法向量的夹角；它和线面角 θ 互余，所以 cos φ 就写成了 sin θ</text>
+  </svg>
+  <figcaption><b>这一张图把「为什么是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>」讲完了。</b>紫色标的是线面角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>——直线与它在平面上的<em>投影</em>之间的角；绿色标的是方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 与法向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 之间的角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span>。两者互余，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>φ</mo></math></span>。<mark>只要看见「线面角」，脑子里就该浮现这张「一个直角被劈成两个互余角」的图</mark>，这样才不会再和「两个平面的夹角用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>」混淆。</figcaption>
+</figure>
+
+<p>老师在这一段把四个夹角公式当场总结了一遍（他还顺手吐槽自己：「我们老师有一个很神奇的技能——嘴上说话跟手上写字一点都不影响」）。这张表就是他为考试准备的那张：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>算谁的夹角</th><th>用哪两个向量</th><th>公式</th><th>分子加绝对值？</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>两个向量</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 自己</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo></mrow></mfrac></math></span></td>
+        <td><strong>不加</strong>（允许钝角，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo><mo>∈</mo><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span>）</td>
+      </tr>
+      <tr>
+        <td>两个平面</td>
+        <td>两个<strong>法向量</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>,</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub><mo>|</mo></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub><mo>|</mo></mrow></mfrac></math></span></td>
+        <td><strong>要加</strong></td>
+      </tr>
+      <tr>
+        <td>两条直线</td>
+        <td>两个<strong>方向向量</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>,</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo>|</mo></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo>|</mo></mrow></mfrac></math></span></td>
+        <td><strong>要加</strong></td>
+      </tr>
+      <tr>
+        <td>直线与平面</td>
+        <td>方向向量与法向量</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>|</mo></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>|</mo></mrow></mfrac></math></span></td>
+        <td><strong>要加</strong>，且换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>这张表其实只要三句话就能重建：<strong>第一，只有「两个向量」的夹角可以取钝角</strong>，所以只有它不加绝对值；图形之间的夹角都是眼见的锐角，一律加。<strong>第二，看每个图形手里握着哪个「专属向量」</strong>——平面有法向量、直线有方向向量，两个平面就用法向量对法向量，两条直线就用方向向量对方向向量，一个平面加一条直线就一边一个。<strong>第三，只有线面角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>。</strong>老师最后的建议是：<q>有时候这个脑子比较容易晕，所以到时候你画个图自己演示演示就行。</q><mark>记不住就画图，这是这一章最可靠的自救方式。</mark></p>
+
+<h2 id="s5">五、直线与平面：位置关系与交点的套路</h2>
+
+<p>直线与平面的位置关系一共四种，老师是按「画个图马上就能理解」的顺序讲的。前两种的判据只差一个字：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>位置关系</th><th>向量条件</th><th>怎么区分最后两种</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>垂直</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>（方向向量与法向量平行）</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>平行</strong>（且不相交）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>，且直线上的点<strong>不</strong>满足平面方程</td>
+        <td rowspan="2">两种都满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>，<mark>唯一的分辨办法是拿直线上一点代进平面方程看成立不成立</mark></td>
+      </tr>
+      <tr>
+        <td><strong>直线在平面上</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>，<strong>且</strong>直线上的点满足平面方程</td>
+      </tr>
+      <tr>
+        <td><strong>斜交</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 既不平行也不垂直</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>老师推导前两条时反复强调「这地方有点绕」：<q>直线和平面垂直，这不很清楚吗？平面的法向量不是这个吗，直线的方向向量不是这个吗，那他俩不平行不就完了吗？所以就是它的方向向量和它的法向量是平行的——这地方有点绕，为什么呢？它的方向向量和它的法向量是平行，那么这个直线和这个平面是不是垂直啊？</q>——<strong>方向向量垂直于平面，直线才垂直于平面；而「方向向量 ⊥ 平面」翻译过来就是「方向向量 ∥ 法向量」</strong>。这里出现的「垂直变平行」，正是本页最容易绕晕的一处。</p>
+
+<p>接着是那对「长得一样」的情况：<q>直线与平面平行、和直线落在这个平面上，这两种情况我都分不开啊——好办，直线在平面上，那就是你从直线上任取一点，它也符合那个平面的要求：你从这个直线上取一点，带到那个平面的方程里头去，是不是能成立就行。</q></p>
+
+<div class="blk trap">
+  <span class="lbl">一个必须改掉的说法：「直线与平面重合」</span>
+  <p>老师说这是他刚教书时也犯过的错：<q>直线落在平面上，老师啊，那你直接就说他俩重合不就完了吗？——不可以的，不能这么说。</q>原因是他打的那个比方：</p>
+  <p><q>两根直线能重合，两个平面也可以重合，但是直线和平面不能叫重合，他两个不是对等的概念。为什么呢？平面是整个平面，直线呢就一根线——简单来说是平面大还是线大？平面大。你说俩东西重合，他俩得是一样的才能重合，对吧；人家有俩同学是双胞胎长得一模一样，他俩一样，但他起码两个都是人啊。</q></p>
+  <p><mark>所以：两条直线可以叫重合，两个平面可以叫重合，直线与平面<strong>不能</strong>叫重合，只能说「直线在平面上」。</mark>老师说这是个会被扣分的说法。</p>
+  <p>还有一句相关的边界：<q>老师，那这个直线落在了平面上，这个直线和这个平面是不是也是平行的？——不用。我们说的直线与平面平行，就是在平面外头和它平行，它本身就把直线落在平面上这种情况排除掉了。</q><strong>「平行」这两个字在答题口径上已经隐含了「不在平面上」。</strong></p>
+</div>
+
+<p>接下来的内容就是「有交点怎么办」。老师在这里给出了本页最实用的一条经验，而且特意要求大家形成条件反射：<q>只要它这个题目是有交点的题，就都是参数式方程。什么叫交点呢？一个直线和一个平面相交是不是交点啊？两个直线相交是不是交点啊？——就是只要这个题目说是和交点有关系，那么它就是参数式方程。</q></p>
+
+<div class="blk thm">
+  <span class="lbl">解题模板 · 凡是「交点」，就把点设成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></span>
+  <ol class="steps">
+    <li>把直线写成<strong>参数式</strong>：所有点统一记成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>m</mi><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>n</mi><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><msub><mi>z</mi><mn>0</mn></msub><mo>+</mo><mi>p</mi><mi>t</mi><mo>)</mo></math></span>。</li>
+    <li>把题目那个几何条件（在平面上 / 与某向量垂直 / 距离是多少）代进去，列出一个<strong>关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的一元方程</strong>。</li>
+    <li>解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，代回参数式得到具体坐标；如果需要方向向量，就用两个点相减。</li>
+  </ol>
+  <p>老师说这个形式的价值就在于：<q>参数式方程它有个好处——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 三个坐标都有了，那就相当于那个点有了。</q></p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q">求过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span> 且与平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>−</mo><mn>3</mn><mi>y</mi><mo>+</mo><mi>z</mi><mo>−</mo><mn>4</mn><mo>=</mo><mn>0</mn></math></span> 垂直的直线方程。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把「直线垂直于平面」直接翻译成「方向向量取成法向量」</span>
+    <p>题目条件里的每个字都已经给出了需要的向量：平面的法向量读出来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>；而「直线垂直于平面」⟺ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>。所以根本不用算：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>3</mn><mo>,</mo><mspace width="1em"></mspace><mn>1</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>点有了、方向向量有了，上点向式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>+</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>4</mn></mrow><mrow><mn>1</mn></mrow></mfrac></math></div>
+    <p>老师对这类题的评价是<q>太简单了</q>，因为条件都摆在明面上。<strong>这道题的关键不在计算，而在认出「垂直」两个字就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 取成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>」。</strong></p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 6</span><span class="ex-q">求与两平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>4</mn><mi>z</mi><mo>=</mo><mn>3</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>−</mo><mi>y</mi><mo>−</mo><mn>5</mn><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 的交线平行，且过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>3</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>5</mn><mo>)</mo></math></span> 的直线。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：不求交线，只求它的方向向量——两个法向量叉乘</span>
+    <p>题目说「与交线平行」，那么交线的方向向量就是所求直线的方向向量；而交线的方向向量就是两个法向量的叉乘。先读法向量：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>5</mn><mo>)</mo></math></span>。</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn><mo stretchy="true">)</mo></mrow><mo>×</mo><mrow><mo stretchy="true">(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>5</mn><mo stretchy="true">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>3</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>取个顺眼的方向，三个分量一起变号，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>4</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。老师说：<q>这个负号咱其实就可以不取了</q>——反正方向反过来还是同一条直线。</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>+</mo><mn>3</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>5</mn></mrow><mrow><mn>1</mn></mrow></mfrac></math></div>
+    <div class="note">
+      <span class="lbl">这道题示范了「不求交线也能用交线」</span>
+      <p>题目只给了两个平面，<strong>连交线上的一个点都没有给，也不需要</strong>。因为我们只需要方向：方向由两个法向量完全决定。<mark>这就是「一般式 → 方向向量」那条结论最典型的用法——把「求交线」这种复杂任务，降级成一次叉乘。</mark>也正因为如此，老师认为这条路比课本用「平面束」的方法简单得多。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 7</span><span class="ex-q">求直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>2</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>3</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>4</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 与平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>−</mo><mn>6</mn><mo>=</mo><mn>0</mn></math></span> 的交点。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：有交点 → 立刻写参数式，把「直线上的点」变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的表达式</span>
+    <p>令三个分式都等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，直线上的任意一点就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>+</mo><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mn>3</mn><mo>+</mo><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mn>4</mn><mo>+</mo><mn>2</mn><mi>t</mi><mo>)</mo></math></span>。交点当然也在这条直线上，所以把它代进平面方程，就只剩下一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>2</mn><mrow><mo stretchy="true">(</mo><mn>2</mn><mo>+</mo><mi>t</mi><mo stretchy="true">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>+</mo><mi>t</mi><mo stretchy="true">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true">(</mo><mn>4</mn><mo>+</mo><mn>2</mn><mi>t</mi><mo stretchy="true">)</mo></mrow><mo>−</mo><mn>6</mn><mo>=</mo><mn>0</mn></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>4</mn><mo>+</mo><mn>2</mn><mi>t</mi><mo>+</mo><mn>3</mn><mo>+</mo><mi>t</mi><mo>+</mo><mn>4</mn><mo>+</mo><mn>2</mn><mi>t</mi><mo>−</mo><mn>6</mn><mo>=</mo><mn>5</mn><mo>+</mo><mn>5</mn><mi>t</mi><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>t</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></div>
+    <p>代回参数式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mn>3</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>2</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><mn>4</mn><mo>−</mo><mn>2</mn><mo>=</mo><mn>2</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>老师提醒这类题做完要<strong>顺手拿铅笔在草图上比划一下</strong>，看交点是不是落在「合理的位置」上。这个动作不花钱，但能挡住大部分符号错误。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 8</span><span class="ex-q">求过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span> 且与直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac></math></span> 垂直相交的直线。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：交点不知道，但它一定在已知直线上——用参数式把它设出来，用「垂直」列方程</span>
+    <p>老师先澄清了一个容易含混的地方：<q>我们刚才讲那个两个直线垂直，它其实是异面垂直的；但是「过这个点与这个直线垂直」，人家说了是垂直是不是还相交啊？它相交就有交点，就是同面垂直——这地方大家一定要搞清楚。</q>换句话说，「垂直<em>相交</em>」比单纯的「垂直」多了两个条件：在同一个平面里，而且确实交于一点。</p>
+    <p><strong>第一步，把交点设出来。</strong>设交点为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span>，它在这条已知直线上，所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>B</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>1</mn><mo>+</mo><mn>3</mn><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mn>1</mn><mo>+</mo><mn>2</mn><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mi>t</mi><mo stretchy="true">)</mo></mrow></math></div>
+    <p><strong>第二步，写出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span>。</strong>终点减起点：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>3</mn><mo>+</mo><mn>3</mn><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mi>t</mi><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mi>t</mi><mo>−</mo><mn>3</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p><strong>第三步，用「垂直」列方程。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>=</mo><mo>(</mo><mn>3</mn><mo>,</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，点乘为零：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>3</mn><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>3</mn><mo>+</mo><mn>3</mn><mi>t</mi><mo stretchy="true">)</mo></mrow><mo>+</mo><mn>2</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>t</mi><mo>+</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>1</mn><mo stretchy="true">)</mo></mrow><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mi>t</mi><mo>−</mo><mn>3</mn><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>1</mn><mn>4</mn><mi>t</mi><mo>−</mo><mn>6</mn><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>t</mi><mo>=</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>7</mn></mrow></mfrac></math></div>
+    <p>老师在这里停顿了一下：<q>写到这一步，要是哪个地方数算错了，有同学眼尖的能给我说哈，因为有时候容易有这个笔误。</q>——<strong>这类题的脾气就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 算错一次、后面每一步都跟着错</strong>，所以这一步必须回头验一遍（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><mi>t</mi><mo>+</mo><mn>4</mn><mi>t</mi><mo>+</mo><mi>t</mi><mo>=</mo><mn>1</mn><mn>4</mn><mi>t</mi></math></span> ✓，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>9</mn><mo>+</mo><mn>3</mn><mo>=</mo><mo form="prefix">−</mo><mn>6</mn></math></span> ✓）。</p>
+    <p><strong>第四步，求出方向向量。</strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>7</mn></mrow></mfrac></math></span> 代回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn><mn>2</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>6</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mfrac><mrow><mn>2</mn><mn>4</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mspace width="1em"></mspace><mo>∼</mo><mspace width="1em"></mspace><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>4</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∼</mo></math></span>」这一步就是老师那套实战习惯：<q>这玩意儿这么麻烦呢，咱一般也不直接用——能提个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>6</mn></mrow><mrow><mn>7</mn></mrow></mfrac></math></span> 没问题吧？那它的方向向量咱就用这个呗。</q>提出公因子之后，分母全变成了小整数。</p>
+    <p><strong>第五步，写点向式。</strong></p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mn>3</mn></mrow><mrow><mo form="prefix">−</mo><mn>4</mn></mrow></mfrac></math></div>
+    <p>老师核对了一下课本答案，说<q>和我书上答案是一样的</q>，并且给出了一个明确的态度：<q>这个题我们比较建议大家用我这个方法做——书上那个方法好像是用的平面做的垂直，那个方法不如我这个简单。</q></p>
+    <div class="trap">
+      <span class="lbl">这类题的两个常见失手</span>
+      <p><span class="bad">一、把「垂直」写成了「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> 与方向向量平行」。</span>垂直是<strong>点乘为零</strong>，平行是<strong>分量成比例</strong>，两个字差得很远。这题用的是点乘。</p>
+      <p><span class="bad">二、方向向量和点弄混。</span>最后写点向式时分子里要放的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>（或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span>）的坐标，别把刚算出来的方向向量当成点填进分子。（本页例 8 的分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>，分母才是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn><mo>)</mo></math></span>。）</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s6">六、点到直线的距离</h2>
+
+<p>平面那一节给的是「点到平面的距离」，直线这边自然也有一个对应物，而且它和叉乘的关系更直接。点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 到过点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>1</mn></msub></math></span>、方向向量为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 的直线的距离是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>d</mi><mo>=</mo><mfrac><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><msub><mi>P</mi><mn>1</mn></msub><msub><mi>P</mi><mn>0</mn></msub></mrow><mo>⃗</mo></mover><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo stretchy="true">|</mo></mrow></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac></math></div>
+
+<div class="why">
+  <span class="lbl">这个公式凭什么成立</span>
+  <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><msub><mi>P</mi><mn>1</mn></msub><msub><mi>P</mi><mn>0</mn></msub></mrow><mo>⃗</mo></mover></math></span> 与方向向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 看成两条边，它们张成一个<strong>平行四边形</strong>。这个平行四边形的面积有两种算法：</p>
+  <ul class="tight">
+    <li>用叉乘：面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><msub><mi>P</mi><mn>1</mn></msub><msub><mi>P</mi><mn>0</mn></msub></mrow><mo>⃗</mo></mover><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo stretchy="true">|</mo></mrow></math></span>；</li>
+    <li>用底乘高：底取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo stretchy="true">|</mo></mrow></math></span>，那么高就是——<mark>点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 到这条直线的距离本身</mark>。</li>
+  </ul>
+  <p>两种算法算的是同一块面积，让它们相等、再除以底 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo stretchy="true">|</mo></mrow></math></span>，就得到上面的公式。<strong>所以它不是新公式，而是「叉乘就是面积」这一条几何事实的直接推论。</strong></p>
+  <p>对照记忆：<em>点到<strong>平面</strong>的距离用「数量积 + 法向量的模」，点到<strong>直线</strong>的距离用「叉乘 + 方向向量的模」</em>——一个打点乘、一个打叉乘，和「平面管垂直、直线管平行」的分工完全一致。</p>
+</div>
+
+<h2 id="s7">七、留个尾巴：平面束（了解即可）</h2>
+
+<p>课本最后有一个内容叫<strong>平面束</strong>（老师念作「平面数」），他明确表态：<q>这个东西其实我们做题的时候用的相对来说比较少一些，既然书上有，咱就给大家解释解释基本原理。</q></p>
+
+<div class="blk def">
+  <span class="lbl">平面束是什么</span>
+  <p>一条直线既然由两个平面相交得到，那么<strong>过这条直线的平面有无穷多张</strong>，它们构成了一个「平面束」。用式子写出来就是：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><msub><mi>A</mi><mn>1</mn></msub><mi>x</mi><mo>+</mo><msub><mi>B</mi><mn>1</mn></msub><mi>y</mi><mo>+</mo><msub><mi>C</mi><mn>1</mn></msub><mi>z</mi><mo>+</mo><msub><mi>D</mi><mn>1</mn></msub><mo stretchy="true">)</mo></mrow><mo>+</mo><mo>λ</mo><mrow><mo stretchy="true">(</mo><msub><mi>A</mi><mn>2</mn></msub><mi>x</mi><mo>+</mo><msub><mi>B</mi><mn>2</mn></msub><mi>y</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>z</mi><mo>+</mo><msub><mi>D</mi><mn>2</mn></msub><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>0</mn></math></div>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>λ</mo></math></span> 取遍实数（它是个可变的常数），就得到全部过这条直线的平面。</p>
+</div>
+
+<p>老师用的比喻是书的「书脊」：<q>什么东西呢？就是我这个书搭的这个书，我们叫书脊，这个地方书脊就是一条直线。这条直线是确定的，现在问通过这条直线的所有平面怎么表示？是不是跟我翻书这个过程还有点像？那所有的平面就是过这条直线，那蹭蹭蹭蹭地这样画，你看这个书的这么多页，是不是就相当于过这个书脊的所有的平面啊？</q></p>
+
+<p>他还给了一个用平面束做的例题：把一条直线投影到平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 上，求投影直线。思路是——先从直线造出平面束，<strong>在无穷多张平面里只挑出「与已知平面垂直」的那一张</strong>：把平面束的法向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mo>λ</mo><mo>,</mo><mspace width="1em"></mspace><mn>1</mn><mo>−</mo><mo>λ</mo><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo>+</mo><mo>λ</mo><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 点乘等于零，解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>λ</mo><mo>=</mo><mn>1</mn></math></span>，代回去就得到那张垂直平面；最后用<strong>这张平面与已知平面联立</strong>，就是投影直线。</p>
+
+<p>老师说得很坦诚：<q>我是不太用这个东西，大家稍微了解了解。</q><mark>所以要记的不是公式本身，而是它示范的那个思想：当「过某条线的平面族」能用一个参数写出来时，就可以用「再加一个条件」把参数定死。</mark>这个思想在后面的多元函数里还会以别的形式出现。</p>
+
+<div class="blk trap">
+  <span class="lbl">本页易错清单（六条）</span>
+  <p><span class="bad">一、把分母为零当成错。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mn>0</mn></mrow></mfrac></math></span> 是合法写法，意思是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub></math></span>；它对应参数式里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是常数。</p>
+  <p><span class="bad">二、以为答案唯一。</span>直线上的点不唯一、方向向量也不唯一（可以整体变号、可以约公因子）；别拿自己的答案去和标准答案逐字比对，要验「点在不在线上、方向对不对」。</p>
+  <p><span class="bad">三、叉乘的中间项忘了取负。</span>例 3 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub></math></span> 的中间分量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>(</mo><mn>3</mn><mo>−</mo><mn>2</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。算完顺手验一下：<strong>叉乘结果与两个法向量的点乘都应该是零</strong>。</p>
+  <p><span class="bad">四、以为「令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>」一定能求出点。</span>那只在直线与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面不平行时成立；换 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 再切。</p>
+  <p><span class="bad">五、把「直线垂直于平面」写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>。</span>正确的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>（方向向量与法向量同向）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 是平行或在平面上。</p>
+  <p><span class="bad">六、说「直线与平面重合」。</span>两者不对等，只能说「直线在平面上」。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>直线靠<strong>方向向量</strong>：找点、找 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span>、套点向式；有交点就改写成参数式。题目里所有「平行 / 垂直 / 夹角」的要求，都是在告诉你 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 是什么。</p>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>两平面一般式</b> 联立</span><span class="ar">→</span>
+    <span class="n"><b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>1</mn></msub><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>n</mi><mn>2</mn></msub></math></span></b></span><span class="ar">→</span>
+    <span class="n"><b>坐标面切一刀</b> 得点</span><span class="ar">→</span>
+    <span class="n"><b>点向式 → 参数式</b></span>
+  </div>
+
+  <h3>三个式子</h3>
+  <ul class="tight">
+    <li>一般式：两个平面方程联立——<strong>出生证明</strong>，看不出点和方向。</li>
+    <li>点向式：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi><mo>−</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><mrow><mi>m</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>z</mi><mo>−</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><mrow><mi>p</mi></mrow></mfrac></math></span>——<strong>答案写它</strong>，分母可以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，不必化简。</li>
+    <li>参数式：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>m</mi><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>n</mi><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub><mo>+</mo><mi>p</mi><mi>t</mi></math></span>——<strong>一有交点就用它</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的系数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span>。</li>
+  </ul>
+
+  <h3>四个夹角公式怎么记</h3>
+  <ul class="tight">
+    <li>平面用法向量、直线用方向向量；两个对两个，一个对一个。</li>
+    <li><strong>只有「两个向量」的夹角不加绝对值</strong>（可以取钝角），其余三种都加。</li>
+    <li><strong>只有线面角用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span></strong>——因为方向向量与法向量互余。</li>
+  </ul>
+
+  <h3>位置关系（两条判据 + 一条口径）</h3>
+  <ul class="tight">
+    <li>两直线：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub></math></span> 判平行（再验点判重合）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>1</mn></msub><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>s</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn></math></span> 判垂直（可以是异面垂直）。</li>
+    <li>线与面：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 判垂直；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 时要代点区分「平行」与「在平面上」。</li>
+    <li><strong>「平行」在答题时就是不重合、不在平面上；重合就说重合。</strong></li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ol class="tight">
+    <li>「令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span>」不是万能——直线与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面平行就切不上，换一根轴再切。</li>
+    <li>答案不唯一：点可以换、方向可以反向或约公因子；验证的方法是「点在线上 + 方向匹配条件」，不是逐字比对。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P072-曲面方程 平面方程 直线方程/index.html">曲面方程 平面方程 直线方程</a> 曲面方程·平面方程·直线方程（本页的新授课版本）</li>
+      <li><a href="../P120-【黑板】平面及其方程/index.html">【黑板】平面及其方程</a> 【黑板】平面及其方程（点法式、两平面位置关系、点到平面距离）</li>
+      <li><a href="../P119-【黑板】数量积与向量积/index.html">【黑板】数量积与向量积</a> 【黑板】数量积与向量积（点乘判垂直、叉乘求方向向量）</li>
+      <li><span class="cur">「成比例」= 平行；「点乘为零」= 垂直</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P122-【黑板】曲面/index.html">【黑板】曲面</a> 【黑板】曲面（旋转曲面、柱面、二次曲面）</li>
+      <li><a href="../P123-【黑板】空间曲线/index.html">【黑板】空间曲线</a> 【黑板】空间曲线（两个曲面相交得曲线）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span> 是<strong>直线</strong>的方向向量（管平行）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span> 是<strong>平面</strong>的法向量（管垂直）</li>
+      <li>直线垂直于平面 ⟺ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span>；直线平行于平面 ⟺ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>n</mi></math></span></li>
+      <li>两直线夹角用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>、线面夹角用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>——四个夹角公式里唯一的例外</li>
+      <li>「直线在平面上」不能说成「直线与平面重合」</li>
+      <li>点向式的分母可以为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（表示该坐标恒定），但这不等于这一项要删掉</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 121 讲</span><a href="../P120-【黑板】平面及其方程/index.html">← P120</a><a href="../index.html">全部目录</a><a href="../P122-【黑板】曲面/index.html">P122 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、三种式子，一张速查卡</a>
+    <a href="#s2">二、一般式 → 点向式：求方向向量的标准套路</a>
+    <a href="#s3">三、两条直线：夹角与四种位置关系</a>
+    <a href="#s4">四、直线与平面的夹角：四个夹角公式里唯一的 sin</a>
+    <a href="#s5">五、直线与平面：位置关系与交点的套路</a>
+    <a href="#s6">六、点到直线的距离</a>
+    <a href="#s7">七、留个尾巴：平面束（了解即可）</a>
+  </aside>
+</div>
+</body>
+</html>

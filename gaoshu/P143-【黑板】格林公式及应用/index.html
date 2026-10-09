@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】格林公式及应用：三查、挖洞、凑全微分 · 高等数学笔记</title>
+<meta name="description" content="格林公式把闭曲线上的第二型曲线积分与区域上的二重积分焊在一起：∮LPdx+Qdy=∬D(∂Q∂x−∂P∂y)dσ，其中 L 取正向、P、Q 在 D 上有一阶连续偏导。黑板课上真正决定成败的不是公式，而是套公式之前那三查：曲线闭吗？方向正吗？区域内有没有让偏导失效的奇点？三查里任一条不过关，就要请出补">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 143 讲</div>
+    <h1 class="title"><span class="pnum">P143</span>【黑板】格林公式及应用：三查、挖洞、凑全微分</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>格林公式把<strong>闭曲线上的第二型曲线积分</strong>与<strong>区域上的二重积分</strong>焊在一起：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 取<strong>正向</strong>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 上有一阶连续偏导。黑板课上真正决定成败的不是公式，而是套公式之前那三查：<mark>曲线闭吗？方向正吗？区域内有没有让偏导失效的奇点？</mark>三查里任一条不过关，就要请出补线、变号和挖洞。</p></div>
+    <div class="meta"><span>时长 1h48m</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=236">03:56</a><span class="vv"><b>两个概念</b>：单连通区域（没洞）与复连通区域（有洞）。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=304">05:04</a><span class="vv"><b>正向的唯一判据</b>：沿边界走时，区域在<strong>左手侧</strong>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=449">07:29</a><span class="vv"><b>格林公式</b>：左边闭曲线上的第二型积分，右边区域上的二重积分。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=566">09:26</a><span class="vv">「一阶连续偏导」不是废话——分母为零的点会让它失效。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=903">15:03</a><span class="vv"><b>目的</b>：曲线积分难算、二重积分熟，公式是用来<strong>降低计算量</strong>的。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=994">16:34</a><span class="vv"><b>例 1</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>−</mo><mi>x</mi><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是圆周 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>a</mi><mrow><mn>2</mn></mrow></msup></math></span> 取正向。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=2913">48:33</a><span class="vv"><b>例 3（有奇点）</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mfrac><mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是不过原点、但可能<strong>包住原点</strong>的闭曲线。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4009">1:06:49</a><span class="vv"><b>路径无关</b>：平面曲线积分与路径无关的充要条件登场。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">先认两个区域、一条边界、一个方向</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=236">03:56</a>格林公式只用到两个新概念，而且都很直观。老师说得很松：<strong>没有洞的一大块，叫单连通区域</strong>；<strong>中间挖了一个洞的，叫复连通区域</strong>。平面上整个圆盘是单连通的；环形区域、挖掉一个点的圆盘都不是。这两个词平时用不上，但一旦遇到「奇点」的题，它们就是唯一的出路。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=304">05:04</a>围成区域的这条曲线叫<strong>边界曲线</strong>。边界曲线要谈方向，方向只有一个判据：</p>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=304">05:04</a>正向的定义</span>
+  <p>沿着边界曲线行走，如果<strong>区域始终在你左手侧</strong>，这个方向就叫正向。</p>
+  <p>推论：单连通区域只有一条边界，它的正向就是<strong>逆时针</strong>；复连通区域有两条边界，外面那条的正向仍是<strong>逆时针</strong>，而里面那条（洞的边界）的正向是<strong>顺时针</strong>——因为只有顺时针走，洞外面的区域才在你的左手边。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 306" role="img" aria-label="左边单连通区域只有一条边界，正向逆时针；右边复连通区域有两条边界，外边界逆时针、内边界顺时针，判据都是区域在左手侧">
+    <line x1="320" y1="34" x2="320" y2="286" class="m-thin" stroke-width="1" stroke-dasharray="4 4"></line>
+
+    <circle cx="158" cy="152" r="106" class="m-area"></circle>
+    <circle cx="158" cy="152" r="106" fill="none" class="m-acc" stroke-width="2.2"></circle>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(158.0,46.0) rotate(-180.0)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(66.2,205.0) rotate(60.0)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(249.8,205.0) rotate(-60.0)"></path>
+    <text x="158" y="30" text-anchor="middle" class="m-txt" font-size="12.5">单连通 · 一条边界</text>
+    <text x="196" y="74" class="m-fill-a" font-size="12.5">L</text>
+    <text x="158" y="126" text-anchor="middle" class="m-sub" font-size="12">D</text>
+    <text x="158" y="156" text-anchor="middle" class="m-sub" font-size="11">左手侧 = 区域</text>
+    <text x="158" y="290" text-anchor="middle" class="m-sub" font-size="11">L 逆时针 = 正向</text>
+
+    <circle cx="482" cy="152" r="106" class="m-area"></circle>
+    <circle cx="482" cy="152" r="106" fill="none" class="m-acc" stroke-width="2.2"></circle>
+    <circle cx="482" cy="152" r="34" class="m-hole"></circle>
+    <circle cx="482" cy="152" r="34" fill="none" class="m-warn" stroke-width="2"></circle>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(482.0,46.0) rotate(-180.0)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(390.2,205.0) rotate(60.0)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(573.8,205.0) rotate(-60.0)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-w" transform="translate(482.0,118.0) rotate(0)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-w" transform="translate(516.0,152.0) rotate(90)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-w" transform="translate(482.0,186.0) rotate(180)"></path>
+    <text x="482" y="30" text-anchor="middle" class="m-txt" font-size="12.5">复连通 · 两条边界</text>
+    <text x="524" y="74" class="m-fill-a" font-size="12.5">L</text>
+    <text x="500" y="200" class="m-fill-w" font-size="12.5">l</text>
+    <text x="482" y="290" text-anchor="middle" class="m-sub" font-size="11">外边界逆时针 · 内边界顺时针</text>
+  </svg>
+  <figcaption><b>正向不看「逆时针」这个外形，只看「区域在不在左手侧」。</b>左图没有洞，沿边界逆时针走，左手侧正好指向圆内，所以逆时针就是正向。右图有洞，外面那圈照旧逆时针；可内圈上必须<strong>顺时针</strong>走，左手侧才指向区域——所以内边界的正向和直觉相反。<em>做题时如果懒得想，就用这一句：外逆内顺，判据永远是「左手侧是区域」。</em></figcaption>
+</figure>
+
+<h2 id="s2">格林公式，以及那个必须死记的地方</h2>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=449">07:29</a>定理 · 格林公式</span>
+  <p>设闭区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 由分段光滑的闭曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 围成，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 上具有<strong>一阶连续偏导数</strong>，则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo></math></div>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 取正向（沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 行走时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 在左手侧）。左边的一圈圈儿（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∮</mo></math></span>）说明它是闭曲线上的积分。</p>
+</div>
+
+<p>公式里有两处必须逐字核对，错了整道题就废：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=566">09:26</a>第一，右边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>——<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导，减 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导，交叉着的</strong>，而且顺序是「先减号后那一项」；第二，左边是<strong>第二型</strong>曲线积分（对坐标），不是对弧长的第一型。老师直说这条得死记。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=903">15:03</a>为什么要有格林公式：把难的换成熟的</span>
+  <p>公式存在的理由只有一句话：<strong>曲线积分难算，二重积分熟</strong>。</p>
+  <p>回头看例 1 就知道差距有多大。直接按第二型的算法硬做，要写出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>t</mi></math></span>，把被积函数代进去、把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 分别求出来，再定限、再算一个全是三角函数乘方的定积分——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=1592">26:32</a>老师原话是「我写了这一大堆式子，这个还真不一定怎么好记」。而在右边做二重积分，被积函数极坐标化以后只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msup><mi>r</mi><mrow><mn>3</mn></mrow></msup></math></span>，几行就完事。</p>
+  <p>所以格林公式的正确身份是<mark>一件降计算量的工具，不是一条定义</mark>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=903">15:03</a>老师还问了句实在话：「二重积分你是喜欢做还是曲线积分喜欢做？」答案是谁都不喜欢，但两个里头总得挑一个——挑那个熟一点的。</p>
+</div>
+
+<h2 id="s3">套公式之前先过三关</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=566">09:26</a>公式的三个条件看着抽象，落到题目上其实是三句具体的追问。任何一句答「不」，都要先做补救：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>三查</th><th>条件不满足时会发生什么</th><th>补救办法</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>① 曲线闭吗</strong></td>
+        <td>不闭就没有「围成的区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span>」，右边那个二重积分无从谈起</td>
+        <td><strong>补线法</strong>：补一段曲线凑成闭环，整体用格林公式算出结果，再<strong>单独算出补上的那一段并减掉</strong>。补哪条线很自由，通常选坐标轴上的直线或好算的线段</td>
+      </tr>
+      <tr>
+        <td><strong>② 方向是正向吗</strong></td>
+        <td>反向绕行，公式两边的符号都要翻</td>
+        <td>先把区域在左手侧的判据用一遍；如果题目给的是反向，就先按正向算出结果，<strong>整体加一个负号</strong></td>
+      </tr>
+      <tr>
+        <td><strong>③ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 上处处有一阶连续偏导吗</strong></td>
+        <td><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=566">09:26</a>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 里有让分母为零的点，偏导在那里不存在，公式的前提塌掉</td>
+        <td><strong>挖洞法</strong>：在奇点周围作一条很小的圆，把奇点从区域里挖出去；剩下的是复连通区域，格林公式仍然成立，只要<strong>两条边界都按正向取</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="使用格林公式前的三步检查流程图：曲线是否闭合、方向是否正向、区域内是否有奇点，以及对应的补救办法">
+    <text x="34" y="22" class="m-txt" font-size="12">套格林公式之前，先过三关</text>
+
+    <rect x="36" y="42" width="234" height="44" rx="6" class="m-panel-s"></rect>
+    <text x="50" y="70" class="m-txt" font-size="11.5">① 曲线是闭曲线吗？</text>
+    <rect x="300" y="42" width="320" height="44" rx="6" class="m-panel-a" stroke-width="1.3"></rect>
+    <text x="314" y="62" class="m-txt" font-size="11.5">不闭 → 补线法</text>
+    <text x="314" y="80" class="m-sub" font-size="11.5">补成闭环算完，再减掉补的那段</text>
+    <line x1="272" y1="64" x2="292" y2="64" class="m-acc" stroke-width="1.3"></line>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-a" transform="translate(299,64) rotate(0)"></path>
+
+    <line x1="153" y1="88" x2="153" y2="106" class="m-acc" stroke-width="1.3"></line>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-a" transform="translate(153,113) rotate(90)"></path>
+
+    <rect x="36" y="116" width="234" height="44" rx="6" class="m-panel-s"></rect>
+    <text x="50" y="144" class="m-txt" font-size="11.5">② 方向是正向吗？</text>
+    <rect x="300" y="116" width="320" height="44" rx="6" class="m-panel-a" stroke-width="1.3"></rect>
+    <text x="314" y="136" class="m-txt" font-size="11.5">反向 → 算完整体加负号</text>
+    <text x="314" y="154" class="m-sub" font-size="11.5">正向判据：区域在左手侧</text>
+    <line x1="272" y1="138" x2="292" y2="138" class="m-acc" stroke-width="1.3"></line>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-a" transform="translate(299,138) rotate(0)"></path>
+
+    <line x1="153" y1="162" x2="153" y2="180" class="m-acc" stroke-width="1.3"></line>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-a" transform="translate(153,187) rotate(90)"></path>
+
+    <rect x="36" y="190" width="234" height="44" rx="6" class="m-panel-s"></rect>
+    <text x="50" y="218" class="m-txt" font-size="11.5">③ 区域内处处有一阶连续偏导吗？</text>
+    <rect x="300" y="190" width="320" height="44" rx="6" class="m-panel-a" stroke-width="1.3"></rect>
+    <text x="314" y="210" class="m-txt" font-size="11.5">有奇点 → 挖洞</text>
+    <text x="314" y="228" class="m-sub" font-size="11.5">把奇点圈出去，改用复连通区域</text>
+    <line x1="272" y1="212" x2="292" y2="212" class="m-acc" stroke-width="1.3"></line>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-a" transform="translate(299,212) rotate(0)"></path>
+
+    <line x1="153" y1="236" x2="153" y2="252" class="m-acc" stroke-width="1.3"></line>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-a" transform="translate(153,259) rotate(90)"></path>
+
+    <rect x="36" y="266" width="584" height="30" rx="6" class="m-panel-hi" stroke-width="1.4"></rect>
+    <text x="50" y="286" class="m-txt" font-size="11.5">三关全过 → 直接用格林公式，把曲线积分换成二重积分</text>
+  </svg>
+  <figcaption><b>这张图比公式更应该背下来。</b>格林公式本身只有一行，可它用不上的情形却有三类，而且三类各有各的补法：不闭补线、反向变号、有奇点挖洞。<em>考场上拿到一道曲线积分，先别急着找 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span>，先在心里把这三关走一遍，走完再动笔。</em>三关全过就直接套公式；任何一关没过，先解决那一关。</figcaption>
+</figure>
+
+<h2 id="s4">例题</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=994">16:34</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>−</mo><mi>x</mi><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是正向圆周 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>a</mi><mrow><mn>2</mn></mrow></msup></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先过三关——闭、正向、偏导连续，三关全过就直接套公式</span>
+    <p><strong>三查</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是整圆，闭；题目明说是正向；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mo form="prefix">−</mo><mi>x</mi><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 是多项式，处处有一阶连续偏导。可以用格林公式。</p>
+    <p>先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 认准（<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=781">13:01</a><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 前面的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 前面的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span></strong>），再算那个交叉偏导：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow></math></div>
+    <p>于是积分变成一个圆面上的二重积分。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=1592">26:32</a>区域是圆面，上极坐标：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></math></span>，还要多一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span>，</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><mo>−</mo><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo><mo>=</mo><mo form="prefix">−</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn><mo>π</mo></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mi>a</mi></mrow></munderover><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>r</mi><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mo>π</mo><mo>⋅</mo><mfrac><mrow><msup><mi>a</mi><mrow><mn>4</mn></mrow></msup></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mn>4</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <div class="note">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=1592">26:32</a>对比一下：不用格林公式要写多少东西</span>
+      <p>直接算这条曲线积分，得先写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>（因为题目给了逆时针），然后</p>
+      <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mi>a</mi><mi mathvariant="normal">sin</mi><mo>θ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">cos</mi><mo>θ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></div>
+      <p>再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>x</mi><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 两项分别代、分别积，全程四五个三角函数乘方。结果当然一样，但时间和出错概率都翻好几倍。<mark>这就是格林公式存在的意义。</mark></p>
+    </div>
+    <p><strong>要点</strong>：只要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span> 化简后是常数或者只跟 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 有关，格林公式几乎稳赢。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=781">13:01</a>唯一的死记点是别把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 认反、别把减号写错。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=2001">33:21</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 是由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 围成的三角形区域。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：这是个二重积分，但用普通方法做不出来——只好反过来用格林公式</span>
+    <p>先按老办法试一遍。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span> 型：先对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 积，被积函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup></math></span>——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=2001">33:21</a>这个函数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求原函数是<strong>积不出来</strong>的（它的原函数不是初等函数），所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span> 型这条路直接堵死。改用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 型：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（左边）到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>（右边），</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mi>y</mi></mrow></munderover><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mi>y</mi><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+    <p>这一步之所以能过，是因为对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 积分时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup></math></span> 是<strong>常数</strong>，可以提出来，剩下的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mi>y</mi></mrow></munderover><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>。接下来把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 凑进微分：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mrow><mo stretchy="true">(</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow></math></span>，于是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mrow><mo stretchy="true">(</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo stretchy="true">)</mo></mrow></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=2001">33:21</a>课本给的是另一条路：<strong>把格林公式反着用</strong>。既然公式说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo></math></span>，那就找一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 使得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup></math></span>，于是取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mi>x</mi><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mn>0</mn></math></span>（<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=2001">33:21</a>书上没写这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，建议自己补上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，不然看不出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 在哪）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mn>0</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>x</mi><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+    <p>右边这条闭曲线按正向是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>A</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>B</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>O</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mi>A</mi><mo>:</mo><mi>y</mi><mo>=</mo><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mi>B</mi><mo>:</mo><mi>y</mi><mo>=</mo><mn>1</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mi>O</mi><mo>:</mo><mi>x</mi><mo>=</mo><mn>0</mn></math></span>）。三段分开算：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mi>B</mi></math></span> 上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span> 是常数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>0</mn></math></span>，贡献 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mi>O</mi></math></span> 上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>，被积函数整个是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，贡献也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mi>A</mi></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>O</mi><mi>A</mi></mrow></munder><mi>x</mi><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mi>x</mi><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo stretchy="true">)</mo></mrow></math></div>
+    <p><strong>要点</strong>：两种做法答案一致。反着用格林公式的价值在于——<mark>它可以把「积不出来的二重积分」变成「好算的曲线积分」</mark>，这也说明公式是双向的，哪边好算就往哪边走。另外这道题里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mi>B</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mi>O</mi></math></span> 两段之所以白送，正是因为其中一段有常数微分为零，这也是选边界时优先挑坐标轴平行线段的理由。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=2913">48:33</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mfrac><mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 是一条不经过原点、分段光滑的闭曲线，方向为逆时针。分两种情况：① <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 不包围原点；② <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 包围原点。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：第三关过不去——分母里有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>，原点是一个奇点</span>
+    <p>先认 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 前面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 前面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>。求交叉偏导：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>两者相等，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>。<strong>但别急着写答案 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=2913">48:33</a>题目只说「曲线不经过原点」，并<strong>没有说曲线围的区域不包含原点</strong>——这句话是本页最要命的一个措辞。原点处两个偏导都没有定义，三查的第三关能不能过，全看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 到底圈没圈住原点。</p>
+    <p><strong>情况 ①：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 不包围原点。</strong>这时原点不在区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 内，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 上处处 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≠</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 一阶连续偏导，三关全过。被积函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，二重积分为零：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mo>=</mo><mn>0</mn></math></div>
+    <p><strong>情况 ②：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 包围原点。</strong>这时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 里有原点，第三关过不去。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=3386">56:26</a>办法是<strong>挖洞</strong>：在原点周围作一个半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 很小的圆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></math></span>），把它整个塞在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 的内部。于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 围成的复连通区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mrow><mn>1</mn></mrow></msub></math></span> 上，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 处处有一阶连续偏导，格林公式可以用了。</p>
+    <p>方向要当心。由正向判据，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span>（逆时针）是正向，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的<strong>正向是顺时针</strong>。为了记法统一些，老师写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi><mo>+</mo><msup><mi>l</mi><mrow><mo form="prefix">−</mo></mrow></msup></math></span>，意思是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 逆时针，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 再取反方向」，这样两条边界都是正向。在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mrow><mn>1</mn></mrow></msub></math></span> 上用格林公式：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi><mo>+</mo><msup><mi>l</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mfrac><mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mi>D</mi><mrow><mn>1</mn></mrow></msub></mrow></munder><mn>0</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo><mo>=</mo><mn>0</mn></math></div>
+    <p>再由可加性拆开，并利用「反向变号」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><msup><mi>l</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mo>=</mo><mo form="prefix">−</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>l</mi></mrow></munder></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mo>=</mo><mo form="prefix">−</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><msup><mi>l</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>l</mi></mrow></munder></math></div>
+    <p>也就是说，<strong>绕大圈的积分等于绕小圈的积分</strong>。小圈上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></math></span>，可以<strong>直接代进被积函数</strong>（它是一条曲线，曲线上的方程当然能带）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>l</mi></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 参数化：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>r</mi><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>r</mi><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mi>r</mi><mi mathvariant="normal">sin</mi><mo>θ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>r</mi><mi mathvariant="normal">cos</mi><mo>θ</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></span>，</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mrow><mo stretchy="true">(</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>θ</mo><mo>+</mo><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mo>θ</mo><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn><mo>π</mo></mrow></munderover><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><mo>=</mo><mn>2</mn><mo>π</mo></math></div>
+    <p><strong>要点</strong>：同一个被积函数，绕不绕原点结果完全不同（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>）。这说明<mark>「交叉偏导相等」这件事，在区域有洞的时候不再能推出「闭路积分为零」</mark>——两种情况的差别不在函数，而在「区域是不是把奇点圈进去了」。这也正是需要单连通概念的场合。</p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 272" role="img" aria-label="挖洞法：大曲线L内部作一个小圆l把原点挖出，外边界取逆时针、内边界取顺时针，得到复连通区域">
+    <text x="34" y="22" class="m-txt" font-size="12">挖洞法：把奇点圈出去，剩下复连通区域</text>
+
+    <circle cx="176" cy="146" r="96" class="m-area"></circle>
+    <circle cx="176" cy="146" r="96" fill="none" class="m-acc" stroke-width="2.2"></circle>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(176,50) rotate(-180)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(92.9,194) rotate(60)"></path>
+    <path d="M0 0 L-9 -4 L-9 4 z" class="m-fill-a" transform="translate(259.1,194) rotate(-60)"></path>
+
+    <circle cx="176" cy="146" r="30" class="m-hole"></circle>
+    <circle cx="176" cy="146" r="30" fill="none" class="m-warn" stroke-width="2"></circle>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-w" transform="translate(176,116) rotate(0)"></path>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-w" transform="translate(206,146) rotate(90)"></path>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-w" transform="translate(176,176) rotate(180)"></path>
+    <circle cx="176" cy="146" r="2.8" class="m-fill"></circle>
+    <text x="150" y="150" class="m-sub" font-size="11.5">O 奇点</text>
+    <text x="214" y="70" class="m-fill-a" font-size="12">L（逆时针）</text>
+    <text x="214" y="200" class="m-fill-w" font-size="12">l（顺时针）</text>
+    <text x="40" y="262" class="m-sub" font-size="11.5">在 L 与 l 之间用格林公式，被积函数为 0，所以两边相等</text>
+
+    <line x1="320" y1="36" x2="320" y2="256" class="m-thin" stroke-width="1" stroke-dasharray="4 4"></line>
+    <rect x="334" y="44" width="290" height="196" rx="6" class="m-panel-s"></rect>
+    <text x="348" y="68" class="m-txt" font-size="12">挖洞三步</text>
+    <text x="348" y="96" class="m-txt" font-size="11.5">① 作半径 r 很小的圆 l</text>
+    <text x="348" y="116" class="m-sub" font-size="11.5">放在 L 内部，且不含奇点</text>
+    <text x="348" y="144" class="m-txt" font-size="11.5">② 在 L 与 l 之间用格林公式</text>
+    <text x="348" y="164" class="m-sub" font-size="11.5">结果通常等于 0</text>
+    <text x="348" y="192" class="m-txt" font-size="11.5">③ 内边界取顺时针才叫正向</text>
+    <text x="348" y="212" class="m-sub" font-size="11.5">若取逆时针，要补一个负号</text>
+    <text x="348" y="236" class="m-txt" font-size="11.5">再把 x² + y² = r² 代入小圈</text>
+  </svg>
+  <figcaption><b>挖洞法救的是第三关。</b>当区域里藏着让偏导失效的点时，先在它周围挖一个小圆，把点排除出去——剩下的复连通区域上格林公式照用不误，代价是<strong>两条边界都要算</strong>。外边界逆时针是正向，内边界要顺时针才是正向；如果图省事把内边界也画成逆时针，那就在它前面补一个负号。<em>最后一步是本题的关键：小圈上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></math></span> 可以直接代入被积函数（曲线上的方程可以代），于是积分化成一个干净的常数。</em></figcaption>
+</figure>
+
+<h2 id="s5">路径无关：一个条件，四种说法</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4009">1:06:49</a>格林公式的第二个大用途，是回答「这条曲线积分能不能换条路走」。先把话说清楚：这里讲的是<strong>平面上的</strong>曲线积分。</p>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4150">1:09:10</a>定理 · 与路径无关的充要条件</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 是<strong>单连通</strong>区域，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 内具有一阶连续偏导数，则曲线积分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 与路径无关（只与起点、终点有关）的充要条件是</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mtext>在 </mtext><mi>G</mi><mtext> 内处处成立</mtext></math></div>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4009">1:06:49</a>证明只是「拼一个闭曲线」，但那条小圈圈不许乱加</span>
+  <p>思路一共三句：</p>
+  <p>取两条都从起点到终点的曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>L</mi><mrow><mn>1</mn></mrow></msub></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>L</mi><mrow><mn>1</mn></mrow></msub></math></span> <strong>掉个头</strong>（记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mi>L</mi><mrow><mn>1</mn></mrow><mrow><mo form="prefix">−</mo></mrow></msubsup></math></span>），与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 首尾相接，就缝出了一条闭曲线。因为它围成的区域是单连通的、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 又有一阶连续偏导，格林公式可以用，被积函数因 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 而恒为零，所以这条闭曲线上的积分为零。</p>
+  <p>再用可加性把闭曲线拆回两段：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mo>+</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><msubsup><mi>L</mi><mrow><mn>1</mn></mrow><mrow><mo form="prefix">−</mo></mrow></msubsup></mrow></munder><mo>=</mo><mn>0</mn></math></span>，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>L</mi></mrow></munder><mo>=</mo><munder><mo largeop="true" movablelimits="true">∫</mo><mrow><msub><mi>L</mi><mrow><mn>1</mn></mrow></msub></mrow></munder></math></span>。换一条路 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>L</mi><mrow><mn>2</mn></mrow></msub></math></span> 再做一遍，得到同样的结论，于是「怎么走都一样」。</p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4343">1:12:23</a>这里有一个细节老师单独点了出来：<strong>小圈圈只能加在封闭曲线上</strong>。原来 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mi>L</mi><mrow><mn>1</mn></mrow><mrow><mo form="prefix">−</mo></mrow></msubsup></math></span> 拼起来是闭的，所以能写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∮</mo></math></span>；一旦拆开成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>L</mi><mrow><mn>1</mn></mrow></msub></math></span>，两条都不再封闭，那个圈就必须去掉。<mark>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∮</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∫</mo></math></span>」的区别不是排版习惯，它是在声明「这条曲线闭不闭」。</mark></p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4623">1:17:03</a>验证 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow><mrow><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow></munderover><mrow><mo stretchy="true">(</mo><mn>2</mn><mi>x</mi><mi>y</mi><mo>−</mo><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup><mo>+</mo><mn>3</mn><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>x</mi><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 与路径无关，并求它的值。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先验条件（一求导就知道），再挑最好走的路，最后还可以用原函数直接做差</span>
+    <p><strong>第一步：验证。</strong>认出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mn>2</mn><mi>x</mi><mi>y</mi><mo>−</mo><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup><mo>+</mo><mn>3</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>x</mi><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup></math></span>，各求一个偏导：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mn>2</mn><mi>x</mi><mo>−</mo><mn>4</mn><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>2</mn><mi>x</mi><mo>−</mo><mn>4</mn><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup></math></div>
+    <p>处处相等，且整个平面是单连通的，所以<strong>与路径无关</strong>。</p>
+    <p><strong>第二步：换一条好走的路。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4623">1:17:03</a>既然与路径无关，就挑最简单的折线：先从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 水平走到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>，再竖直走到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。</p>
+    <p>第一段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>≡</mo><mn>0</mn></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mn>2</mn><mi>x</mi><mo>⋅</mo><mn>0</mn><mo>−</mo><mn>0</mn><mo>+</mo><mn>3</mn><mo>=</mo><mn>3</mn></math></span>，只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></munderover><mn>3</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>3</mn></math></span>。</p>
+    <p>第二段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≡</mo><mn>2</mn></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mn>4</mn><mo>−</mo><mn>8</mn><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup></math></span>，只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mo stretchy="true">(</mo><mn>4</mn><mo>−</mo><mn>8</mn><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>4</mn><mo>−</mo><mn>2</mn><mo>=</mo><mn>2</mn></math></span>。</p>
+    <p>两段相加：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow><mrow><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow></munderover><mo>=</mo><mn>3</mn><mo>+</mo><mn>2</mn><mo>=</mo><mn>5</mn></math></div>
+    <p><strong>第三步：更高级的做法——凑全微分。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4874">1:21:14</a>既然与路径无关，就说明存在一个二元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，使 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi><mo>=</mo><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>。找它的窍门是「一条一条对」：看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>u</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>2</mn><mi>x</mi><mi>y</mi><mo>−</mo><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup><mo>+</mo><mn>3</mn></math></span>，里面的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mi>y</mi></math></span> 只能来自 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></math></span>（因为对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导会掉一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span> 出来），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup></math></span> 提示要对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导前是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>x</mi><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup></math></span>，常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span> 来自 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi></math></span>。合起来</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi><mo>−</mo><mi>x</mi><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi></math></div>
+    <p>验证：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mrow><mi>x</mi></mrow></msub><mo>=</mo><mn>2</mn><mi>x</mi><mi>y</mi><mo>−</mo><msup><mi>y</mi><mrow><mn>4</mn></mrow></msup><mo>+</mo><mn>3</mn></math></span> ✓，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mrow><mi>y</mi></mrow></msub><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>x</mi><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup></math></span> ✓。于是积分等于原函数在两端点的差：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo><mo>−</mo><mi>u</mi><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>4</mn><mo>−</mo><mn>2</mn><mo>+</mo><mn>6</mn><mo stretchy="true">)</mo></mrow><mo>−</mo><mrow><mo stretchy="true">(</mo><mn>0</mn><mo>−</mo><mn>0</mn><mo>+</mo><mn>3</mn><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>8</mn><mo>−</mo><mn>3</mn><mo>=</mo><mn>5</mn></math></div>
+    <p><strong>要点</strong>：三种做法（折线硬算、凑原函数、直接观察）都给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>5</mn></math></span>。凑原函数这一步值得练——它就是「二元函数的不定积分」，考试里如果是填空题，很多时候可以直接<strong>猜</strong>：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=4874">1:21:14</a>看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 就要立刻想到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>y</mi></math></span>。<mark>猜出来的答案，用两条偏导回去验一遍即可。</mark></p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 246" role="img" aria-label="从一到零到二一的两条路径：原来的曲线路径难算，改成先水平再竖直的折线路径，两段积分分别是3和2">
+    <text x="34" y="22" class="m-txt" font-size="12">与路径无关：换成折线走</text>
+
+    <line x1="60" y1="192" x2="272" y2="192" class="m-line" stroke-width="1.2"></line>
+    <line x1="90" y1="208" x2="90" y2="52" class="m-line" stroke-width="1.2"></line>
+    <text x="274" y="206" class="m-sub" font-size="11.5">x</text>
+    <text x="78" y="60" class="m-sub" font-size="11.5">y</text>
+
+    <path d="M 160 192 C 176 150 200 130 230 122" fill="none" class="m-thin" stroke-width="1.8" stroke-dasharray="5 4"></path>
+    <polyline points="160,192 230,192 230,122" fill="none" class="m-good" stroke-width="2.4"></polyline>
+    <circle cx="160" cy="192" r="3" class="m-fill"></circle>
+    <circle cx="230" cy="192" r="3" class="m-fill"></circle>
+    <circle cx="230" cy="122" r="3" class="m-fill"></circle>
+    <text x="132" y="208" class="m-sub" font-size="11.5">A(1,0)</text>
+    <text x="236" y="208" class="m-sub" font-size="11.5">C(2,0)</text>
+    <text x="236" y="118" class="m-sub" font-size="11.5">B(2,1)</text>
+    <text x="182" y="132" class="m-sub" font-size="11">原路（难算）</text>
+    <text x="150" y="182" class="m-good" font-size="11">折线（好算）</text>
+
+    <line x1="300" y1="34" x2="300" y2="228" class="m-thin" stroke-width="1" stroke-dasharray="4 4"></line>
+    <rect x="314" y="42" width="312" height="180" rx="6" class="m-panel-s"></rect>
+    <text x="328" y="66" class="m-txt" font-size="12">折线上两段</text>
+    <text x="328" y="94" class="m-good" font-size="11.5">AC：y = 0　→ ∫ 3 dx = 3</text>
+    <text x="328" y="124" class="m-good" font-size="11.5">CB：x = 2　→ ∫ (4 − 8y³) dy = 2</text>
+    <text x="328" y="156" class="m-txt" font-size="12">合计 = 5</text>
+    <text x="328" y="184" class="m-sub" font-size="11.5">原函数：u = x²y − xy⁴ + 3x</text>
+    <text x="328" y="206" class="m-sub" font-size="11.5">u(2,1) − u(1,0) = 8 − 3 = 5</text>
+  </svg>
+  <figcaption><b>路径无关的价值：把难走的路换成好走的路。</b>虚线是原来那条弯弯曲曲的路，实线是换成折线以后的路。换路的合法性来自定理——只要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 在单连通区域上处处成立，两条路的积分值必然相等。折线之所以好，是因为水平段上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>0</mn></math></span>、竖直段上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>0</mn></math></span>，每一项自动砍掉一半。<em>右栏还给出了第二条捷径：求出原函数，直接做差，一次求导的功夫就得到答案。</em></figcaption>
+</figure>
+
+<h3 id="s6">顺带一用：面积公式</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=1592">26:32</a>在格林公式里取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>y</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，被积函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>，右边就退化成区域面积：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=143&amp;t=1805">30:05</a>用面积公式求椭圆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>b</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>t</mi></math></span> 所围图形的面积。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：正不用背椭圆面积公式，只要会参数化边界</span>
+    <p>椭圆转一圈，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>（这个方向就是逆时针，即正向）。先算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mi>a</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>b</mi><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>，于是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>a</mi><mi>b</mi><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>+</mo><mi>a</mi><mi>b</mi><msup><mi mathvariant="normal">sin</mi><mrow><mn>2</mn></mrow></msup><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mi>a</mi><mi>b</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>2</mn><mo>π</mo></mrow></munderover><mi>a</mi><mi>b</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>a</mi><mi>b</mi><mo>=</mo><mo>π</mo><mspace width="0.25em"></mspace><mi>a</mi><mi>b</mi></math></div>
+    <p>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mi>b</mi><mo>=</mo><mi>R</mi></math></span> 就回到圆的面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>R</mi><mrow><mn>2</mn></mrow></msup></math></span>。<strong>要点</strong>：这个公式的适用条件与格林公式完全一样——闭、正向、偏导连续。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>y</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 都不含分母，处处光滑，所以对任意分段光滑的闭曲线都好用。</p>
+  </div>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>格林公式：<strong>闭曲线上的第二型积分 = 它围成的区域上的二重积分</strong>。用之前先过三关：闭、正向、偏导连续。</p>
+
+  <h3>核心两式</h3>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><mi>D</mi></mrow></munder><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>σ</mo></math></div>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><munder><mo largeop="true" movablelimits="true">∮</mo><mrow><mi>L</mi></mrow></munder><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>过三关</b> 闭 · 正向 · 偏导连续</span><span class="ar">→</span>
+    <span class="n"><b>不过就补救</b> 补线 / 变号 / 挖洞</span><span class="ar">→</span>
+    <span class="n"><b>换上二重积分</b> 极坐标或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi></math></span> 型</span><span class="ar">→</span>
+    <span class="n"><b>算出结果</b></span>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 前面的，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 前面的；右边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>，<strong>交叉、带减号</strong>。</li>
+    <li>正向 = <strong>区域在左手侧</strong>：外边界逆时针，内边界顺时针。</li>
+    <li>路径无关的判据：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span></strong>，前提是<strong>单连通</strong>。</li>
+    <li>与路径无关后，换折线（一段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>0</mn></math></span>、一段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>0</mn></math></span>）或凑原函数做差。</li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li><span class="bad">看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span> 就直接答 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</span>还得看曲线有没有<strong>圈住奇点</strong>（例 3 的两种情况答案差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>）。</li>
+    <li><span class="bad">只按「逆时针」判断正向。</span>有洞时内边界必须顺时针，判据只有「区域在左手侧」。</li>
+    <li><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∮</mo></math></span> 随便写在没封闭的曲线上。</span>拆段以后曲线不闭，小圈圈必须去掉。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P142-【黑板】第二型曲线积分/index.html">【黑板】第二型曲线积分</a> 【黑板】第二型曲线积分（方向、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span> 的位置）</li>
+      <li><a href="../P094-格林公式&amp;积分与路径无关条件/index.html">格林公式&amp;积分与路径无关条件</a> 格林公式与积分与路径无关条件（补线法的完整算例）</li>
+      <li><a href="../P138-【黑板】二重积分{极坐标}/index.html">【黑板】二重积分{极坐标}</a> 二重积分 · 极坐标（右边那一步怎么算）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P144-【黑板】常数项级数的概念和性质/index.html">【黑板】常数项级数的概念和性质</a> 【黑板】常数项级数的概念和性质（换一个板块）</li>
+      <li><a href="../P098-高斯公式与斯托克斯公式/index.html">高斯公式与斯托克斯公式</a> 高斯公式与斯托克斯公式（同一模式升到三维）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>补线法：补的那段要<strong>减掉</strong>，且补完方向要凑成正向</li>
+      <li>挖洞法：内边界取<strong>逆时针</strong>时要补负号（正向是顺时针）</li>
+      <li>路径无关的判据 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 前有一条前提：区域<strong>单连通</strong>。有洞时它推不出「闭路积分为零」</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 143 讲</span><a href="../P142-【黑板】第二型曲线积分/index.html">← P142</a><a href="../index.html">全部目录</a><a href="../P144-【黑板】常数项级数的概念和性质/index.html">P144 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">先认两个区域、一条边界、一个方向</a>
+    <a href="#s2">格林公式，以及那个必须死记的地方</a>
+    <a href="#s3">套公式之前先过三关</a>
+    <a href="#s4">例题</a>
+    <a href="#s5">路径无关：一个条件，四种说法</a>
+    <a class="sub" href="#s6">顺带一用：面积公式</a>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>自动控制原理笔记 · 全部目录</title>
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   自动控制原理笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+/* ==========================================================================
+   ↓↓↓ 以下为【自动控制原理】系列专用组件 ↓↓↓
+   与上方通用骨架并存：通用骨架管「怎么排版」，本节管「自控怎么表达」。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   17. 内容角色标记
+   本系列硬性要求区分四类内容来源，视觉上必须一眼可辨：
+     视频核心 core（靛蓝）· 前置补课 pre（紫）· 考研补充 exam（琥珀）· 知识拓展 ext（灰）
+   -------------------------------------------------------------------------- */
+.blk.core { border-left-color: var(--accent); background: var(--accent-bg); }
+.blk.core .lbl { color: var(--accent-ink); }
+.blk.pre  { border-left-color: var(--violet); background: var(--violet-bg); }
+.blk.pre  .lbl { color: var(--violet); }
+.blk.exam { border-left-color: var(--warn);   background: var(--warn-bg); }
+.blk.exam .lbl { color: var(--warn); }
+.blk.ext  { border-left-color: var(--ink-4);  background: var(--paper-2); }
+.blk.ext  .lbl { color: var(--ink-3); }
+
+/* 行内角色徽章：小圆点 + 文字，颜色即语义 */
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: .38em;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.role::before {
+  content: "";
+  width: .44em; height: .44em;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.role.r-core { color: var(--accent); }
+.role.r-pre  { color: var(--violet); }
+.role.r-exam { color: var(--warn); }
+.role.r-ext  { color: var(--ink-3); }
+
+/* 页首角色图例 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.5rem;
+  margin: 1.2rem 0 0;
+  padding: .8rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: .78rem;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.legend .role { font-size: .78rem; }
+
+/* --------------------------------------------------------------------------
+   18. 方框图组件
+   控制系统方框图的五大要素：方框 · 信号线 · 比较点 · 引出点 · 负号。
+   颜色一律走 class —— SVG 表示属性里不能写 var()。
+   -------------------------------------------------------------------------- */
+/* 方框：看得见摸得着的元部件 */
+figure.fig svg .d-box   { fill: var(--paper);     stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-box-a { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.4; }
+figure.fig svg .d-box-v { fill: var(--violet-bg); stroke: var(--violet); stroke-width: 1.4; }
+figure.fig svg .d-box-w { fill: var(--warn-bg);   stroke: var(--warn);   stroke-width: 1.4; }
+
+/* 信号线 */
+figure.fig svg .d-line  { stroke: var(--ink-2);  stroke-width: 1.3; fill: none; }
+figure.fig svg .d-thin  { stroke: var(--line-2); stroke-width: 1.1; fill: none; }
+figure.fig svg .d-acc   { stroke: var(--accent); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-fb    { stroke: var(--violet); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-warn  { stroke: var(--warn);   stroke-width: 1.6; fill: none; }
+figure.fig svg .d-dash  { stroke-dasharray: 5 4; }
+
+/* 比较点 / 引出点 / 箭头 */
+figure.fig svg .d-sum   { fill: var(--paper); stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-sum-a { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+figure.fig svg .d-tap   { fill: var(--ink-2); stroke: none; }
+figure.fig svg .d-arrow   { fill: var(--ink-2);  stroke: none; }
+figure.fig svg .d-arrow-a { fill: var(--accent); stroke: none; }
+figure.fig svg .d-arrow-v { fill: var(--violet); stroke: none; }
+figure.fig svg .d-arrow-w { fill: var(--warn);   stroke: none; }
+
+/* 区域底色（把前向通道 / 反馈通道整片标出来） */
+figure.fig svg .d-band   { fill: var(--accent-bg); stroke: none; opacity: .55; }
+figure.fig svg .d-band-v { fill: var(--violet-bg); stroke: none; opacity: .55; }
+
+/* 窄屏微调 */
+@media (max-width: 46rem) {
+  .legend { gap: .35rem .95rem; font-size: .74rem; }
+  .legend .role { font-size: .74rem; }
+}
+
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+
+.catshell { max-width: 54rem; margin: 0 auto; padding: 0 1.5rem 6rem; }
+.cat-head { padding: 4.5rem 0 2rem; }
+.cat-head h1 { font-size: 1.9rem; font-weight: 640; letter-spacing: -.012em; margin: .6rem 0 1rem; }
+.cat-head .sub { color: var(--ink-2); font-size: 1rem; margin: 0; }
+.cat-head .stat { margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--line);
+  display: flex; gap: 2.4rem; flex-wrap: wrap; font-size: .84rem; color: var(--ink-3); }
+.cat-head .stat b { display: block; font-size: 1.5rem; font-weight: 620; color: var(--ink);
+  font-variant-numeric: tabular-nums; line-height: 1.3; }
+.ch { margin: 3rem 0 0; }
+.ch > h2 { font-size: .8rem; letter-spacing: .12em; color: var(--ink-3); font-weight: 620;
+  margin: 0 0 .3rem; padding: 0 0 .9rem; border-bottom: 1px solid var(--line-2); }
+.ch .cnt { float: right; color: var(--ink-4); letter-spacing: 0; }
+.li { display: grid; grid-template-columns: 3.4rem minmax(0,1fr); gap: 0 1rem;
+  padding: .95rem 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.li .pn { font-size: .78rem; font-weight: 620; color: var(--accent); letter-spacing: .04em;
+  font-variant-numeric: tabular-nums; }
+.li .tt { font-size: 1.02rem; font-weight: 560; color: var(--ink); text-decoration: none;
+  border-bottom: none; }
+.li .tt:hover { color: var(--accent); }
+.li .sn { grid-column: 2; font-size: .87rem; color: var(--ink-3); margin-top: .22rem;
+  line-height: 1.65; }
+.li.todo .pn { color: var(--ink-4); }
+.li.todo .tt { color: var(--ink-4); font-weight: 500; }
+.li.todo .sn { color: var(--ink-4); }
+.tagl { display: inline-block; font-size: .68rem; letter-spacing: .06em; color: var(--ink-3);
+  border: 1px solid var(--line-2); border-radius: 3px; padding: .05em .45em; margin-left: .6em;
+  vertical-align: .1em; }
+@media (max-width: 46rem) {
+  .li { grid-template-columns: 3rem minmax(0,1fr); }
+  .cat-head { padding-top: 3rem; }
+  /* 摘要里的公式只是点缀，必须允许换行 + 自身滚动兜底：.mi 默认 white-space:nowrap，
+     一条稍长的行内公式会撑破摘要列、把整页撑宽，手机上左右漂移。
+     只写 white-space:normal 不够 —— 浏览器不在 MathML 内部断行。
+     摘要是点缀，无需完整展示，故给公式自身加横向滚动兜底。 */
+  /* 摘要是**纯文本**里的长公式串（无空格），浏览器不会在字母间断行
+     → 撑破摘要列、整页漂移。overflow-wrap:anywhere 让它在必要时折行。 */
+  .li .sn { overflow-wrap: anywhere; word-break: break-word; }
+  .li .sn .mi {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+    white-space: normal;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="catshell">
+  <header class="cat-head">
+    <div class="crumb"><b>卢京潮《自动控制原理》· 西北工业大学</b></div>
+    <h1>自动控制原理 · 知识笔记</h1>
+    <p class="sub">西北工业大学卢京潮《自动控制原理》逐课笔记。每页自包含、可离线打开；四类内容分色标记 —— <b>视频核心</b>（老师课上所讲）· <b>前置补课</b>（为听懂本课补的基础）· <b>考研补充</b>（课上未展开）· <b>知识拓展</b>（当前非必须）。</p>
+    <div class="stat">
+      <div><b>12</b>已撰写</div>
+      <div><b>83</b>总课次</div>
+      <div><b>9</b>章</div>
+    </div>
+  </header>
+<section class="ch"><h2>第 1 章  自动控制的一般概念<span class="cnt">3 / 3</span></h2>
+<div class="li"><span class="pn">P001</span><a class="tt" href="P001-自动控制的一般概念（上）/index.html">从工业现场到三个抽象概念：自动控制究竟是什么</a><div class="sn">本节课办三件事：用两段电教片看清自动控制在工业现场长什么样；梳理控制理论的三大发展阶段；最后落在自动控制的精确定义与三个抽象概念上——它们正是下一节拆解炉温系统的工具。</div></div>
+<div class="li"><span class="pn">P003</span><a class="tt" href="P003-控制系统示例与复合控制/index.html">从火炮到水温：系统示例与复合控制</a><div class="sn">本节给第一章收口：先用炉温、函数记录仪复习「由工作原理图画方框图」，再讲火炮方位角系统（核心器件自整角机把角差变成电压）与水温调节系统。复合控制＝前馈＋反馈是本集头号考点——给只会「事后纠偏」的反馈，装一路「提前预判」。</div></div>
+<div class="li"><span class="pn">P004</span><a class="tt" href="P004-系统分类与性能要求/index.html">系统分类与性能要求：五个维度，加稳准快</a><div class="sn">第一章收官。本节用五个维度给控制系统分类（给定信号 / 数学性质 / 参数时变 / 信号传递 / 变量数目），再把对系统的全部要求压成 稳 · 准 · 快三个字，最后用一张体系图交代全课走向。分类不是背名词，而是先归类、再选工具。</div></div>
+</section>
+<section class="ch"><h2>导学<span class="cnt">1 / 1</span></h2>
+<div class="li"><span class="pn">P002</span><a class="tt" href="P002-自动控制的一般概念（下）/index.html">从炉温到记录仪：闭环如何「看见自己」并修正自己</a><div class="sn">两个真实系统（炉温控制系统、函数记录仪）办两件事——看懂闭环怎么工作，以及把工作原理图变成方框图。方框图是建立数学模型的第一步，也是后面一切分析的入口。</div></div>
+</section>
+<section class="ch"><h2>第 2 章  控制系统的数学模型<span class="cnt">8 / 11</span></h2>
+<div class="li"><span class="pn">P005</span><a class="tt" href="P005-控制系统的数学模型（上）/index.html">控制系统的数学模型（上）：从物理定律到微分方程</a><div class="sn">第一章讲「控制是什么」，第二章讲「怎样把它写成可计算的数学」。本页把两种模型形式、两种建模方法讲清，再用五个例子把机理分析建模走一遍：列物理定律 → 消中间变量 → 写首一标准型 → 判性质。</div></div>
+<div class="li"><span class="pn">P006</span><a class="tt" href="P006-控制系统的数学模型（下）/index.html">控制系统的数学模型（下）：复数复习与拉普拉斯变换</a><div class="sn">上一节把系统写成了微分方程，这一节先备好&quot;解方程的工具&quot;——复数与拉普拉斯变换。只需先记住一句：拉普拉斯变换把时域的微分方程，变成 s 域里关于 s 的代数方程。这句话就是你下一节学&quot;传递函数&quot;的入场券。</div></div>
+<div class="li todo"><span class="pn">P007</span><span class="tt">晋程自控辅导班</span><div class="sn">待撰写<span class="tagl">2m33s</span></div></div>
+<div class="li"><span class="pn">P008</span><a class="tt" href="P008-拉氏反变换与传递函数（上）/index.html">拉普拉斯反变换：把 s 域的解翻译回时域</a><div class="sn">上一节把微分方程搬进 s 域变成代数方程，这一节再把它翻译回去。全页只有两句主线：反变换靠「部分分式 + 查表」，拆出来的每一项 epit 就是系统的一个模态——这就是&quot;极点决定响应&quot;的第一次出场。</div></div>
+<div class="li"><span class="pn">P009</span><a class="tt" href="P009-拉氏反变换与传递函数（下）/index.html">传递函数（下）：用一条式子写出系统自己的&quot;性格&quot;</a><div class="sn">把输入和起点都固定死以后，输出与输入的拉氏变换之比只剩系统自身的结构参数——这就是传递函数 G(s)，本课程最重要的数学模型。本页讲清它的定义、首一/尾一标准型与增益、六条性质、使用边界，再用一道七问综合题把整条链走通。</div></div>
+<div class="li"><span class="pn">P010</span><a class="tt" href="P010-复域数学模型（上）/index.html">复域数学模型（上）：从元部件到传递函数</a><div class="sn">先走一遍「由物理系统求闭环传递函数」的完整流程；再把电位器、自整角机、测速发电机、电动机等元部件逐个拆开求传函。它们原理各异，数学上却只落在少数几种「典型环节」里——这是后面频率法与根轨迹的地基。</div></div>
+<div class="li"><span class="pn">P011</span><a class="tt" href="P011-复域数学模型（下）/index.html">复域数学模型（下）：结构图法、齿轮减速器与典型环节</a><div class="sn">这一讲给第二章收口。三件事：先用「结构图法」重做两相异步电动机（不再消中间变量）；再讲透齿轮减速器与多级减速的转动惯量折算；最后把五花八门的元部件抽象成七个典型环节，并说清传递函数的负载效应与第二章的整条建模路线。</div></div>
+<div class="li"><span class="pn">P012</span><a class="tt" href="P012-结构图及其等效变换（上）/index.html">结构图及其等效变换（上）：把复杂结构图化成一个传递函数</a><div class="sn">这一讲把第二章的结构图补全：先说清它是从方框图或微分方程组两条路导出来的；再依次给出串联、并联、反馈三条基本联结与比较点、引出点的移动规则；最后用三道例题把它们拼成一套能上手的等效化简流程。全课只守一条底线：变前变后必须等效——该乘就乘，该除就除。</div></div>
+<div class="li"><span class="pn">P013</span><a class="tt" href="P013-结构图及其等效变换（下）/index.html">结构图等效变换（下）：两道复杂题，把方法练到手上</a><div class="sn">上一集发齐了串联、并联、反馈三种联结与比较点、引出点移动的&quot;零件&quot;；本集用两道复杂例题把它们真正拼成一套可执行的操作流程——先扫描、先消局部反馈、实在卡住才动用&quot;比较点与引出点互换&quot;这张杀手锏。配 5 张方框图，逐步演示每一步的动机与陷阱。</div></div>
+<div class="li todo"><span class="pn">P014</span><span class="tt">第7节课2.5 信号流图; 2.6 系统传递函数; 2.7 小结（上）</span><div class="sn">待撰写<span class="tagl">46m44s</span></div></div>
+<div class="li todo"><span class="pn">P015</span><span class="tt">第7节课2.5 信号流图; 2.6 系统传递函数; 2.7 小结（下）</span><div class="sn">待撰写<span class="tagl">44m07s</span></div></div>
+</section>
+<section class="ch"><h2>第 3 章  线性系统的时域分析与校正<span class="cnt">0 / 10</span></h2>
+<div class="li todo"><span class="pn">P016</span><span class="tt">第8节课3 线性系统的时域分析与校正3.1-3.3 一阶,过阻尼二阶系统动态性能（上）</span><div class="sn">待撰写<span class="tagl">43m59s</span></div></div>
+<div class="li todo"><span class="pn">P017</span><span class="tt">第8节课3 线性系统的时域分析与校正3.1-3.3 一阶,过阻尼二阶系统动态性能（下）</span><div class="sn">待撰写<span class="tagl">34m51s</span></div></div>
+<div class="li todo"><span class="pn">P018</span><span class="tt">第9节课3.3.3 欠阻尼二阶系统动态性能指标计算（上）</span><div class="sn">待撰写<span class="tagl">46m37s</span></div></div>
+<div class="li todo"><span class="pn">P019</span><span class="tt">第9节课3.3.3 欠阻尼二阶系统动态性能指标计算（下）</span><div class="sn">待撰写<span class="tagl">40m32s</span></div></div>
+<div class="li todo"><span class="pn">P020</span><span class="tt">第10节课3.3.4改善性能措施;3.4高阶系统动态性能3.5线性系统的稳定性分析（上）</span><div class="sn">待撰写<span class="tagl">46m16s</span></div></div>
+<div class="li todo"><span class="pn">P021</span><span class="tt">第10节课3.3.4改善性能措施;3.4高阶系统动态性能3.5线性系统的稳定性分析（下）</span><div class="sn">待撰写<span class="tagl">48m15s</span></div></div>
+<div class="li todo"><span class="pn">P022</span><span class="tt">第11节课3.6 线性系统的稳态误差（静态误差）（上）</span><div class="sn">待撰写<span class="tagl">47m33s</span></div></div>
+<div class="li todo"><span class="pn">P023</span><span class="tt">第11节课3.6 线性系统的稳态误差（静态误差）（下）</span><div class="sn">待撰写<span class="tagl">36m01s</span></div></div>
+<div class="li todo"><span class="pn">P024</span><span class="tt">第12节课3.6 动态误差; 3.7 时域校正; 3.8 小结（上）</span><div class="sn">待撰写<span class="tagl">47m26s</span></div></div>
+<div class="li todo"><span class="pn">P025</span><span class="tt">第12节课3.6 动态误差; 3.7 时域校正; 3.8 小结（下）</span><div class="sn">待撰写<span class="tagl">47m02s</span></div></div>
+</section>
+<section class="ch"><h2>第 4 章  根轨迹法<span class="cnt">0 / 8</span></h2>
+<div class="li todo"><span class="pn">P026</span><span class="tt">第13节课4 根轨迹法4.1 基本概念4.2 法则1-4（上）</span><div class="sn">待撰写<span class="tagl">45m58s</span></div></div>
+<div class="li todo"><span class="pn">P027</span><span class="tt">第13节课根轨迹法4.1 基本概念4.2 法则1-4（下）</span><div class="sn">待撰写<span class="tagl">27m20s</span></div></div>
+<div class="li todo"><span class="pn">P028</span><span class="tt">第14节课4.2 绘制根轨迹的基本法则5-8（上）</span><div class="sn">待撰写<span class="tagl">45m23s</span></div></div>
+<div class="li todo"><span class="pn">P029</span><span class="tt">第14节课4.2 绘制根轨迹的基本法则5-8（下）</span><div class="sn">待撰写<span class="tagl">35m28s</span></div></div>
+<div class="li todo"><span class="pn">P030</span><span class="tt">第15节课4.3 广义根轨迹 （上）</span><div class="sn">待撰写<span class="tagl">43m21s</span></div></div>
+<div class="li todo"><span class="pn">P031</span><span class="tt">第15节课4.3 广义根轨迹 （下）</span><div class="sn">待撰写<span class="tagl">43m55s</span></div></div>
+<div class="li todo"><span class="pn">P032</span><span class="tt">第16节课4.4利用根轨迹分析系统性能；4.5 小结 （上）</span><div class="sn">待撰写<span class="tagl">40m38s</span></div></div>
+<div class="li todo"><span class="pn">P033</span><span class="tt">第16节课4.4利用根轨迹分析系统性能；4.5 小结 （下）</span><div class="sn">待撰写<span class="tagl">43m48s</span></div></div>
+</section>
+<section class="ch"><h2>第 5 章  线性系统的频域分析与校正<span class="cnt">0 / 25</span></h2>
+<div class="li todo"><span class="pn">P034</span><span class="tt">总结介绍</span><div class="sn">待撰写<span class="tagl">3m04s</span></div></div>
+<div class="li todo"><span class="pn">P035</span><span class="tt">第17节课5 线性系统的频域分析与校正5.1 频率特性 5.2.1 典型环节幅相特性（上）</span><div class="sn">待撰写<span class="tagl">50m48s</span></div></div>
+<div class="li todo"><span class="pn">P036</span><span class="tt">第17节课线性系统的频域分析与校正5.1 频率特性 5.2.1 典型环节幅相特性（下）</span><div class="sn">待撰写<span class="tagl">31m04s</span></div></div>
+<div class="li todo"><span class="pn">P037</span><span class="tt">第18节课5.2 幅相频率特性(典型环节，开环系统)（上）</span><div class="sn">待撰写<span class="tagl">46m16s</span></div></div>
+<div class="li todo"><span class="pn">P038</span><span class="tt">第18节课5.2 幅相频率特性(典型环节，开环系统)（下）</span><div class="sn">待撰写<span class="tagl">41m32s</span></div></div>
+<div class="li todo"><span class="pn">P039</span><span class="tt">第19节课5.3 对数频率特性(典型环节)（上）</span><div class="sn">待撰写<span class="tagl">49m21s</span></div></div>
+<div class="li todo"><span class="pn">P040</span><span class="tt">第19节课5.3 对数频率特性(典型环节)（下）</span><div class="sn">待撰写<span class="tagl">47m15s</span></div></div>
+<div class="li todo"><span class="pn">P041</span><span class="tt">第20节课5.3 对数频率特性(开环系统)（上）</span><div class="sn">待撰写<span class="tagl">46m41s</span></div></div>
+<div class="li todo"><span class="pn">P042</span><span class="tt">第20节课5.3 对数频率特性(开环系统)（下）</span><div class="sn">待撰写<span class="tagl">42m37s</span></div></div>
+<div class="li todo"><span class="pn">P043</span><span class="tt">第21节课5.4 频域稳定判据(1)（上）</span><div class="sn">待撰写<span class="tagl">47m25s</span></div></div>
+<div class="li todo"><span class="pn">P044</span><span class="tt">第21节课5.4 频域稳定判据(1)（下）</span><div class="sn">待撰写<span class="tagl">45m55s</span></div></div>
+<div class="li todo"><span class="pn">P045</span><span class="tt">第22节课5.4 频域稳定判据(2); 5.5 稳定裕度（上）</span><div class="sn">待撰写<span class="tagl">49m59s</span></div></div>
+<div class="li todo"><span class="pn">P046</span><span class="tt">第22节课5.4 频域稳定判据(2); 5.5 稳定裕度（下）</span><div class="sn">待撰写<span class="tagl">38m22s</span></div></div>
+<div class="li todo"><span class="pn">P047</span><span class="tt">第23节课5.6 利用开环对数幅频特性分析系统的性能（上）</span><div class="sn">待撰写<span class="tagl">47m07s</span></div></div>
+<div class="li todo"><span class="pn">P048</span><span class="tt">第23节课5.6 利用开环对数幅频特性分析系统的性能（下）</span><div class="sn">待撰写<span class="tagl">34m11s</span></div></div>
+<div class="li todo"><span class="pn">P049</span><span class="tt">第24节课5.7 闭环频率特性曲线的绘制5.8 利用闭环频率特性分析系统的性能（上）</span><div class="sn">待撰写<span class="tagl">40m08s</span></div></div>
+<div class="li todo"><span class="pn">P050</span><span class="tt">第24节课5.7 闭环频率特性曲线的绘制5.8 利用闭环频率特性分析系统的性能（下）</span><div class="sn">待撰写<span class="tagl">47m40s</span></div></div>
+<div class="li todo"><span class="pn">P051</span><span class="tt">第25节课5.9.1 相角超前校正（上）</span><div class="sn">待撰写<span class="tagl">49m42s</span></div></div>
+<div class="li todo"><span class="pn">P052</span><span class="tt">第25节课5.9.1 相角超前校正（下）</span><div class="sn">待撰写<span class="tagl">49m56s</span></div></div>
+<div class="li todo"><span class="pn">P053</span><span class="tt">第26节课5.9.2 相角滞后校正（上）</span><div class="sn">待撰写<span class="tagl">50m27s</span></div></div>
+<div class="li todo"><span class="pn">P054</span><span class="tt">第26节课5.9.2 相角滞后校正（下）</span><div class="sn">待撰写<span class="tagl">37m12s</span></div></div>
+<div class="li todo"><span class="pn">P055</span><span class="tt">第27节课5.9.3-4 滞后超前校正,PID校正; 5.10 小结（上）</span><div class="sn">待撰写<span class="tagl">46m10s</span></div></div>
+<div class="li todo"><span class="pn">P056</span><span class="tt">第27节课5.9.3-4 滞后超前校正,PID校正; 5.10 小结（下）</span><div class="sn">待撰写<span class="tagl">46m32s</span></div></div>
+<div class="li todo"><span class="pn">P057</span><span class="tt">第28节课课程阶段总结（上）</span><div class="sn">待撰写<span class="tagl">46m03s</span></div></div>
+<div class="li todo"><span class="pn">P058</span><span class="tt">第28节课课程阶段总结（下）</span><div class="sn">待撰写<span class="tagl">48m38s</span></div></div>
+</section>
+<section class="ch"><h2>第 6 章  线性离散系统的分析与校正<span class="cnt">0 / 12</span></h2>
+<div class="li todo"><span class="pn">P059</span><span class="tt">第29节课6 线性离散系统的分析与校正 6.1 离散系统；6.2 信号采样与保持（上）</span><div class="sn">待撰写<span class="tagl">41m07s</span></div></div>
+<div class="li todo"><span class="pn">P060</span><span class="tt">第29节课6 线性离散系统的分析与校正 6.1 离散系统；6.2  信号采样与保持（下）</span><div class="sn">待撰写<span class="tagl">42m20s</span></div></div>
+<div class="li todo"><span class="pn">P061</span><span class="tt">第30节课6.3 z变换（上）</span><div class="sn">待撰写<span class="tagl">44m41s</span></div></div>
+<div class="li todo"><span class="pn">P062</span><span class="tt">第30节课6.3 z变换（下）</span><div class="sn">待撰写<span class="tagl">28m15s</span></div></div>
+<div class="li todo"><span class="pn">P063</span><span class="tt">第31节课6.4离散系统的数学模型（上）</span><div class="sn">待撰写<span class="tagl">51m03s</span></div></div>
+<div class="li todo"><span class="pn">P064</span><span class="tt">第31节课6.4离散系统的数学模型（下）</span><div class="sn">待撰写<span class="tagl">41m22s</span></div></div>
+<div class="li todo"><span class="pn">P065</span><span class="tt">第32节课6.5 稳定性分析（上）</span><div class="sn">待撰写<span class="tagl">45m44s</span></div></div>
+<div class="li todo"><span class="pn">P066</span><span class="tt">第32节课6.5 稳定性分析（下）</span><div class="sn">待撰写<span class="tagl">26m47s</span></div></div>
+<div class="li todo"><span class="pn">P067</span><span class="tt">第33节课6.6 稳态误差计算；6.7 动态性能分析（上）</span><div class="sn">待撰写<span class="tagl">42m58s</span></div></div>
+<div class="li todo"><span class="pn">P068</span><span class="tt">第33节课6.6 稳态误差计算；6.7 动态性能分析（下）</span><div class="sn">待撰写<span class="tagl">48m34s</span></div></div>
+<div class="li todo"><span class="pn">P069</span><span class="tt">第34节课6.8模拟化校正；6.9 数字校正；6.10 小结（上）</span><div class="sn">待撰写<span class="tagl">42m30s</span></div></div>
+<div class="li todo"><span class="pn">P070</span><span class="tt">第34节课6.8模拟化校正；6.9 数字校正；6.10 小结（下）</span><div class="sn">待撰写<span class="tagl">40m05s</span></div></div>
+</section>
+<section class="ch"><h2>第 7 章  非线性控制系统分析<span class="cnt">0 / 10</span></h2>
+<div class="li todo"><span class="pn">P071</span><span class="tt">第35节课7 非线性控制系统分析 7.1 非线性系统概述；7.2相平面法（1）（上）</span><div class="sn">待撰写<span class="tagl">43m53s</span></div></div>
+<div class="li todo"><span class="pn">P072</span><span class="tt">第35节课7 非线性控制系统分析 7.1 非线性系统概述；7.2相平面法（1）（下）</span><div class="sn">待撰写<span class="tagl">47m19s</span></div></div>
+<div class="li todo"><span class="pn">P073</span><span class="tt">第36节课7.2相平面法(2)（上）</span><div class="sn">待撰写<span class="tagl">51m43s</span></div></div>
+<div class="li todo"><span class="pn">P074</span><span class="tt">第36节课7.2相平面法(2)（下）</span><div class="sn">待撰写<span class="tagl">39m06s</span></div></div>
+<div class="li todo"><span class="pn">P075</span><span class="tt">第37节课7.3 描述函数法(1)（上）</span><div class="sn">待撰写<span class="tagl">47m49s</span></div></div>
+<div class="li todo"><span class="pn">P076</span><span class="tt">第37节课7.3 描述函数法(1)（下）</span><div class="sn">待撰写<span class="tagl">50m23s</span></div></div>
+<div class="li todo"><span class="pn">P077</span><span class="tt">第38节课7.3 描述函数法(2)； 7.4 改善非线性系统性能的措施；7.5小结（上）</span><div class="sn">待撰写<span class="tagl">49m55s</span></div></div>
+<div class="li todo"><span class="pn">P078</span><span class="tt">第38节课7.3 描述函数法(2)； 7.4 改善非线性系统性能的措施；7.5小结（下）</span><div class="sn">待撰写<span class="tagl">36m40s</span></div></div>
+<div class="li todo"><span class="pn">P079</span><span class="tt">第39节课 课程总结（上）</span><div class="sn">待撰写<span class="tagl">41m18s</span></div></div>
+<div class="li todo"><span class="pn">P080</span><span class="tt">第39节课 课程总结（下）</span><div class="sn">待撰写<span class="tagl">50m21s</span></div></div>
+</section>
+<section class="ch"><h2>第 8 章  课程总结与总复习<span class="cnt">0 / 3</span></h2>
+<div class="li todo"><span class="pn">P081</span><span class="tt">第40节课 课程总复习（上）</span><div class="sn">待撰写<span class="tagl">44m22s</span></div></div>
+<div class="li todo"><span class="pn">P082</span><span class="tt">第40节课 课程总复习（下）</span><div class="sn">待撰写<span class="tagl">43m17s</span></div></div>
+<div class="li todo"><span class="pn">P083</span><span class="tt">晋程考研全程班</span><div class="sn">待撰写<span class="tagl">0m58s</span></div></div>
+</section>
+</div>
+</body>
+</html>

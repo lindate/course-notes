@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】向量的模·方向角·方向余弦·投影 · 高等数学笔记</title>
+<meta name="description" content="这一页只讲一件事：怎么用一个向量跟坐标轴的关系来「定位」它。模给长度（两次勾股定理），方向角与方向余弦给姿态（cosα=x|⃗r|）——两者一乘，向量就被坐标彻底还原。本页有三个必须记死的点：单位向量的四种问法各差一个符号、方向角必须认「正半轴」所以余弦为负很正常、恒等式 cos2α+cos2β+c">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 118 讲</div>
+    <h1 class="title"><span class="pnum">P118</span>【黑板】向量的模·方向角·方向余弦·投影</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这一页只讲一件事：<strong>怎么用一个向量跟坐标轴的关系来「定位」它</strong>。模给长度（两次勾股定理），方向角与方向余弦给姿态（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo></mrow></mfrac></math></span>）——两者一乘，向量就被坐标彻底还原。本页有三个必须记死的点：单位向量的<mark>四种问法</mark>各差一个符号、方向角必须认「<mark>正半轴</mark>」所以余弦为负很正常、恒等式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>α</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>β</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>γ</mo><mo>=</mo><mn>1</mn></math></span> 是最好的自检工具；再加一个反直觉的点——<mark>投影是一个可以取负数的数</mark>，不是向量。新授课见 <a href="../P071-方向角 方向余弦 数量积 向量积/index.html">方向角 方向余弦 数量积 向量积</a>。</p></div>
+    <div class="meta"><span>时长 40m08s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=0">00:00</a><span class="vv"><b>向量的模</b>：把向量挪到原点，做两次勾股定理，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=127">02:07</a><span class="vv"><b>两点距离公式</b>与它的一道应用：算出三条边，看有没有两条相等 → 等腰三角形。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=295">04:55</a><span class="vv"><b>例</b>：在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上找一点，使它到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 两点距离相等（答案 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mn>4</mn></mrow><mrow><mn>9</mn></mrow></mfrac></math></span>）。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=363">06:03</a><span class="vv"><b>例</b>：求与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> 同方向的单位向量——老师顺势列出这种题的<b>四种问法</b>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=463">07:43</a><span class="vv">「终点减起点」的<b>严谨版</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mover accent="true"><mrow><mi>O</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>−</mo><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover></math></span> 是两个向量相减，不是两个点相减。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=861">14:21</a><span class="vv"><b>方向角与方向余弦</b>：老师自己也说这一节<q>比较麻烦</q>，后面还要反复用。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=941">15:41</a><span class="vv">为什么必须说「与三根轴<mark>正半轴</mark>的夹角」，以及方向角的范围 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>∼</mo><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=1383">23:03</a><span class="vv"><b>恒等式</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>α</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>β</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>γ</mo><mo>=</mo><mn>1</mn></math></span>：三个余弦组成的向量就是单位向量。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=1462">24:22</a><span class="vv"><b>例</b>：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>2</mn></msub></mrow><mo>⃗</mo></mover></math></span> 的模、三个方向余弦与三个方向角（含一个钝角）。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=1575">26:15</a><span class="vv"><b>例</b>：已知点在<b>第一卦限</b>、两个方向角与模，用恒等式反求第三个角，再还原出点的坐标。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=1770">29:30</a><span class="vv"><b>向量在轴上的投影</b>：书上叙述啰嗦，一句话——它就是那个坐标，<b>是一个数</b>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、这一页在链条上的位置</h2>
+
+<p>上一页 <a href="../P117-【黑板】向量的概念运算和空间直角坐标系/index.html">【黑板】向量的概念运算和空间直角坐标系</a> 交付了「翻译器」：向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>=</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></math></span> 的三条坐标。但只有坐标还不够——<strong>坐标是三个并列的数，没法一眼看出这个向量「多长、朝哪」</strong>。本页补上这两样：</p>
+
+<dl class="kv">
+  <dt>模 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo></math></span></dt>
+  <dd>长度。由三次坐标的平方和开方得到，靠的是<strong>两次勾股定理</strong>。</dd>
+  <dt>方向角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>,</mo><mo>β</mo><mo>,</mo><mo>γ</mo></math></span> 与方向余弦</dt>
+  <dd>姿态。三个余弦恰好是「坐标除以模」，它们组成的向量就是<strong>单位向量</strong>。</dd>
+</dl>
+
+<p>把这两样合起来看，会发现一个漂亮的闭环：<mark>方向余弦给出的三个数乘上模，正好还原出三条坐标</mark>——也就是说，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo stretchy="true">)</mo></mrow></math></span> 这条式子里，<strong>「长度」与「方向」把向量完整地重建了一遍</strong>。最后一段的「投影」是同一件事在一根任意轴上的版本，它顺手解决了本页最反直觉的一个问题：一个投影怎么会是负数。</p>
+
+<h2 id="s2">二、模与两点距离：一条链子</h2>
+
+<p>老师讲模的时候动作很固定，先把向量挪到以原点为起点，然后在图上做两次勾股定理：<q>在这个直角三角形根据勾股定理，把这条斜边就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>；然后再去这样做垂直，那么这个边是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>……再在这个直角三角形里边用勾股定理，用了两次了大家就比较熟。</q></p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 280" role="img" aria-label="用两次勾股定理推导向量模的公式：先在底面上勾股得到 OP，再在竖直三角形里勾股得到 OM">
+    <line x1="110" y1="200" x2="352" y2="212" class="m-line" stroke-width="1.5"></line>
+    <polygon points="360,212.4 348.1,207.3 347.9,217.3" class="m-fill"></polygon>
+    <line x1="110" y1="200" x2="470" y2="148" class="m-thin" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <line x1="360" y1="212.4" x2="470" y2="148" class="m-thin" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <line x1="110" y1="200" x2="110" y2="120" class="m-thin" stroke-width="1.2"></line>
+
+    <line x1="110" y1="200" x2="282" y2="178.4" class="m-good" stroke-width="2"></line>
+    <polygon points="290,177.4 278.5,173.6 279.6,183.5" class="m-fill-g"></polygon>
+    <line x1="470" y1="148" x2="470" y2="60" class="m-warn" stroke-width="2.2"></line>
+    <line x1="110" y1="200" x2="462" y2="56" class="m-acc" stroke-width="2.2"></line>
+    <polygon points="470,52 458.6,56.7 463.4,65.3" class="m-fill-a"></polygon>
+
+    <path d="M 470,136 L 458.5,135.4 L 459,147.4" fill="none" class="m-thin" stroke-width="1.2"></path>
+
+    <circle cx="110" cy="200" r="3.4" class="m-fill"></circle>
+    <text x="94" y="216" class="m-txt" font-size="12">O</text>
+    <text x="366" y="206" class="m-sub" font-size="11.5">x</text>
+    <text x="252" y="228" class="m-good" font-size="11.5">OP = √(x² + y²)</text>
+    <text x="478" y="106" class="m-warn" font-size="11.5">z</text>
+    <text x="478" y="168" class="m-sub" font-size="11.5">P</text>
+    <text x="478" y="44" class="m-txt" font-size="11.5">M(x, y, z)</text>
+    <text x="252" y="150" class="m-acc" font-size="11.5">OM</text>
+
+    <rect x="16" y="16" width="252" height="94" rx="6" class="m-panel-hi"></rect>
+    <text x="28" y="38" class="m-fill-a" font-size="11.5">两次勾股定理</text>
+    <text x="28" y="60" class="m-math" font-size="11.5">OP² = x² + y²</text>
+    <text x="28" y="80" class="m-math" font-size="11.5">OM² = OP² + z²</text>
+    <text x="28" y="100" class="m-math" font-size="11.5">|OM| = √(x² + y² + z²)</text>
+
+    <text x="24" y="252" class="m-txt" font-size="12">把 M 换成两点之差，同一个公式就变成两点间距离公式</text>
+    <text x="24" y="270" class="m-sub" font-size="11.5">|AB| = √( (x₂−x₁)² + (y₂−y₁)² + (z₂−z₁)² )</text>
+  </svg>
+  <figcaption><b>模的公式不是背来的，是勾股定理用两次用出来的。</b>绿色那段是底面里的对角线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mi>P</mi></math></span>，长度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>；因为竖直棱（长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>）与它垂直，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mi>P</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mi>M</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mi>M</mi></math></span> 就构成一个直角三角形，再勾股一次才得到紫色的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi><mi>M</mi></math></span>。<em>右下角那个小方框标的是直角：<mark>第二次勾股定理成立的全部依据，就是「竖直棱垂直于底面」这一条</mark>——三根坐标轴两两垂直，这个直角才是白送的。</em></figcaption>
+</figure>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></div>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><msup><mrow><mo stretchy="true">(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>−</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mrow><mo stretchy="true">(</mo><msub><mi>y</mi><mn>2</mn></msub><mo>−</mo><msub><mi>y</mi><mn>1</mn></msub><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mrow><mo stretchy="true">(</mo><msub><mi>z</mi><mn>2</mn></msub><mo>−</mo><msub><mi>z</mi><mn>1</mn></msub><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></div>
+
+<p>第二条的来历是「先求向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mover accent="true"><mrow><mi>O</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>−</mo><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover></math></span>，再求它的模」。老师对它的态度很省事：<q>这个没什么好说的，就直接用公式。</q>——注意这句话背后的意思：<strong>「两点距离」和「向量模」从此是同一件事</strong>，不需要记两套。他随即用一道题把这个公式的用法演示了一遍。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q">以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>M</mi><mn>1</mn></msub><mo>(</mo><mn>4</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>M</mi><mn>2</mn></msub><mo>(</mo><mn>7</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>M</mi><mn>3</mn></msub><mo>(</mo><mn>5</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span> 为顶点的三角形是等腰三角形，验证这一点。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三条边都算出来，看有没有两条相等——这一步没有技巧</span>
+    <p>先把三条边对应的向量求出来（一律「终点减起点」）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>2</mn></msub></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo stretchy="true">)</mo></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mover accent="true"><mrow><msub><mi>M</mi><mn>2</mn></msub><msub><mi>M</mi><mn>3</mn></msub></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="true">)</mo></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>3</mn></msub></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>再各自求模：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>2</mn></msub></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>9</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><msub><mi>M</mi><mn>2</mn></msub><msub><mi>M</mi><mn>3</mn></msub></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>4</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>6</mn></mrow></msqrt><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>3</mn></msub></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>4</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>6</mn></mrow></msqrt></math></div>
+    <p>后两条相等，所以是等腰三角形。老师这一题的评语是<q>那你就分别求两点之间的距离呗</q>、<q>这个很明显，咱就一略而过了</q>。</p>
+    <p><strong>顺手多看一眼：它是不是等腰直角三角形？</strong>不是。直角要满足勾股定理，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn><mo>+</mo><mn>6</mn><mo>=</mo><mn>1</mn><mn>2</mn><mo>≠</mo><mn>1</mn><mn>4</mn></math></span>——最大的边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></math></span>，另外两边之和的平方和凑不出它。<mark>把这一步当成习惯</mark>：凡是三角形题，算完边长顺手看一眼勾股关系，既是检查，也常常是下一小问的答案。</p>
+    <div class="trap">
+      <span class="lbl">两个易错处</span>
+      <p><span class="bad">一、三条边别写错方向。</span>写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><msub><mi>M</mi><mn>2</mn></msub><msub><mi>M</mi><mn>1</mn></msub></mrow><mo>⃗</mo></mover></math></span> 也无妨——<strong>模与方向无关</strong>，答案一样；但如果后面还要用这个向量的方向（比如求角的余弦），方向错了就全错。所以从一开始就统一按「字母顺序」写。</p>
+      <p><span class="bad">二、模算完不要漏项。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>9</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>1</mn></mrow></msqrt></math></span> 里三项一个都不能少；三个分量平方和开方，这一步错一次后面全崩。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上求一点，使它到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><mo form="prefix">−</mo><mn>4</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>7</mn><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>(</mo><mn>3</mn><mo>,</mo><mn>5</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo></math></span> 的距离相等。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先把「在 z 轴上」翻译成坐标条件，再列距离相等的方程——并且两边都别开根号</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上的点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 坐标都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（<a href="../P117-【黑板】向量的概念运算和空间直角坐标系/index.html">【黑板】向量的概念运算和空间直角坐标系</a> 的速查表里那一行），所以设这个点为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mi>z</mi><mo>)</mo></math></span>。<strong>距离相等也就是距离的平方相等</strong>，这样不用带根号：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>4</mn><mo>−</mo><mn>0</mn><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mn>0</mn><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mrow><mo stretchy="true">(</mo><mn>7</mn><mo>−</mo><mi>z</mi><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>−</mo><mn>0</mn><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mrow><mo stretchy="true">(</mo><mn>5</mn><mo>−</mo><mn>0</mn><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mn>2</mn><mo>−</mo><mi>z</mi><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></math></div>
+    <p>老师把这一步念得很细：<q>根号能去掉，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>6</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mn>5</mn></math></span> 能消一消；平方展开以后这个地方有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 方，这地方也有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 方，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 方就能消掉了。</q>整理如下——左边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>7</mn><mo>+</mo><mo>(</mo><mn>7</mn><mo>−</mo><mi>z</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span>，右边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mn>4</mn><mo>+</mo><mo>(</mo><mi>z</mi><mo>+</mo><mn>2</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>1</mn><mn>7</mn><mo>+</mo><mn>4</mn><mn>9</mn><mo>−</mo><mn>1</mn><mn>4</mn><mi>z</mi><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>3</mn><mn>4</mn><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>4</mn><mi>z</mi><mo>+</mo><mn>4</mn></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>6</mn><mn>6</mn><mo>−</mo><mn>1</mn><mn>4</mn><mi>z</mi><mo>=</mo><mn>3</mn><mn>8</mn><mo>+</mo><mn>4</mn><mi>z</mi><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mn>2</mn><mn>8</mn><mo>=</mo><mn>1</mn><mn>8</mn><mi>z</mi><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mn>4</mn></mrow><mrow><mn>9</mn></mrow></mfrac></math></div>
+    <p>所以所求点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi><mrow><mo stretchy="true">(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mn>1</mn><mn>4</mn></mrow><mrow><mn>9</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>。</p>
+    <div class="trap">
+      <span class="lbl">两个易错处</span>
+      <p><span class="bad">一、忘了「在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上」意味着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>y</mi><mo>=</mo><mn>0</mn></math></span>。</span>若把点设成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></math></span>，就多出两个未知数，一个方程解不出来。</p>
+      <p><span class="bad">二、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>−</mo><mi>z</mi><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span> 展开成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span>，漏掉交叉项。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>z</mi><mo>+</mo><mn>2</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>4</mn><mi>z</mi><mo>+</mo><mn>4</mn></math></span>，那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>z</mi></math></span> 正是解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mn>4</mn></mrow><mrow><mn>9</mn></mrow></mfrac></math></span> 的关键；漏了它就得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mfrac><mrow><mn>2</mn><mn>8</mn></mrow><mrow><mn>1</mn><mn>4</mn></mrow></mfrac><mo>=</mo><mn>2</mn></math></span> 这种错答案。</p>
+    </div>
+    <div class="note">
+      <span class="lbl">这类题的通用动作</span>
+      <p>三步：<strong>① 用「在哪个轴上 / 哪个面上」把点设成只剩一个未知数；② 写距离的平方，两边相等；③ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 自动消掉，解一元一次方程。</strong>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 会消掉」不是巧合——等距点的集合是一个平面（垂直平分面），而它与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴最多只有一个交点，所以方程必然退化成一次的。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s3">三、与向量有关的单位向量：四种问法</h2>
+
+<p>这一小段是本页最容易丢分的地方。老师一上来就把话说重了：<q>这种题目一共有<b>四种问法</b>，大家审题一定——这个地方经常会出很细的，你可能就忘记到这个正负号的问题。</q></p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q">已知 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>(</mo><mn>7</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>，求与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> 同方向的单位向量。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先严格地求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span>，再除以它的模</span>
+    <p>老师把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> 的求法<strong>完整地推了一遍</strong>，因为「引入坐标以后这还是第一次用坐标来写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span>」：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mover accent="true"><mrow><mi>O</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>−</mo><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>7</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo stretchy="true">)</mo></mrow><mo>−</mo><mrow><mo stretchy="true">(</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo stretchy="true">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>讲完推导，他又补了一句大实话：<q>这些刚才用过的所有的东西，一个字都不用写。这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> 其实你这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>7</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>，减这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>5</mn><mo>)</mo></math></span>，他俩直接相减就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo></math></span>。</q>——也就是说，<mark>卷面上直接写「终点减起点」的结果就行</mark>。</p>
+    <p>模：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>9</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>4</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></math></span>。最后由单位化公式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>e</mi><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo stretchy="true">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>3</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+    <p><strong>但题目问的是「同方向」，所以不加任何符号。</strong>老师接着把题目改了三次，考的就是那个符号：</p>
+    <div class="tbl-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>题目怎么问</th><th>答案</th><th>为什么</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> <strong>同方向</strong>的单位向量</td>
+            <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo stretchy="true">)</mo></mrow></math></span></td>
+            <td>只有一个，不加号</td>
+          </tr>
+          <tr>
+            <td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> <strong>方向相反</strong>的单位向量</td>
+            <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo stretchy="true">)</mo></mrow></math></span></td>
+            <td>也只有一个，加负号</td>
+          </tr>
+          <tr>
+            <td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> <strong>平行</strong>的单位向量</td>
+            <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo stretchy="true">)</mo></mrow></math></span></td>
+            <td><mark>因为平行包含反方向，所以是两个</mark></td>
+          </tr>
+          <tr>
+            <td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> <strong>共线</strong>的单位向量</td>
+            <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></mrow></mfrac><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo stretchy="true">)</mo></mrow></math></span></td>
+            <td>「共线」和「平行」是同一个意思</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="trap">
+      <span class="lbl">这一处的病根在 <a href="../P117-【黑板】向量的概念运算和空间直角坐标系/index.html">【黑板】向量的概念运算和空间直角坐标系</a></span>
+      <p>为什么「平行」要加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo></math></span>？因为<strong>平行的定义里包含反方向</strong>。老师说得很直白：<q>大家审题一定——你可能是忘记到这个正负号的问题。</q></p>
+      <p>他还顺手把一个更隐蔽的地方点破了：如果题目只问「单位向量的长度」，那么方向写反不算错（模是一样的）；但题目问的是「与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> <em>同方向</em>的单位向量」，方向就必须对。<mark>凡是问「单位向量」，先问自己一句：题目要的是哪一个方向的？</mark></p>
+    </div>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl">「终点减起点」到底严不严谨</span>
+  <p>老师在课上自己跟自己抬了一句杠：<q>这样说是非常不严谨的——请问为什么？老师啊，你上面这个式子这不写过一遍了吗，你这不叫什么自己打自己的脸吗？你刚说了这么写，你又说不严谨，老师你是几个意思啊？</q>他给的解释是<strong>「我是两个意思」</strong>。</p>
+  <ul class="tight">
+    <li><strong>口语上的「终点减起点」用于解题，一点问题都没有。</strong>结果永远是对的，速度也最快。</li>
+    <li><strong>但严格地说，两个「点」是不能相减的。</strong>老师说：<q>你是不是用两个点相减啊？你什么时候学过一个点减一个点？你告诉我一个点减一个点是什么东西？不知道啊。</q></li>
+    <li>真正发生的事是：先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 各自变成以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi></math></span> 为起点的<strong>向量</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>O</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span>，<strong>这两个向量才能相减</strong>。而向量与点的坐标写法完全一样，所以看起来像「点减点」。</li>
+  </ul>
+  <p>那卷面上怎么写？老师给了一条很实用的口径：<q>我们一般不写这一步，要不然就把这一步彻底省掉——为什么呢？把结果给他了不就行了吗？反正结果是对的，你也不能说我错了。其实严谨的就是把这东西都得写上。</q></p>
+  <p><strong>结论：卷面直接写坐标差，但心里要留着那一步。</strong><mark>「省掉的步骤」和「不存在的步骤」是两回事</mark>——这道题不扣分，是因为结果恰好一样；换个问法（比如要你说明为什么能这么做），就必须把那句「两个向量相减」补上。老师还提到课本的习惯：<q>很多书就是这一步呢很多书是没有的。</q></p>
+</div>
+
+<h2 id="s4">四、方向角与方向余弦</h2>
+
+<p>这一段的开场就是个提醒：<q>下面内容有点麻烦——方向角与方向余弦，这个东西不仅仅在这个地方会有，后边大量的内容都牵扯到了。</q>所以本页要把它一次讲透。</p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 方向角与方向余弦</span>
+  <p>给一个<strong>非零</strong>向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi></math></span>，把它与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的夹角分别记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo></math></span>，叫做它的<strong>方向角</strong>。三个余弦叫<strong>方向余弦</strong>：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mi>y</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mrow><mi>z</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac></math></div>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么必须说「与正半轴的夹角」</span>
+  <p>老师先指着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴问：一个向量与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的夹角最大能到多少？</p>
+  <p><q>这个向量这么取，这两个夹角是不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><mn>0</mn></math></span>（度）？老师你转过来怎么办？转过来你就取这个部分了，就不再取那个部分了。</q>接着他给了一个特别好记的动作：<q>假设我的这只胳膊是这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的正半轴，那你的另外一只胳膊和他的夹角零度、越来越大到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><mn>0</mn></math></span> 度，然后钝角一直到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><mn>0</mn></math></span>。</q></p>
+  <p>由此得到三条：</p>
+  <ul class="tight">
+    <li><strong>关键在「正」字。</strong>坐标轴不是一根光秃秃的直线，<mark>它是带方向的</mark>。所以「向量与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴的夹角」严格说是「与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴<strong>正半轴</strong>的夹角」，钝角完全合法。</li>
+    <li><strong>范围是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>≤</mo><mo>α</mo><mo>,</mo><mo>β</mo><mo>,</mo><mo>γ</mo><mo>≤</mo><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span></strong>，两个端点都取得到。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 是与那根轴同向，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 是与它反向。老师举的例子就是向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>：<q>我整一个向量是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，那和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的正半轴夹角是零度啊，可以啊。</q></li>
+    <li><strong>「非零」这个前提不能丢。</strong>零向量的方向是任意的，所以说它的方向角<q>没有定义</q>——老师提到有同学问过这个问题，答案就是定义里那句「非零」。</li>
+  </ul>
+  <p><mark>推论：方向角里出现钝角是家常便饭，不要一看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>&lt;</mo><mn>0</mn></math></span> 就以为算错了。</mark>这与「两个向量的夹角不超过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span>」是同一件事的两种说法——方向角本质上就是向量与「三根轴」这三个特殊向量的夹角。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 286" role="img" aria-label="方向角：向量与三条坐标轴正半轴的夹角，以及三个方向余弦与恒等式">
+    <polygon points="40,222 400,232 600,150 240,140" class="m-area"></polygon>
+
+    <line x1="110" y1="210" x2="440" y2="223.6" class="m-line" stroke-width="1.4"></line>
+    <polygon points="450,224 437.8,229.0 438.2,218.0" class="m-fill"></polygon>
+    <text x="458" y="230" class="m-txt" font-size="12">x</text>
+
+    <line x1="110" y1="210" x2="317" y2="129.7" class="m-line" stroke-width="1.4"></line>
+    <polygon points="325,126.5 315.8,136.0 311.8,125.7" class="m-fill"></polygon>
+    <text x="334" y="122" class="m-txt" font-size="12">y</text>
+
+    <line x1="110" y1="210" x2="110" y2="72" class="m-line" stroke-width="1.4"></line>
+    <polygon points="110,60 115.5,72 104.5,72" class="m-fill"></polygon>
+    <text x="96" y="52" class="m-txt" font-size="12">z</text>
+
+    <line x1="110" y1="210" x2="110" y2="210" class="m-thin" stroke-width="1"></line>
+    <line x1="110" y1="210" x2="296" y2="159" class="m-thin" stroke-width="1.1" stroke-dasharray="5 4"></line>
+    <line x1="296" y1="159" x2="296" y2="81" class="m-thin" stroke-width="1.1" stroke-dasharray="5 4"></line>
+
+    <line x1="110" y1="210" x2="288" y2="75" class="m-acc" stroke-width="2"></line>
+    <polygon points="296,71 289.7,82.6 283.1,73.8" class="m-fill-a"></polygon>
+    <text x="186" y="142" class="m-acc" font-size="12">r</text>
+    <text x="304" y="64" class="m-txt" font-size="11.5">M(x, y, z)</text>
+    <text x="302" y="176" class="m-sub" font-size="11.5">P</text>
+
+    <path d="M 179.9,212.8 Q 186.4,186.3 166.1,168.1" fill="none" class="m-good" stroke-width="1.3"></path>
+    <text x="194" y="198" class="m-good" font-size="12">α</text>
+    <path d="M 179.9,182.9 Q 178.2,172.2 166.1,168.1" fill="none" class="m-vio" stroke-width="1.3"></path>
+    <text x="188" y="178" class="m-vio" font-size="12">β</text>
+    <path d="M 110,140 Q 145.8,138.5 166.1,168.1" fill="none" class="m-warn" stroke-width="1.3"></path>
+    <text x="124" y="160" class="m-warn" font-size="12">γ</text>
+
+    <circle cx="110" cy="210" r="3.4" class="m-fill"></circle>
+    <text x="94" y="226" class="m-txt" font-size="12">O</text>
+
+    <rect x="396" y="20" width="232" height="104" rx="6" class="m-panel-s"></rect>
+    <text x="408" y="40" class="m-txt" font-size="11.5">方向余弦（邻边 / 斜边）</text>
+    <text x="408" y="64" class="m-math" font-size="11.5">cos α = x / |r|</text>
+    <text x="408" y="86" class="m-math" font-size="11.5">cos β = y / |r|</text>
+    <text x="408" y="108" class="m-math" font-size="11.5">cos γ = z / |r|</text>
+
+    <rect x="396" y="140" width="232" height="62" rx="6" class="m-panel-hi"></rect>
+    <text x="408" y="164" class="m-fill-a" font-size="11.5">cos²α + cos²β + cos²γ = 1</text>
+    <text x="408" y="188" class="m-sub" font-size="11.5">三个平方和恒为 1，可当自检工具</text>
+
+    <text x="24" y="256" class="m-txt" font-size="12">方向角是与三根轴「正半轴」的夹角，所以取值范围是 0° 到 180°，钝角很正常</text>
+    <text x="24" y="274" class="m-sub" font-size="11.5">三个方向余弦组成的向量，就是 r 的单位向量</text>
+  </svg>
+  <figcaption><b>方向角是「向量与三根正半轴之间的三个夹角」。</b>图中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 是与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴正半轴的夹角、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 是与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴的、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo></math></span> 是与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的。虚线画的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi></math></span> 的终点朝底面垂直落下的路径，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>O</mi><mi>P</mi></mrow><mo>⃗</mo></mover></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上的投影。<em>要读懂三个余弦，只需盯住三件事：坐标 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 分别是三个直角三角形的邻边，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo></math></span> 永远是斜边，所以「邻边比斜边」直接给出三个余弦。右边高亮的那条恒等式是本页最该记住的一句——它其实就是「单位向量的模是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>」换了一身衣服。</em></figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么用「方向余弦」而不用「方向正弦」</span>
+  <p>老师先自问自答：<q>我们在这里为什么要用方向余弦？如果用方向正弦，其实说白了没有什么本质的区别，对吧？正弦、余弦什么对边比斜边、邻边比斜边，这也没有什么本质的区别。大家想一想这个地方我们为什么要用方向余弦、为什么不要用方向正弦？</q></p>
+  <p>答案藏在<strong>角的范围</strong>里。方向角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 跑的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span>：</p>
+  <ul class="tight">
+    <li><strong>正弦在这个区间里不是单调的。</strong>它先增后减，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 两侧对称——<mark>给一个正弦值，往往对应两个不同的角</mark>（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>3</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>1</mn><mn>5</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>）。想知道角是多少，光看正弦值不够。</li>
+    <li><strong>余弦在这个区间里是严格单调递减的。</strong>从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 一路降到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>，<mark>一个余弦值唯一对应一个角</mark>。</li>
+  </ul>
+  <p>所以老师的话说得很实在：<q>余弦有什么好处呢？它的图是不是这样的一个图啊，从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><mn>0</mn></math></span>。如果它的方向余弦是知道了，这个角度是不是唯一的啊？它比较好算。</q></p>
+  <p><strong>一句话总结：用余弦是为了「反查角度时不出歧义」。</strong>这一点在做题时立刻兑现——例 4 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 之所以能直接锁定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo><mo>=</mo><mfrac><mrow><mn>3</mn><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>，靠的就是「余弦在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span> 上单调」。</p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl">恒等式 · 三个方向余弦的平方和等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></span>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>α</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>β</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>γ</mo><mo>=</mo><mn>1</mn></math></div>
+</div>
+
+<div class="why">
+  <span class="lbl">把这条恒等式的证明写清楚</span>
+  <p>老师的讲法是「你把这个方直接朝里带呗」，一步就出来了。关键在于<strong>先把三个余弦换回坐标</strong>：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mi>y</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mrow><mi>z</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac></math></div>
+  <p>三个式子平方后相加，右边分母是同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><msup><mo>|</mo><mrow><mn>2</mn></mrow></msup></math></span>，分子是三条坐标的平方和：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>α</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>β</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>γ</mo><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+  <p>而分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 正是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><msup><mo>|</mo><mrow><mn>2</mn></mrow></msup></math></span> 本身（这就是本页第二节的模公式），分子分母相等，整个式子等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。证毕。</p>
+  <p><strong>换一个视角更省事。</strong>把三个余弦拼成一个向量：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mspace width="1em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mspace width="1em"></mspace><mi mathvariant="normal">cos</mi><mo>γ</mo><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac><mrow><mo stretchy="true">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac></math></div>
+  <p>右边正是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi></math></span> 的<strong>单位向量</strong>。老师对这个东西的描述特别形象：<q>老师啊，你给我个痛快吧，你这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi></math></span> 在这，你告诉我这玩意儿到底是个什么东西？就是这么个东西——你沿着这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi></math></span> 的方向，你不是有了吗？你拿这个尺子去量，什么时候长度是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 就到这儿停就行了。</q></p>
+  <p><mark>所以恒等式根本不需要背：三个方向余弦组成的向量是单位向量，单位向量的模是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，平方和自然是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</mark>它的实用价值是<strong>当检查表</strong>：算完三个余弦，平方加起来如果不等 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，一定哪里算错了。老师在后一题里就把它当工具用了一回（见例 5）。</p>
+</div>
+
+<h2 id="s5">五、两道方向余弦例题</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=1462">24:22</a>已知 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>M</mi><mn>1</mn></msub><mo>(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>,</mo><msqrt><mrow><mn>2</mn></mrow></msqrt><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>M</mi><mn>2</mn></msub><mo>(</mo><mn>3</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>2</mn></msub></mrow><mo>⃗</mo></mover></math></span> 的模、三个方向余弦与三个方向角。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先求向量，再求模，然后按顺序求方向余弦、最后由余弦反查角</span>
+    <p>老师先夸了一句课本：<q>你看我们书上写的可鸡贼了，可有心眼了——为什么呢？他就不写这个减这个，直接把它合起来。</q>指的就是「终点减起点」那一步被省略了。我们这里写全：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>2</mn></msub></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>−</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mn>3</mn><mo>−</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mn>0</mn><mo>−</mo><msqrt><mrow><mn>2</mn></mrow></msqrt><mo stretchy="true">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><msqrt><mrow><mn>2</mn></mrow></msqrt><mo stretchy="true">)</mo></mrow></math></div>
+    <p>求模：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><msub><mi>M</mi><mn>1</mn></msub><msub><mi>M</mi><mn>2</mn></msub></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>2</mn></mrow></msqrt><mo>=</mo><mn>2</mn></math></span>。</p>
+    <p>方向余弦（每个坐标除以模）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p><strong>再求方向角，并且要用「余弦的符号」判断锐角还是钝角</strong>：</p>
+    <ol class="steps">
+      <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>&gt;</mo><mn>0</mn></math></span>，是锐角</span>，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span> 里只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>。</li>
+      <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>&gt;</mo><mn>0</mn></math></span>，同样是锐角</span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>。</li>
+      <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mo>&lt;</mo><mn>0</mn></math></span>，是钝角</span>，满足这个余弦值的只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo><mo>=</mo><mfrac><mrow><mn>3</mn><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>。老师的判据很干脆：<q>这是个负的，就证明这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo></math></span> 这个角度是一个钝角，是多少度啊？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>π</mo></math></span>。</q></li>
+    </ol>
+    <p><strong>顺手验算恒等式：</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></span> ✓，说明三个余弦都没算错。</p>
+    <div class="trap">
+      <span class="lbl">两个易错处</span>
+      <p><span class="bad">一、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo></math></span> 写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 是负的，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mo form="prefix">+</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。<mark>余弦为负 ⟹ 钝角</mark>，这一步要条件反射。</p>
+      <p><span class="bad">二、忘了先求模。</span>方向余弦是「坐标除以模」，模算错三个余弦全错。</p>
+      <p>另外提醒一句审题：<q>就是他出题的时候你要看他是求方向余弦还是求方向角，他到底求什么东西。</q>这两个答案形式完全不同，一个是三个数，一个是三个角。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=1575">26:15</a>点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 位于第一卦限，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴的夹角分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo>|</mo><mo>=</mo><mn>6</mn></math></span>。求点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的坐标。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：已知两个角与模，缺的那个角用恒等式凑出来——这是恒等式最典型的用法</span>
+    <p>第一步是先判断<strong>符号的分布</strong>。老师提醒：<q>因为它是处于第一卦限，那么它的三个方向角其实都是锐角。</q>为什么？第一卦限里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 三个坐标全为正，三个余弦全为正，所以三个方向角全是锐角。这一步决定了后面开方取正号还是负号。</p>
+    <p>于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>，代进恒等式：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>γ</mo><mo>=</mo><mn>1</mn><mo>−</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac></math></div>
+    <p>开方时<strong>符号由第一卦限决定</strong>：<q>因为你这个平方等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>，开平方的话不是个正负 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 吗？那这样的话 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo></math></span> 就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo></math></span> 就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>。</q></p>
+    <p>最后一步是把模「拿回来」——由方向余弦公式反解出坐标：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mspace width="1em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mspace width="1em"></mspace><mi mathvariant="normal">cos</mi><mo>γ</mo><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>6</mn><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mspace width="1em"></mspace><mn>3</mn><msqrt><mrow><mn>2</mn></mrow></msqrt><mo>,</mo><mspace width="1em"></mspace><mn>3</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>所以点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的坐标是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mn>3</mn><mo>,</mo><mspace width="1em"></mspace><mn>3</mn><msqrt><mrow><mn>2</mn></mrow></msqrt><mo>,</mo><mspace width="1em"></mspace><mn>3</mn><mo stretchy="true">)</mo></mrow></math></span>。</p>
+    <div class="note">
+      <span class="lbl">这道题示范了「模 + 方向余弦 = 向量」</span>
+      <p>老师在讲这一步时特意回头指了前面那个公式：<q>我们在前面讲的公式是把这个模给他拿过来——刚才咱不是讲了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo></math></span> 形成那个向量吗？</q>也就是说，<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo stretchy="true">)</mo></mrow></math></span> 这条式子是双向可用的</mark>：知道向量求余弦，知道余弦与模还原向量。</p>
+      <p>这一点在后面的曲面、直线方向、以及多元函数的方向导数里会反复出现——凡是「只知道方向、要去凑坐标」的场合，走的都是这一步。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s6">六、投影：一个可以取负数的数</h2>
+
+<p>最后一段老师先给了个预警：<q>书上的叙述是非常的啰嗦。</q>所以他只保留一件事——<strong>投影到底是什么</strong>。</p>
+
+<p>设定是这样：给一根轴（泛指 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 中的某一根，书上记作「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 轴」），再给一个向量。过向量的终点朝这根轴作<strong>垂直的平面</strong>，与轴交于一点；从原点到这个落点的距离，带上正负号，就叫做向量在这根轴上的<strong>投影</strong>。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=118&amp;t=2023">33:43</a>投影是一个数，不是向量——这件事反直觉在哪</span>
+  <p>老师说得很直接：<q>投影你告诉我，投影到底是个什么东西？是个数还是个向量？——是个数，因为就是它的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 坐标。</q>他随即交代了一件好玩的事：<q>你们高中学的投影是投影向量还是个数？你们高中是学的是向量还都有？那就这数吧。一个向量在一个数上的投影——就光说「投影」俩字，是数还是向量？我问过高中老师，他们说是向量。</q></p>
+  <p><mark>这就是反直觉的根源：同一个词，高中和大学指的可能是两个不同的对象。</mark>高中常把「投影向量」也叫投影；本课程按课本口径，<strong>「投影」一律指那个数</strong>。至于作为向量的那一块，老师用的是另一个名字：</p>
+  <dl class="kv">
+    <dt>分向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>O</mi><mi>M</mi><mo>'</mo></mrow><mo>⃗</mo></mover></math></span></dt>
+    <dd>从原点到那个落点的向量。既然落在轴上，它可以写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>λ</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>e</mi></math></span>——<mark>它是一个向量</mark>。</dd>
+    <dt>投影 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>λ</mo></math></span></dt>
+    <dd>式子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>O</mi><mi>M</mi><mo>'</mo></mrow><mo>⃗</mo></mover><mo>=</mo><mo>λ</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>e</mi></math></span> 里的那个系数。若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>e</mi></math></span> 是该轴的<strong>单位</strong>向量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>λ</mo></math></span> 就正好是这个向量在这根轴上的坐标——<mark>它是一个数</mark>。</dd>
+  </dl>
+  <p>老师给了本页最好用的一句话总结：<q>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴上的投影，就是它的坐标。</q>所以那三个公式：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">cos</mi><mo>γ</mo></math></div>
+  <p>——正好又把方向余弦接了一遍。<strong>「投影」不过是「坐标」这个概念推广到任意一根轴上；在三条坐标轴上，它就是三个坐标本身。</strong></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="向量在轴上的投影：锐角时投影为正，钝角时投影为负">
+    <line x1="40" y1="200" x2="620" y2="200" class="m-line" stroke-width="1.4"></line>
+    <polygon points="628,200 616,195.5 616,204.5" class="m-fill"></polygon>
+    <text x="556" y="190" class="m-txt" font-size="11.5">u 轴</text>
+
+    <line x1="340" y1="200" x2="546" y2="200" class="m-good" stroke-width="3"></line>
+    <line x1="214" y1="200" x2="340" y2="200" class="m-warn" stroke-width="3"></line>
+
+    <line x1="340" y1="200" x2="538" y2="102" class="m-good" stroke-width="1.8"></line>
+    <polygon points="546,96 537.8,106.3 532.8,96.5" class="m-fill-g"></polygon>
+    <line x1="546" y1="96" x2="546" y2="200" class="m-thin" stroke-width="1.1" stroke-dasharray="5 4"></line>
+    <path d="M 534,200 L 534,188 L 546,188" fill="none" class="m-thin" stroke-width="1.2"></path>
+    <path d="M 410,200 Q 415.9,181.9 402.5,168.5" fill="none" class="m-good" stroke-width="1.3"></path>
+    <text x="416" y="192" class="m-good" font-size="12">θ</text>
+    <text x="552" y="88" class="m-good" font-size="12">b</text>
+    <text x="392" y="222" class="m-good" font-size="11.5">投影 &gt; 0</text>
+
+    <line x1="340" y1="200" x2="220" y2="128" class="m-warn" stroke-width="1.8"></line>
+    <polygon points="214,124 227.1,125.5 221.4,134.9" class="m-fill-w"></polygon>
+    <line x1="214" y1="124" x2="214" y2="200" class="m-thin" stroke-width="1.1" stroke-dasharray="5 4"></line>
+    <path d="M 226,200 L 226,188 L 214,188" fill="none" class="m-thin" stroke-width="1.2"></path>
+    <path d="M 270,200 Q 264.9,179.1 280,163.8" fill="none" class="m-warn" stroke-width="1.3"></path>
+    <text x="256" y="192" class="m-warn" font-size="12">θ</text>
+    <text x="196" y="116" class="m-warn" font-size="12">b</text>
+    <text x="130" y="222" class="m-warn" font-size="11.5">投影 &lt; 0</text>
+
+    <circle cx="340" cy="200" r="3.4" class="m-fill"></circle>
+    <text x="330" y="220" class="m-txt" font-size="12">O</text>
+
+    <rect x="16" y="16" width="256" height="72" rx="6" class="m-panel-a"></rect>
+    <text x="28" y="38" class="m-fill-a" font-size="11.5">投影是一个数：|b| cos θ</text>
+    <text x="28" y="60" class="m-sub" font-size="11.5">锐角为正、钝角为负、直角为零</text>
+    <text x="28" y="80" class="m-sub" font-size="11.5">「分向量」才是向量（差一个 e）</text>
+
+    <text x="24" y="256" class="m-txt" font-size="12">θ 是钝角时，落点跑到原点另一侧，所以投影取负值——这不是算错，是它带着方向信息</text>
+    <text x="24" y="274" class="m-sub" font-size="11.5">在三条坐标轴上，投影就等于坐标：x = |r| cos α，y = |r| cos β，z = |r| cos γ</text>
+  </svg>
+  <figcaption><b>同一根轴，两个方向的投影，一正一负。</b>右边的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 与轴成锐角，垂直落点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mn>1</mn></msub></math></span>，投影 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mo>|</mo><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>&gt;</mo><mn>0</mn></math></span>（绿色那一段）；左边的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 与轴成钝角，落点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mn>2</mn></msub></math></span> 跑到了原点<em>另一侧</em>，于是投影成了负数（黄色那一段）。<mark>请注意黄色那一段是从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mn>2</mn></msub></math></span> 量到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>O</mi></math></span> 的——「投影」是有向长度，方向与轴的正方向相反就取负号。</mark>这也解释了为什么数量积（<a href="../P119-【黑板】数量积与向量积/index.html">【黑板】数量积与向量积</a>）会等于「一个向量的模乘上另一个向量的投影」，因而可以是负的。</figcaption>
+</figure>
+
+<p>投影还有三条性质，老师说<q>用的其实是很少的</q>，但都很好解释：</p>
+
+<ol class="steps">
+  <li><span class="sh">基本公式。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 在一根轴上的投影等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>φ</mo></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>φ</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 与这根轴正方向的夹角）。这正是上面那个公式。</li>
+  <li><span class="sh">和的投影等于投影的和。</span>老师用图解释：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 首尾相接得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>+</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>，把三段各自投影到轴上，<q>总的这个长度等不等于这块的长度加这块的长度啊？可以啊。</q>——其实就是「整体在某个方向上的分量，等于各部分分量之和」。</li>
+  <li><span class="sh">数乘可以提到外面。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 拉长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>λ</mo></math></span> 倍，<q>他的投影是不是也延伸了三倍啊？</q>——直观得不需要证明。</li>
+</ol>
+
+<h2 id="s7">七、易错清单</h2>
+
+<div class="blk trap">
+  <span class="lbl">一 · 「平行的单位向量」忘了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo></math></span></span>
+  <p>四种问法只差一个符号：同方向不加、反方向加负号、<strong>平行与共线必须加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo></math></span></strong>。病根是 <a href="../P117-【黑板】向量的概念运算和空间直角坐标系/index.html">【黑板】向量的概念运算和空间直角坐标系</a> 里那条「平行包含反方向」。考试时先圈出题目里的动词再动笔。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">二 · 把「方向余弦」当成「方向角」交上去</span>
+  <p>老师专门提醒过这一处。方向余弦是三个<strong>数</strong>（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>），方向角是三个<strong>角</strong>（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>）。题目问哪一个，就答哪一个。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">三 · 看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>&lt;</mo><mn>0</mn></math></span> 就以为算错了</span>
+  <p>方向角是与<strong>正半轴</strong>的夹角，范围 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>∼</mo><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span>，钝角完全正常。反过来，如果恒等式平方和验算过不去，那才是真错了。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">四 · 把「投影」和「分向量」混为一谈</span>
+  <p>投影是<strong>数</strong>，分向量是<strong>向量</strong>，差的就是那个单位向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>e</mi></math></span>。向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上的投影是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，分向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>——题目问哪一个，就写哪一个。另外注意：高中所说「投影」很多时候指的是向量，本课程按课本口径只认「数」，<mark>两套口径不能混用</mark>。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">五 · 等距问题带上了根号</span>
+  <p>「到两点距离相等」一律写成<strong>距离的平方相等</strong>，省掉的不仅是根号，还有开方时的一堆符号讨论。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 会自动消掉，剩下的是一元一次方程。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p><strong>模给长度、方向余弦给姿态</strong>；两者合起来（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo stretchy="true">)</mo></mrow></math></span>）就把向量完整地重建了。投影是这件事在一根任意轴上的版本，它是一个数。</p>
+
+  <h3>要背的</h3>
+  <dl class="kv">
+    <dt>模</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span>（两次勾股定理）</dd>
+    <dt>两点距离</dt><dd>差向量的模：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>−</mo><msub><mi>x</mi><mn>1</mn></msub><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mo>(</mo><msub><mi>y</mi><mn>2</mn></msub><mo>−</mo><msub><mi>y</mi><mn>1</mn></msub><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><mo>(</mo><msub><mi>z</mi><mn>2</mn></msub><mo>−</mo><msub><mi>z</mi><mn>1</mn></msub><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span></dd>
+    <dt>方向角范围</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>≤</mo><mo>α</mo><mo>,</mo><mo>β</mo><mo>,</mo><mo>γ</mo><mo>≤</mo><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span>；<strong>与三根轴的正半轴</strong>；向量必须非零</dd>
+    <dt>方向余弦</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mfrac><mrow><mi>y</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mrow><mi>z</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo></mrow></mfrac></math></span></dd>
+    <dt>恒等式</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>α</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>β</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>γ</mo><mo>=</mo><mn>1</mn></math></span>——<mark>当自检工具用</mark></dd>
+    <dt>方向余弦的向量</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo stretchy="true">)</mo></mrow><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>/</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>r</mi><mo>|</mo></math></span>，就是单位向量</dd>
+    <dt>投影</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>，是<strong>一个数</strong>，可正可负；在坐标轴上就等于坐标</dd>
+  </dl>
+
+  <h3>单位向量的四种问法（最常丢分）</h3>
+  <div class="tbl-wrap">
+    <table class="cmp">
+      <thead><tr><th>问法</th><th>答案个数</th><th>符号</th></tr></thead>
+      <tbody>
+        <tr><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 同方向</td><td>一个</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></mrow></mfrac></math></span></td></tr>
+        <tr><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 反方向</td><td>一个</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></mrow></mfrac></math></span></td></tr>
+        <tr><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 平行</td><td>两个</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></mrow></mfrac></math></span></td></tr>
+        <tr><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 共线</td><td>两个</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></mrow></mfrac></math></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>两个坑</h3>
+  <ol class="tight">
+    <li><strong>投影与分向量</strong>：投影是数（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>），分向量是向量（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>）；高中口径与本课程口径不同。</li>
+    <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>&lt;</mo><mn>0</mn></math></span> 不是错</strong>，是「与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴正半轴成钝角」的意思；用恒等式平方和验一下才是可靠的检查。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P071-方向角 方向余弦 数量积 向量积/index.html">方向角 方向余弦 数量积 向量积</a> 方向角·方向余弦·数量积·向量积（本页的新授课版本）</li>
+      <li><a href="../P117-【黑板】向量的概念运算和空间直角坐标系/index.html">【黑板】向量的概念运算和空间直角坐标系</a> 【黑板】向量的概念、运算和空间直角坐标系（模、坐标、单位化）</li>
+      <li><span class="cur">勾股定理与两点距离公式；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span> 上的单调性与特殊值</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P119-【黑板】数量积与向量积/index.html">【黑板】数量积与向量积</a> 【黑板】数量积与向量积（投影立刻派上用场：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span> 就是「底 × 投影」）</li>
+      <li><a href="../P120-【黑板】平面及其方程/index.html">【黑板】平面及其方程</a> 【黑板】平面及其方程</li>
+      <li><a href="../P121-【黑板】直线及其方程/index.html">【黑板】直线及其方程</a> 【黑板】直线及其方程</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>方向<strong>余弦</strong>（三个数）vs 方向<strong>角</strong>（三个角）——审题先看要求哪一个</li>
+      <li>方向余弦 vs 方向正弦：余弦在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span> 上单调，反查角不出歧义</li>
+      <li>「投影」是数，「分向量」是向量；向量的模是数，向量本身不是</li>
+      <li>「与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴正半轴的夹角」不能简写成「与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的夹角」——差一个「正」字就丢了钝角情形</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mover accent="true"><mrow><mi>O</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>−</mo><mover accent="true"><mrow><mi>O</mi><mi>A</mi></mrow><mo>⃗</mo></mover></math></span> 是两个<strong>向量</strong>相减；两个点相减没有定义（卷面可省这一步，但要心里清楚）</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 118 讲</span><a href="../P117-【黑板】向量的概念运算和空间直角坐标系/index.html">← P117</a><a href="../index.html">全部目录</a><a href="../P119-【黑板】数量积与向量积/index.html">P119 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、这一页在链条上的位置</a>
+    <a href="#s2">二、模与两点距离：一条链子</a>
+    <a href="#s3">三、与向量有关的单位向量：四种问法</a>
+    <a href="#s4">四、方向角与方向余弦</a>
+    <a href="#s5">五、两道方向余弦例题</a>
+    <a href="#s6">六、投影：一个可以取负数的数</a>
+    <a href="#s7">七、易错清单</a>
+  </aside>
+</div>
+</body>
+</html>

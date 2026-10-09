@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>传递函数（下）：用一条式子写出系统自己的&quot;性格&quot; · 自动控制原理笔记</title>
+<meta name="description" content="把输入和起点都固定死以后，输出与输入的拉氏变换之比只剩系统自身的结构参数——这就是传递函数 G(s)，本课程最重要的数学模型。本页讲清它的定义、首一/尾一标准型与增益、六条性质、使用边界，再用一道七问综合题把整条链走通。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   自动控制原理笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+/* ==========================================================================
+   ↓↓↓ 以下为【自动控制原理】系列专用组件 ↓↓↓
+   与上方通用骨架并存：通用骨架管「怎么排版」，本节管「自控怎么表达」。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   17. 内容角色标记
+   本系列硬性要求区分四类内容来源，视觉上必须一眼可辨：
+     视频核心 core（靛蓝）· 前置补课 pre（紫）· 考研补充 exam（琥珀）· 知识拓展 ext（灰）
+   -------------------------------------------------------------------------- */
+.blk.core { border-left-color: var(--accent); background: var(--accent-bg); }
+.blk.core .lbl { color: var(--accent-ink); }
+.blk.pre  { border-left-color: var(--violet); background: var(--violet-bg); }
+.blk.pre  .lbl { color: var(--violet); }
+.blk.exam { border-left-color: var(--warn);   background: var(--warn-bg); }
+.blk.exam .lbl { color: var(--warn); }
+.blk.ext  { border-left-color: var(--ink-4);  background: var(--paper-2); }
+.blk.ext  .lbl { color: var(--ink-3); }
+
+/* 行内角色徽章：小圆点 + 文字，颜色即语义 */
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: .38em;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.role::before {
+  content: "";
+  width: .44em; height: .44em;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.role.r-core { color: var(--accent); }
+.role.r-pre  { color: var(--violet); }
+.role.r-exam { color: var(--warn); }
+.role.r-ext  { color: var(--ink-3); }
+
+/* 页首角色图例 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.5rem;
+  margin: 1.2rem 0 0;
+  padding: .8rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: .78rem;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.legend .role { font-size: .78rem; }
+
+/* --------------------------------------------------------------------------
+   18. 方框图组件
+   控制系统方框图的五大要素：方框 · 信号线 · 比较点 · 引出点 · 负号。
+   颜色一律走 class —— SVG 表示属性里不能写 var()。
+   -------------------------------------------------------------------------- */
+/* 方框：看得见摸得着的元部件 */
+figure.fig svg .d-box   { fill: var(--paper);     stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-box-a { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.4; }
+figure.fig svg .d-box-v { fill: var(--violet-bg); stroke: var(--violet); stroke-width: 1.4; }
+figure.fig svg .d-box-w { fill: var(--warn-bg);   stroke: var(--warn);   stroke-width: 1.4; }
+
+/* 信号线 */
+figure.fig svg .d-line  { stroke: var(--ink-2);  stroke-width: 1.3; fill: none; }
+figure.fig svg .d-thin  { stroke: var(--line-2); stroke-width: 1.1; fill: none; }
+figure.fig svg .d-acc   { stroke: var(--accent); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-fb    { stroke: var(--violet); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-warn  { stroke: var(--warn);   stroke-width: 1.6; fill: none; }
+figure.fig svg .d-dash  { stroke-dasharray: 5 4; }
+
+/* 比较点 / 引出点 / 箭头 */
+figure.fig svg .d-sum   { fill: var(--paper); stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-sum-a { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+figure.fig svg .d-tap   { fill: var(--ink-2); stroke: none; }
+figure.fig svg .d-arrow   { fill: var(--ink-2);  stroke: none; }
+figure.fig svg .d-arrow-a { fill: var(--accent); stroke: none; }
+figure.fig svg .d-arrow-v { fill: var(--violet); stroke: none; }
+figure.fig svg .d-arrow-w { fill: var(--warn);   stroke: none; }
+
+/* 区域底色（把前向通道 / 反馈通道整片标出来） */
+figure.fig svg .d-band   { fill: var(--accent-bg); stroke: none; opacity: .55; }
+figure.fig svg .d-band-v { fill: var(--violet-bg); stroke: none; opacity: .55; }
+
+/* 窄屏微调 */
+@media (max-width: 46rem) {
+  .legend { gap: .35rem .95rem; font-size: .74rem; }
+  .legend .role { font-size: .74rem; }
+}
+
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  控制系统的数学模型</b><span class="sep">·</span>卢京潮《自动控制原理》· 西北工业大学<span class="sep">·</span>第 9 讲</div>
+    <h1 class="title"><span class="pnum">P009</span>传递函数（下）：用一条式子写出系统自己的&quot;性格&quot;</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>把输入和起点都固定死以后，输出与输入的拉氏变换之比只剩系统自身的结构参数——这就是<strong>传递函数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，本课程最重要的数学模型。本页讲清它的<strong>定义、首一/尾一标准型与增益、六条性质、使用边界</strong>，再用一道<strong>七问综合题</strong>把整条链走通。</p></div>
+    <div class="meta"><span>时长 38m15s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=50">00:50</a><span class="vv"><b>响应取决于三因素</b>：输入、初始条件、系统结构参数。</span></li>
+    <li class="sep"><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=187">03:07</a><span class="vv"><b>规范输入</b>：为什么拿单位阶跃当"标准考题"。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=280">04:40</a><span class="vv"><b>规范初始条件</b>：零初始条件是什么意思。</span></li>
+    <li class="sep"><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=509">08:29</a><span class="vv"><b>从微分方程推传递函数</b>：首一、尾一标准型与增益。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=1099">18:19</a><span class="vv"><b>七问综合题</b>：一个系统、七种问法。</span></li>
+    <li class="sep"><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=1880">31:20</a><span class="vv"><b>传递函数的局限</b>：什么时候不许用它。</span></li>
+  </ol>
+</div>
+
+<div class="legend">
+  <span class="role r-core">视频核心</span> 老师课上实际讲授的内容（本页正文默认即为此类）
+  <span class="role r-pre">前置补课</span> 为听懂本课而补的基础
+  <span class="role r-exam">考研补充</span> 对做题有用、课上未展开
+  <span class="role r-ext">知识拓展</span> 有价值但当前非必须
+</div>
+
+<h2 id="s1">一、一个系统的响应，到底由谁决定</h2>
+
+<p>上一节我们把最简单的电路——电阻 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span> 串电容 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span>，合闸后电容电压怎么变——完整求了出来。这一节要从里面抓住一条更普遍的规律。</p>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 先用一个水桶理解"响应"（只要会用即可）</span>
+  <p>没学过电路也别慌，只需要一个日常画面：<strong>往水桶里注水</strong>。你倒水的快慢叫<em>输入</em>；桶里原本存着多少水叫<em>初始条件</em>；桶的粗细、漏不漏水叫<em>系统的结构与参数</em>。三者一起决定"水位怎么涨"——这就是系统的<strong>响应</strong>，也就是<span class="t">输出</span>随时间变化的规律。会看会套即可，不求推导。</p>
+</div>
+
+<p>把上一节的象函数表达式拆开看，答案清清楚楚三条：</p>
+
+<ol class="steps">
+  <li><span class="sh">和输入有关。</span>输入项一换，响应形式就跟着变——给不同激励，系统给不同回应。</li>
+  <li><span class="sh">和初始条件有关。</span>解里多出一块<strong>纯由初始储能引起的自由响应分量</strong>，响应的出发点不一样。</li>
+  <li><span class="sh">和系统的结构与参数有关。</span>是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mi>C</mi></math></span> 还是别的数值，直接决定时间常数、决定衰减快慢。</li>
+</ol>
+
+<p>老师概括成一句：<strong>响应取决于输入、初始条件、系统自身结构与参数三方面。</strong></p>
+
+<figure class="fig">
+  <svg viewBox="0 24 640 186" role="img" aria-label="系统响应由三方面共同决定：左侧的输入信号与结构参数、上方的初始条件（储能状态）三路汇入中间的系统方框，再输出响应；响应等于强迫响应与自由响应之和">
+    <defs>
+      <marker id="g1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+
+    <rect x="16" y="32" width="168" height="38" rx="3" class="d-box"/>
+    <text x="100" y="56" class="m-txt" font-size="12" text-anchor="middle">输入信号 r(t)</text>
+
+    <rect x="16" y="96" width="168" height="38" rx="3" class="d-box"/>
+    <text x="100" y="120" class="m-txt" font-size="12" text-anchor="middle">初始条件（储能）</text>
+
+    <rect x="16" y="160" width="168" height="38" rx="3" class="d-box"/>
+    <text x="100" y="184" class="m-txt" font-size="12" text-anchor="middle">结构参数 R、C</text>
+
+    <rect x="256" y="86" width="150" height="66" rx="4" class="d-box-a"/>
+    <text x="331" y="114" class="m-txt" font-size="12.5" text-anchor="middle">系统</text>
+    <text x="331" y="132" class="m-sub" font-size="11.5" text-anchor="middle">线性定常</text>
+
+    <line x1="184" y1="51" x2="252" y2="100" class="d-line" marker-end="url(#g1a)"/>
+    <line x1="184" y1="115" x2="252" y2="115" class="d-line" marker-end="url(#g1a)"/>
+    <line x1="184" y1="179" x2="252" y2="138" class="d-line" marker-end="url(#g1a)"/>
+
+    <line x1="406" y1="119" x2="470" y2="119" class="d-line" marker-end="url(#g1a)"/>
+    <rect x="474" y="86" width="150" height="66" rx="4" class="d-box"/>
+    <text x="549" y="114" class="m-txt" font-size="12" text-anchor="middle">响应 c(t)</text>
+    <text x="549" y="132" class="m-sub" font-size="11.5" text-anchor="middle">强迫 + 自由</text>
+  </svg>
+  <figcaption><b>三路进、一路出。</b><em>输入</em>由你施加，<em>结构参数</em>是系统天生带来的，<em>初始条件</em>是开工前储存的能量。三者一起挤进系统，出来的才叫<em>响应</em>。<mark>想让响应只反映系统自身，就得先把前两路固定死。</mark></figcaption>
+</figure>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 上一节那个电路，只需要三条朴素规则</span>
+  <p>把电路也看成"水管"：<strong>电阻</strong>像一段细管子（有阻碍），<strong>电容</strong>像一个小水库（能存电能）。三条规则，只要会用：</p>
+  <ul class="tight">
+    <li><strong>欧姆定律</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>R</mi></msub><mo>=</mo><mi>R</mi><mi>i</mi></math></span>。读作"压力 = 阻力 × 流量"。</li>
+    <li><strong>电流定律（KCL）</strong>：流进一个岔口的电流，等于流出的电流。</li>
+    <li><strong>电压定律（KVL）</strong>：绕回路走一圈，各元件电压降加起来为零——像绕楼层一圈，上去多少就得下来多少。</li>
+  </ul>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 是电流，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 是电压。把电源、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 串成回路，用 KVL 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub><mo>=</mo><msub><mi>u</mi><mi>R</mi></msub><mo>+</mo><msub><mi>u</mi><mi>C</mi></msub></math></span>，再借欧姆定律消掉电流，就得到上一节的微分方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mi>C</mi><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><msub><mi>u</mi><mi>C</mi></msub><mo>+</mo><msub><mi>u</mi><mi>C</mi></msub><mo>=</mo><msub><mi>u</mi><mi>r</mi></msub></math></span>。（字母顶上一点表示对时间求导，会认即可。）</p>
+</div>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 复阻抗：把电路直接变成代数（下一讲 P010 正式接手）</span>
+  <p>上面那本微分方程还有一条捷径——<strong>复阻抗</strong>：不列方程，直接把每个元件"翻译"成关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的量，串并联规则和电阻完全一样，电路方程随即变成代数式。操作就三步（见下图）：①元件换成复阻抗；②<strong>串联相加、并联取倒数和</strong>；③套<strong>分压公式</strong>取电压比。得到的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>U</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>/</mo><msub><mi>U</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 就是传递函数。<mark>本页只要会用这三步。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 14 640 150" role="img" aria-label="复阻抗法三步：第一步把电阻、电容、电感分别换成 R、1 除以 C s、L s；第二步按串联相加、并联取倒数和、分压公式连接；第三步直接得到传递函数 G(s)，不必列微分方程">
+    <defs>
+      <marker id="g2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+    </defs>
+
+    <text x="16" y="26" class="m-sub" font-size="11.5">① 元件 → 复阻抗</text>
+    <rect x="16" y="34" width="176" height="34" rx="3" class="d-box"/>
+    <text x="104" y="56" class="m-txt" font-size="12" text-anchor="middle">电阻 R → R</text>
+    <rect x="16" y="76" width="176" height="34" rx="3" class="d-box"/>
+    <text x="104" y="98" class="m-txt" font-size="12" text-anchor="middle">电容 C → 1/(Cs)</text>
+    <rect x="16" y="118" width="176" height="34" rx="3" class="d-box"/>
+    <text x="104" y="140" class="m-txt" font-size="12" text-anchor="middle">电感 L → Ls</text>
+
+    <line x1="196" y1="93" x2="228" y2="93" class="d-acc" marker-end="url(#g2a)"/>
+
+    <text x="232" y="26" class="m-sub" font-size="11.5">② 连接规则（同电阻）</text>
+    <rect x="232" y="34" width="196" height="34" rx="3" class="d-box"/>
+    <text x="330" y="56" class="m-txt" font-size="12" text-anchor="middle">串联：Z = Z1 + Z2</text>
+    <rect x="232" y="76" width="196" height="34" rx="3" class="d-box"/>
+    <text x="330" y="98" class="m-txt" font-size="12" text-anchor="middle">并联：1/Z = 1/Z1 + 1/Z2</text>
+    <rect x="232" y="118" width="196" height="34" rx="3" class="d-box"/>
+    <text x="330" y="140" class="m-txt" font-size="12" text-anchor="middle">分压：Uout/Uin = Z2/(Z1+Z2)</text>
+
+    <line x1="432" y1="93" x2="464" y2="93" class="d-acc" marker-end="url(#g2a)"/>
+
+    <text x="468" y="26" class="m-sub" font-size="11.5">③ 直接得传递函数</text>
+    <rect x="468" y="34" width="156" height="118" rx="4" class="d-box-a"/>
+    <text x="546" y="82" class="m-txt" font-size="12.5" text-anchor="middle">G(s) =</text>
+    <text x="546" y="104" class="m-txt" font-size="12.5" text-anchor="middle">Uout(s) / Uin(s)</text>
+    <text x="546" y="130" class="m-sub" font-size="11.5" text-anchor="middle">代数式，免列微分方程</text>
+  </svg>
+  <figcaption><b>复阻抗法 = 把"解微分方程"换成"算电阻"。</b>左列把元件翻译成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mo>(</mo><mi>C</mi><mi>s</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi><mi>s</mi></math></span>；中列连接规则与纯电阻一样——<em>串联加、并联取倒数和</em>；右列用<mark>分压公式</mark>取电压比，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 直接到手。</figcaption>
+</figure>
+
+<h2 id="s2">二、要比较不同系统，先"统一赛道"：规范输入与零初始条件</h2>
+
+<p>接下来的诉求很自然：<strong>要比较两个系统谁好，必须让它们站在同一起跑线上。</strong>否则给甲一种输入、给乙另一种，差别说明不了谁好谁坏——人家一句就顶回来：你给的输入不一样。</p>
+
+<div class="said">
+  <span class="lbl">老师原话 · 为什么必须先"统一条件"</span>
+  <p><q>两个运动员放那儿赛跑，你给第一个运动员提前两分钟打枪，那这书（结果）不一样啊，你跑到后边的运动员不服气。</q>所以要比较，先把"起跑条件"规定死。</p>
+</div>
+
+<p>于是规定两件事：<strong>输入统一取单位阶跃信号；初始条件统一取零初始条件。</strong>加同样的激励、从同一起点出发，剩下的差别就只能来自系统本身。</p>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 什么是"阶跃"信号（只要会用）</span>
+  <p><strong>阶跃</strong>就是"合闸"：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mn>0</mn></math></span> 时信号一直是 0，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>0</mn></math></span> 那一刻"啪"地跳到 1，之后一直保持，记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>(</mo><mi>t</mi><mo>)</mo></math></span>。生活里就是电灯开关一合、电机一通电；图上是一个直角台阶，所以叫阶跃。</p>
+  <p>这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 是时间，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mn>0</mn></math></span> 表示"合闸之前"；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 分别读作输入、输出信号。</p>
+</div>
+
+<h3 id="s3">2.1 为什么偏偏选单位阶跃</h3>
+
+<p>理由两条。第一，<strong>工程上极易实现</strong>：合闸就是一次阶跃，任何现场都能做。</p>
+
+<p>第二，<strong>它是对系统"比较严酷"的输入</strong>：一个直上直下的突变，系统来不及反应就得硬扛。<mark>所以共识是：连阶跃都跟得不错，跟踪更平缓的信号一般没问题。</mark></p>
+
+<div class="why">
+  <span class="lbl">为什么"严酷输入测得好，别的输入就没问题"</span>
+  <p>这靠线性系统的<strong>叠加原理</strong>：任何输入都能看成许多"错开时间、大小不同"的阶跃分量之和。既然对每个阶跃分量都响应得又快又稳，叠加起来（即任意输入）自然也不差——所以阶跃是性价比最高的"试金石"。</p>
+</div>
+
+<h3 id="s4">2.2 什么是零初始条件</h3>
+
+<p>第二条同样来自运动员的比喻：起跑时不能一个站起跑线、另一个提前 10 米。<mark>初始条件统一规定为<strong>零初始条件</strong>。</mark></p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 零初始条件</span>
+  <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mn>0</mn></math></span>（开工之前）时，系统的<strong>输入、输出以及它们的各阶导数全部为零</strong>——系统相对静止，没有储存着的能量，也没有正在发生的变化。</p>
+  <p>（"各阶导数"就是"变化的快慢、变化的变化的快慢……"，第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 阶导数记作带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 个点的符号，会认即可。）</p>
+</div>
+
+<p>担心不符合真实系统？加热炉开机前是室温、电机启动前是静止，零初始条件天然满足；工作点附近<strong>线性化</strong>后的增量模型，把"<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>0</mn></math></span> 时的增量变化"当成阶跃，同样适用。<mark>所以它不妨碍分析、设计。</mark></p>
+
+<p>两条规定一做，效果干脆：输入定死、起点拉平，<strong>响应就只剩一个影响因素——系统自身的结构与参数</strong>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 25 640 176" role="img" aria-label="左边是单位阶跃信号曲线：t 小于 0 时为 0，t 等于 0 处垂直跳到 1 并一直保持；右边方框说明零初始条件：t 小于 0 时输入输出及各阶导数全为零，系统相对静止，从而所有系统站在同一起跑线上">
+    <defs>
+      <marker id="g3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+    </defs>
+
+    <line x1="64" y1="176" x2="64" y2="52" class="m-line" marker-end="url(#g3a)"/>
+    <line x1="64" y1="176" x2="340" y2="176" class="m-line" marker-end="url(#g3a)"/>
+    <text x="56" y="48" class="m-sub" font-size="11.5" text-anchor="end">r(t)</text>
+    <text x="344" y="182" class="m-sub" font-size="11.5">t</text>
+
+    <line x1="64" y1="176" x2="176" y2="176" class="m-acc"/>
+    <line x1="176" y1="176" x2="176" y2="92" class="m-acc"/>
+    <line x1="176" y1="92" x2="340" y2="92" class="m-acc"/>
+    <line x1="64" y1="92" x2="176" y2="92" class="m-thin d-dash"/>
+    <text x="60" y="96" class="m-sub" font-size="11.5" text-anchor="end">1</text>
+    <text x="178" y="192" class="m-sub" font-size="11.5">t=0</text>
+    <text x="258" y="84" class="m-sub" font-size="11.5" text-anchor="middle">阶跃（合闸）</text>
+
+    <rect x="392" y="48" width="232" height="128" rx="4" class="m-panel"/>
+    <text x="406" y="70" class="m-txt" font-size="12">零初始条件</text>
+    <text x="406" y="94" class="m-sub" font-size="11.5">t 小于 0 时：输入、输出</text>
+    <text x="406" y="114" class="m-sub" font-size="11.5">及其各阶导数全为 0，</text>
+    <text x="406" y="134" class="m-sub" font-size="11.5">系统处于相对静止。</text>
+    <text x="406" y="160" class="m-sub" font-size="11.5">→ 大家站在同一起跑线</text>
+  </svg>
+  <figcaption><b>两条"统一条件"合起来看。</b>左图台阶就是单位阶跃 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>(</mo><mi>t</mi><mo>)</mo></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mn>0</mn></math></span> 为零，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>0</mn></math></span> 垂直跳到 1，此后保持——对应"合闸"那一瞬；右框是零初始条件。两者把"输入"与"起点"都钉死，<em>不同系统之间才谈得上公平比较</em>。</figcaption>
+</figure>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 三种"标准考试信号"</span>
+  <p>单位阶跃 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 与单位脉冲 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 是一对：<strong>阶跃是脉冲的积分，脉冲是阶跃的导数</strong>。复域里最清楚——阶跃象函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>s</mi></math></span>，脉冲象函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，正好差一个因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>。</p>
+  <p>第三种是<strong>斜坡</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mi>t</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>(</mo><mi>t</mi><mo>)</mo></math></span>，象函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><msup><mi>s</mi><mn>2</mn></msup></math></span>，用来考察"能不能跟上匀速变化的给定"。这三种在第 3、5 章与稳态误差里轮番出现。</p>
+  <p>顺带扫盲：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 读"单位脉冲"，像在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>0</mn></math></span> 瞬间敲一下（极窄极高的尖峰，面积凑成 1）；"积分"就是把小量累加起来。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 54 640 146" role="img" aria-label="三种标准考试信号的波形对比：单位阶跃在 t 等于 0 处跳到 1 后保持；单位脉冲在 t 等于 0 处是一个竖直尖峰；单位斜坡从原点出发沿直线上升；三者下方标出各自的象函数">
+    <defs>
+      <marker id="g4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+    </defs>
+
+    <line x1="50" y1="150" x2="190" y2="150" class="m-line"/>
+    <line x1="50" y1="150" x2="50" y2="62" class="m-line"/>
+    <line x1="50" y1="150" x2="96" y2="150" class="m-acc"/>
+    <line x1="96" y1="150" x2="96" y2="88" class="m-acc"/>
+    <line x1="96" y1="88" x2="190" y2="88" class="m-acc"/>
+    <text x="120" y="176" class="m-sub" font-size="11.5" text-anchor="middle">单位阶跃 1(t)</text>
+    <text x="120" y="193" class="m-sub" font-size="11.5" text-anchor="middle">象函数 1/s</text>
+
+    <line x1="272" y1="150" x2="412" y2="150" class="m-line"/>
+    <line x1="272" y1="150" x2="272" y2="62" class="m-line"/>
+    <line x1="312" y1="150" x2="312" y2="74" class="m-acc" marker-end="url(#g4a)"/>
+    <text x="342" y="176" class="m-sub" font-size="11.5" text-anchor="middle">单位脉冲 δ(t)</text>
+    <text x="342" y="193" class="m-sub" font-size="11.5" text-anchor="middle">象函数 1</text>
+
+    <line x1="450" y1="150" x2="590" y2="150" class="m-line"/>
+    <line x1="450" y1="150" x2="450" y2="62" class="m-line"/>
+    <line x1="450" y1="150" x2="556" y2="88" class="m-acc"/>
+    <text x="520" y="176" class="m-sub" font-size="11.5" text-anchor="middle">单位斜坡 t·1(t)</text>
+    <text x="520" y="193" class="m-sub" font-size="11.5" text-anchor="middle">象函数 1/s²</text>
+  </svg>
+  <figcaption><b>三根探针，各问各的事。</b>阶跃问"能不能稳住"，脉冲问"系统本身的底子"（其响应就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 的反变换），斜坡问"能不能追上匀速目标"。三者只差一次求导或积分，复域里差的正是因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>。</figcaption>
+</figure>
+
+<h2 id="s5">三、传递函数：拉氏变换的"主战场"</h2>
+
+<p>老师点破拉氏变换的真正定位：<mark>解微分方程只是"副业"，主业是引出本课程最重要的数学模型——传递函数。</mark>它会从第 2 章一直用到最后一章。</p>
+
+<p>动机一句话：系统给定输入就产生响应，这毫无疑问；现在把初始条件规定为零，在这个前提下<strong>把输出的拉氏变换与输入的拉氏变换做个"比值"</strong>，这个比值就大有名堂。</p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 传递函数（线性定常系统）</span>
+  <p>在<strong>零初始条件</strong>下，线性定常系统的<strong>输出量的拉氏变换</strong>与<strong>输入量的拉氏变换</strong>之比，称为该系统的传递函数，记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mtext>输出的拉氏变换</mtext></mrow><mrow><mtext>输入的拉氏变换</mtext></mrow></mfrac></math></div>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 分别是输入、输出信号的<strong>象函数</strong>（做拉氏变换后的结果；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 是复变量，上一节讲过）。读作"<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 形式"即可。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么"比一比"就能把输入输出甩掉</span>
+  <p>初看会犯嘀咕：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 里明明含着输入的影子，凭什么说它与输入无关？关键在<strong>做的是比值</strong>。你换一个输入，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 会<mark>同时</mark>改变，约掉公因子后只剩系统自身的结构参数。老师原话：这个比值"既和输入的具体形式无关，也和输出的具体形式无关，只和系统自身的结构参数有关"。<strong>输入输出是"因"，传递函数是"锅"的形状——炒什么菜变不了锅本身。</strong></p>
+</div>
+
+<p>正因为它滤掉输入输出的具体形式、只留系统本性，才能当数学模型：同一个系统无论喂什么进去，这条式子都不变。所以后面反复强调——<mark>建立数学模型，默认就是"把它的传递函数找出来"</mark>。</p>
+
+<div class="note">
+  <span class="lbl">先埋一个伏笔：单位脉冲是"探针"</span>
+  <p>如果给系统加的不是阶跃而是<strong>单位脉冲</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>(</mo><mi>t</mi><mo>)</mo></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mn>1</mn></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。<strong>传递函数恰好是单位脉冲响应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>h</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 的拉氏变换</strong>。以后在时域里量到一条脉冲响应，就等于在复域里量到了传递函数。这条下一节正式收进"性质"清单。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 38 640 68" role="img" aria-label="传递函数信号流：输入 R(s) 经传递函数 G(s) 方框得到输出 C(s)">
+    <defs>
+      <marker id="g5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+    </defs>
+    <text x="20" y="80" class="m-math" font-size="13">R(s)</text>
+    <line x1="78" y1="74" x2="266" y2="74" class="d-acc" marker-end="url(#g5a)"/>
+    <rect x="272" y="48" width="130" height="52" rx="3" class="d-box-a"/>
+    <text x="337" y="70" class="m-txt" font-size="12.5" text-anchor="middle">G(s)</text>
+    <text x="337" y="88" class="m-sub" font-size="11.5" text-anchor="middle">传递函数</text>
+    <line x1="402" y1="74" x2="556" y2="74" class="d-acc" marker-end="url(#g5a)"/>
+    <text x="590" y="80" class="m-math" font-size="13" text-anchor="middle">C(s)</text>
+  </svg>
+  <figcaption><b>后面每张结构图的骨架。</b>输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 穿过方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 得到输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，一个箭头就是一次相乘：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。多个环节串、并起来，都从这一小段长出来。</figcaption>
+</figure>
+
+<h2 id="s6">四、从微分方程推传递函数：一般式与两种标准型</h2>
+
+<p>传递函数可以从最熟悉的<strong>微分方程</strong>直接推出来，思路和上一节解方程一样，只是目的从"解出响应"变成"解出那个比值"。设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶线性定常系统的微分方程为：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>a</mi><mi>n</mi></msub><mfrac><mrow><msup><mi>d</mi><mi>n</mi></msup><mspace width="0.25em"></mspace><mi>c</mi></mrow><mrow><mi>d</mi><msup><mi>t</mi><mi>n</mi></msup></mrow></mfrac><mo>+</mo><msub><mi>a</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><mfrac><mrow><msup><mi>d</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mi>c</mi></mrow><mrow><mi>d</mi><msup><mi>t</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow></mfrac><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>a</mi><mn>1</mn></msub><mfrac><mrow><mi>d</mi><mi>c</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>+</mo><msub><mi>a</mi><mn>0</mn></msub><mspace width="0.25em"></mspace><mi>c</mi><mo>=</mo><msub><mi>b</mi><mi>m</mi></msub><mfrac><mrow><msup><mi>d</mi><mi>m</mi></msup><mspace width="0.25em"></mspace><mi>r</mi></mrow><mrow><mi>d</mi><msup><mi>t</mi><mi>m</mi></msup></mrow></mfrac><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>b</mi><mn>1</mn></msub><mfrac><mrow><mi>d</mi><mi>r</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>+</mo><msub><mi>b</mi><mn>0</mn></msub><mspace width="0.25em"></mspace><mi>r</mi></math></div>
+
+<p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 是输出、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 是输入，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mi>i</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>b</mi><mi>j</mi></msub></math></span> 是常数（"定常"即系数不随时间变）。物理上总有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>≤</mo><mspace width="0.25em"></mspace><mi>n</mi></math></span>：没加激励系统不会自己冒响应，输入的求导阶数不会超过输出。</p>
+
+<p><strong>第一步：两端取拉氏变换。</strong>零初始条件下，微分定理里带初始值的"尾巴"全为零，每项只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的幂次乘象函数：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><msub><mi>a</mi><mi>n</mi></msub><mspace width="0.25em"></mspace><msup><mi>s</mi><mi>n</mi></msup><mo>+</mo><msub><mi>a</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><msup><mi>s</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>a</mi><mn>1</mn></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><msub><mi>a</mi><mn>0</mn></msub><mo stretchy="true">)</mo></mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><msub><mi>b</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><msup><mi>s</mi><mi>m</mi></msup><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>b</mi><mn>1</mn></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><msub><mi>b</mi><mn>0</mn></msub><mo stretchy="true">)</mo></mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></div>
+
+<p><strong>第二步：解出比值。</strong>括号里已是<strong>代数式</strong>——这正是拉氏变换最讨喜之处：时域的微分方程，到复域变成乘除。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 前的系数除过去：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>b</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><msup><mi>s</mi><mi>m</mi></msup><mo>+</mo><msub><mi>b</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><msup><mi>s</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>b</mi><mn>1</mn></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><msub><mi>b</mi><mn>0</mn></msub></mrow><mrow><msub><mi>a</mi><mi>n</mi></msub><mspace width="0.25em"></mspace><msup><mi>s</mi><mi>n</mi></msup><mo>+</mo><msub><mi>a</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><msup><mi>s</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>a</mi><mn>1</mn></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><msub><mi>a</mi><mn>0</mn></msub></mrow></mfrac></math></div>
+
+<p>这就是<strong>一般形式</strong>：关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的有理分式，分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi></math></span> 阶、分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶。<mark>它与微分方程一一对应</mark>——系数原样对搬，两个模型等价，知其一即知其二。</p>
+
+<div class="note">
+  <span class="lbl">两个词先扫盲</span>
+  <p><strong>多项式</strong>：几个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的整数次幂带系数相加，如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></math></span>。<strong>有理分式</strong>：两个多项式相除。<strong>阶</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的最高次幂，如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></math></span> 是 2 阶。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 48 640 84" role="img" aria-label="微分方程与传递函数是等价模型：零初始条件下两者之间双向箭头，系数一一对应，知其一即知其二">
+    <defs>
+      <marker id="g6a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <rect x="40" y="56" width="200" height="52" rx="3" class="d-box"/>
+    <text x="140" y="88" class="m-txt" font-size="12" text-anchor="middle">微分方程（实际模型）</text>
+    <rect x="400" y="56" width="200" height="52" rx="3" class="d-box"/>
+    <text x="500" y="88" class="m-txt" font-size="12" text-anchor="middle">传递函数（复域模型）</text>
+    <line x1="246" y1="72" x2="394" y2="72" class="d-line" marker-end="url(#g6a)"/>
+    <line x1="394" y1="92" x2="246" y2="92" class="d-line" marker-end="url(#g6a)"/>
+    <text x="320" y="126" class="m-sub" font-size="11.5" text-anchor="middle">系数一一对应 · 知其一知其二</text>
+  </svg>
+  <figcaption><b>同一个系统的两副面孔。</b>左边是时域的实际模型（微分方程），右边是复域的数学模型（传递函数）。两个箭头双向：<em>系数原样对搬</em>。所以"由微分方程写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>"与"由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 写微分方程"是同一件事的两个方向。</figcaption>
+</figure>
+
+<h3 id="s7">4.1 首一标准型与尾一标准型</h3>
+
+<p>常用两种"标准化"写法，别混。区别只在一件事：<strong>从分子、分母的哪一项把系数提到分式外面。</strong></p>
+
+<p><strong>首一标准型</strong>：把分子、分母<strong>最高次项</strong>（"首"指最高次）系数都化为 1。做法是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>b</mi><mi>m</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mi>n</mi></msub></math></span> 提到分式外：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>b</mi><mi>m</mi></msub></mrow><mrow><msub><mi>a</mi><mi>n</mi></msub></mrow></mfrac><mo>⋅</mo><mfrac><mrow><msup><mi>s</mi><mi>m</mi></msup><mo>+</mo><mi>b</mi><msub><mo>'</mo><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><msup><mi>s</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>b</mi><msub><mo>'</mo><mn>0</mn></msub></mrow><mrow><msup><mi>s</mi><mi>n</mi></msup><mo>+</mo><mi>a</mi><msub><mo>'</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><msup><mi>s</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>a</mi><msub><mo>'</mo><mn>0</mn></msub></mrow></mfrac><mo>=</mo><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mfrac><mrow><mtext>分子首一式</mtext></mrow><mrow><mtext>分母首一式</mtext></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mo>=</mo><mfrac><mrow><msub><mi>b</mi><mi>m</mi></msub></mrow><mrow><msub><mi>a</mi><mi>n</mi></msub></mrow></mfrac></math></div>
+
+<p>再把分子、分母的首一多项式各自<strong>因式分解</strong>（每个因子最高次项系数为 1），得首一标准型的因式形式：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mfrac><mrow><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>z</mi><mn>1</mn></msub><mo>)</mo><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>z</mi><mn>2</mn></msub><mo>)</mo><mo>⋯</mo><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>z</mi><mi>m</mi></msub><mo>)</mo></mrow><mrow><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>p</mi><mn>1</mn></msub><mo>)</mo><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>p</mi><mn>2</mn></msub><mo>)</mo><mo>⋯</mo><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>p</mi><mi>n</mi></msub><mo>)</mo></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mo>=</mo><mfrac><mrow><msub><mi>b</mi><mi>m</mi></msub></mrow><mrow><msub><mi>a</mi><mi>n</mi></msub></mrow></mfrac></math></div>
+
+<p>式中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>i</mi></msub></math></span> 是分子多项式的根、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>p</mi><mi>j</mi></msub></math></span> 是分母多项式的根，含义见下一节的性质清单。</p>
+
+<p><strong>尾一标准型</strong>：这次化的是<strong>尾项（最低次项）</strong>系数。把常数项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>b</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mn>0</mn></msub></math></span> 提到分式外，让括号里两个多项式的最低次项系数都变成 1：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>b</mi><mn>0</mn></msub></mrow><mrow><msub><mi>a</mi><mn>0</mn></msub></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mi>b</mi><mo>'</mo><msub><mo>'</mo><mn>1</mn></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>b</mi><mo>'</mo><msub><mo>'</mo><mi>m</mi></msub><mspace width="0.25em"></mspace><msup><mi>s</mi><mrow><mi>m</mi></mrow></msup></mrow><mrow><mn>1</mn><mo>+</mo><mi>a</mi><mo>'</mo><msub><mo>'</mo><mn>1</mn></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>a</mi><mo>'</mo><msub><mo>'</mo><mi>n</mi></msub><mspace width="0.25em"></mspace><msup><mi>s</mi><mrow><mi>n</mi></mrow></msup></mrow></mfrac><mo>=</mo><mi>K</mi><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mo>⋯</mo></mrow><mrow><mn>1</mn><mo>+</mo><mo>⋯</mo></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>K</mi><mo>=</mo><mfrac><mrow><msub><mi>b</mi><mn>0</mn></msub></mrow><mrow><msub><mi>a</mi><mn>0</mn></msub></mrow></mfrac></math></div>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 尾一标准型前面的系数叫"增益"</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=736">12:16</a>特别注意：<strong>写成尾一标准型后，提到分式前面的系数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>/</mo><msub><mi>a</mi><mn>0</mn></msub></math></span> 叫做"增益"</strong>。这个概念以后反复用到（稳态误差、频率特性、校正处处都要用），务必记住：<mark>首一标准型前面的系数不是增益，尾一标准型前面的系数才是增益。</mark></p>
+</div>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>写法</th><th>化的是哪一项</th><th>前面的系数</th><th>典型用途</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>首一标准型</td><td>分子、分母最高次项系数化为 1</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mo>=</mo><msub><mi>b</mi><mi>m</mi></msub><mo>/</mo><msub><mi>a</mi><mi>n</mi></msub></math></span>（不是增益）</td><td>写零极点因式、判阶次</td></tr>
+      <tr><td>尾一标准型</td><td>分子、分母最低次项（尾项）系数化为 1</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>/</mo><msub><mi>a</mi><mn>0</mn></msub></math></span>（<strong>增益</strong>）</td><td>读增益、稳态分析、频率特性</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="trap">
+  <span class="lbl">这一步最容易错 · 提尾项时别把负号也拎出去</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=826">13:46</a>提尾项系数时，<strong>别把整个式子的负号也一起提出来</strong>：括号里分子、分母的首项系数都要为正，常数项该负就负、该正就正。<span class="bad">错法：为了"整齐"把负号拎到分式外，结果首项系数为负，增益也读错。</span></p>
+</div>
+
+<p>一句话对照：<mark>首一看结构（零极点、阶次），尾一看增益（放大倍数）。</mark>两者是同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 的两种包装，可互相转换。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q">已知某系统的传递函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>4</mn><mi>s</mi><mo>+</mo><mn>8</mn></mrow><mrow><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac></math></span>。把它化成首一标准型、尾一标准型，并确定系统的增益。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先看分母是不是已经首一，再决定提谁</span>
+    <p><strong>① 首一标准型。</strong>分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></math></span> 的最高次项系数已经是 1，不用动；分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>s</mi><mo>+</mo><mn>8</mn></math></span> 里把 4 提出来，最高次项系数就归了 1：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>4</mn><mo>(</mo><mi>s</mi><mo>+</mo><mn>2</mn><mo>)</mo></mrow><mrow><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac><mo>=</mo><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mfrac><mrow><mi>s</mi><mo>+</mo><mn>2</mn></mrow><mrow><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mo>=</mo><mn>4</mn></math></div>
+    <p>分母还能继续分解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn><mo>=</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo></math></span>，于是首一因式形式是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mn>4</mn><mo>⋅</mo><mfrac><mrow><mi>s</mi><mo>+</mo><mn>2</mn></mrow><mrow><mo>(</mo><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo></mrow></mfrac></math></span>。</p>
+    <p><strong>② 尾一标准型。</strong>这次提的是"尾项"（常数项）。分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>s</mi><mo>+</mo><mn>8</mn></math></span> 的尾项是 8，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>8</mn><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>s</mi><mo stretchy="true">)</mo></mrow></math></span>；分母的尾项是 4，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>(</mo><mn>1</mn><mo>+</mo><mi>s</mi><mo>)</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mi>s</mi><mo stretchy="true">)</mo></mrow></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>8</mn><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>s</mi><mo stretchy="true">)</mo></mrow></mrow><mrow><mn>4</mn><mo>(</mo><mn>1</mn><mo>+</mo><mi>s</mi><mo>)</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mi>s</mi><mo stretchy="true">)</mo></mrow></mrow></mfrac><mo>=</mo><mn>2</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>s</mi></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>s</mi><mo>)</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mi>s</mi><mo stretchy="true">)</mo></mrow></mrow></mfrac></math></div>
+    <p><strong>③ 增益。</strong><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=871">14:31</a>尾一标准型前面的系数就是增益，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>/</mo><msub><mi>a</mi><mn>0</mn></msub><mo>=</mo><mn>8</mn><mo>/</mo><mn>4</mn><mo>=</mo><mn>2</mn></math></span>。也可以直接看：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mn>0</mn></math></span>，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>8</mn><mo>/</mo><mn>4</mn><mo>=</mo><mn>2</mn></math></span>，正是增益。</p>
+    <div class="trap">
+      <span class="lbl">顺手核对分母因式分解</span>
+      <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>(</mo><mn>1</mn><mo>+</mo><mi>s</mi><mo>)</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mi>s</mi><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>4</mn><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><msup><mi>s</mi><mn>2</mn></msup></math></span>，与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></math></span> 一致；分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>8</mn><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>s</mi><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>8</mn><mo>+</mo><mn>4</mn><mi>s</mi></math></span>，与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mi>s</mi><mo>+</mo><mn>8</mn></math></span> 一致。<mark>增益 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>=</mo><mn>2</mn></math></span> 就是课上给出的答案。</mark></p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 22 640 178" role="img" aria-label="首一标准型与尾一标准型的对比：左边首一标准型把分子分母最高次项系数化为 1，前面的系数 K 星不是增益；右边尾一标准型把最低次项系数化为 1，前面的系数才是增益">
+    <rect x="16" y="30" width="296" height="160" rx="4" class="d-box-a"/>
+    <text x="30" y="54" class="m-txt" font-size="12">首一标准型（看结构）</text>
+    <text x="30" y="84" class="m-sub" font-size="11.5">把分子、分母最高次项</text>
+    <text x="30" y="104" class="m-sub" font-size="11.5">系数化成 1</text>
+    <text x="30" y="132" class="m-sub" font-size="11.5">前面的系数 K* = bm/an</text>
+    <text x="30" y="152" class="m-sub" font-size="11.5">（不是增益）</text>
+    <text x="30" y="178" class="m-sub" font-size="11.5">用途：写零极点、判阶次</text>
+
+    <rect x="328" y="30" width="296" height="160" rx="4" class="d-box-a"/>
+    <text x="342" y="54" class="m-txt" font-size="12">尾一标准型（看增益）</text>
+    <text x="342" y="84" class="m-sub" font-size="11.5">把分子、分母最低次项</text>
+    <text x="342" y="104" class="m-sub" font-size="11.5">（尾项）系数化成 1</text>
+    <text x="342" y="132" class="m-sub" font-size="11.5">前面的系数 K = b0/a0</text>
+    <text x="342" y="152" class="m-sub" font-size="11.5">（这就是增益）</text>
+    <text x="342" y="178" class="m-sub" font-size="11.5">用途：读增益、稳态、频域</text>
+  </svg>
+  <figcaption><b>同一条 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，两种包装。</b>左框"首一"化最高次项，方便写因式、数阶次；右框"尾一"化最低次项，前面的系数直接就是<em>增益</em>。<mark>提错地方就会把"首一系数"当成"增益"。</mark></figcaption>
+</figure>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 这三类题必须会</span>
+  <ul class="tight">
+    <li><strong>给微分方程写传递函数</strong>：把各阶导数换成对应的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 幂（零初始条件），直接抄系数写成有理分式；反向也要会。</li>
+    <li><strong>给环节读增益</strong>：先化成尾一标准型，前面的系数就是增益 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>b</mi><mn>0</mn></msub><mo>/</mo><msub><mi>a</mi><mn>0</mn></msub></math></span>；等价地令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mn>0</mn></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span>。</li>
+    <li><strong>给阶跃响应反推 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span></strong>：先对阶跃响应取拉氏变换得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，再除以输入的拉氏变换（阶跃是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>s</mi></math></span>），商就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。这正是下面七问第 1 问的做法。</li>
+  </ul>
+</div>
+
+<h2 id="s8">五、传递函数的性质：六条一次记住</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=917">15:17</a>新概念刚登场，老师把性质"一股脑"摆出来，并叮嘱：以后想不清传递函数相关概念，就回来翻这张表。</p>
+
+<dl class="kv">
+  <dt>① 是复函数</dt>
+  <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 是关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的有理分式，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 是复数，所以它有实部、有虚部，也有模和相角。<strong>复数</strong>就是"带方向的数"。先记住"它是复数的函数"即可，第 5 章频率特性会让它当主角。</dd>
+  <dt>② 只与系统自身有关</dt>
+  <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 虽定义成"输出拉氏变换 / 输入拉氏变换"，但一约之后<strong>与输入、输出的具体形式都无关</strong>，只取决于系统自身的结构参数。这是它能当数学模型的根本原因。</dd>
+  <dt>③ 与实际模型等价</dt>
+  <dd>传递函数（复域模型）与微分方程（实际模型）<strong>知其一即知其二</strong>：系数一一对应。两者是同一个系统的两副面孔。</dd>
+  <dt>④ 与单位脉冲响应互为拉氏变换对</dt>
+  <dd>给系统加单位脉冲 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo><mo>(</mo><mi>t</mi><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mn>1</mn></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 就是单位脉冲响应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>h</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 的拉氏变换，反过来做反变换就还原出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>h</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span>。</dd>
+  <dt>⑤ 零极点在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 平面上的分布与它对应</dt>
+  <dd>分子多项式的根叫<strong>零点</strong>，分母多项式的根叫<strong>极点</strong>（即系统特征根）。画在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 平面上即零极点图。<mark>但它看不出增益</mark>，所以还不足以完全还原 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。</dd>
+  <dt>⑥ 定义以零初始条件为前提</dt>
+  <dd>因此它<strong>不直接包含初始条件引起的那部分响应</strong>。需要时先由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 还原微分方程，再带初始条件求解（见七问第 ⑦ 问）。</dd>
+</dl>
+
+<figure class="fig">
+  <svg viewBox="0 16 640 216" role="img" aria-label="传递函数六条性质的关系网：中间是传递函数 G(s)，六个分列左右，分别是它是复函数、只由系统自身决定、与微分方程等价、等于脉冲响应的拉氏变换、零极点画在 s 平面、定义于零初始条件">
+    <line x1="178" y1="42" x2="248" y2="110" class="d-line"/>
+    <line x1="462" y1="42" x2="392" y2="110" class="d-line"/>
+    <line x1="178" y1="122" x2="248" y2="124" class="d-line"/>
+    <line x1="462" y1="122" x2="392" y2="124" class="d-line"/>
+    <line x1="178" y1="202" x2="248" y2="138" class="d-line"/>
+    <line x1="462" y1="202" x2="392" y2="138" class="d-line"/>
+
+    <rect x="8" y="24" width="170" height="36" rx="3" class="d-box"/>
+    <text x="93" y="47" class="m-txt" font-size="11.5" text-anchor="middle">① 是 s 的复函数</text>
+    <rect x="462" y="24" width="170" height="36" rx="3" class="d-box"/>
+    <text x="547" y="47" class="m-txt" font-size="11.5" text-anchor="middle">② 只由系统自身决定</text>
+
+    <rect x="8" y="104" width="170" height="36" rx="3" class="d-box"/>
+    <text x="93" y="127" class="m-txt" font-size="11.5" text-anchor="middle">③ 与微分方程等价</text>
+    <rect x="462" y="104" width="170" height="36" rx="3" class="d-box"/>
+    <text x="547" y="127" class="m-txt" font-size="11.5" text-anchor="middle">④ = 脉冲响应的象函数</text>
+
+    <rect x="8" y="184" width="170" height="36" rx="3" class="d-box"/>
+    <text x="93" y="207" class="m-txt" font-size="11.5" text-anchor="middle">⑤ 零极点画在 s 平面</text>
+    <rect x="462" y="184" width="170" height="36" rx="3" class="d-box"/>
+    <text x="547" y="207" class="m-txt" font-size="11.5" text-anchor="middle">⑥ 定义于零初始条件</text>
+
+    <rect x="250" y="92" width="140" height="64" rx="4" class="d-box-a"/>
+    <text x="320" y="116" class="m-txt" font-size="12" text-anchor="middle">传递函数</text>
+    <text x="320" y="138" class="m-txt" font-size="12" text-anchor="middle">G(s)</text>
+  </svg>
+  <figcaption><b>六条性质一张网。</b>中心是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，六条各从一个角度描述它：①③ 说它"是什么"，②⑥ 说它"归谁管"，④⑤ 说它"怎么用"。<mark>想不清某一问时，先问它落在哪一条上。</mark></figcaption>
+</figure>
+
+<h2 id="s9">六、一道七问综合题：把整条链一次走通</h2>
+
+<p>老师用一道"综合题"把前面所有概念串成一条线。<strong>某系统在零初始条件下，其单位阶跃响应的解析式为</strong></p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup><mspace width="1em"></mspace><mo>(</mo><mi>t</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>)</mo></math></div>
+
+<p>要求依次回答七件事：①求传递函数；②求增益；③求特征根及模态；④画零极点图；⑤求单位脉冲响应；⑥求微分方程；⑦当初条件不为零（初始位置 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>、初始速度为零）、输入仍为单位阶跃时，求响应。题里"<strong>零初始条件</strong>"与"<strong>单位阶跃响应</strong>"是两个钥匙：前者保证 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>/</mo><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 的关系成立，后者说明输入是阶跃、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>/</mo><mi>s</mi></math></span>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 16 640 212" role="img" aria-label="七问综合题的总览链：从已知的单位阶跃响应出发，先求传递函数，再分出增益与模态、零极点图与脉冲响应、微分方程与带初始条件的响应">
+    <defs>
+      <marker id="g9a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+    </defs>
+    <rect x="150" y="24" width="340" height="40" rx="3" class="d-box"/>
+    <text x="320" y="49" class="m-txt" font-size="11.5" text-anchor="middle">已知：零初始条件下的单位阶跃响应 y(t)</text>
+
+    <line x1="320" y1="66" x2="320" y2="86" class="d-acc" marker-end="url(#g9a)"/>
+    <rect x="210" y="86" width="220" height="40" rx="3" class="d-box-a"/>
+    <text x="320" y="111" class="m-txt" font-size="12" text-anchor="middle">① 求传递函数 G(s)</text>
+
+    <line x1="320" y1="126" x2="320" y2="140" class="d-acc" marker-end="url(#g9a)"/>
+    <line x1="112" y1="140" x2="528" y2="140" class="d-acc"/>
+    <line x1="112" y1="140" x2="112" y2="148" class="d-acc" marker-end="url(#g9a)"/>
+    <line x1="320" y1="140" x2="320" y2="148" class="d-acc" marker-end="url(#g9a)"/>
+    <line x1="528" y1="140" x2="528" y2="148" class="d-acc" marker-end="url(#g9a)"/>
+
+    <rect x="16" y="150" width="192" height="66" rx="3" class="d-box"/>
+    <text x="112" y="176" class="m-sub" font-size="11.5" text-anchor="middle">② 增益 K = 1</text>
+    <text x="112" y="198" class="m-sub" font-size="11.5" text-anchor="middle">③ 极点 -1、-4 与模态</text>
+
+    <rect x="224" y="150" width="192" height="66" rx="3" class="d-box"/>
+    <text x="320" y="176" class="m-sub" font-size="11.5" text-anchor="middle">④ 零极点图</text>
+    <text x="320" y="198" class="m-sub" font-size="11.5" text-anchor="middle">⑤ 单位脉冲响应 h(t)</text>
+
+    <rect x="432" y="150" width="192" height="66" rx="3" class="d-box"/>
+    <text x="528" y="176" class="m-sub" font-size="11.5" text-anchor="middle">⑥ 微分方程</text>
+    <text x="528" y="198" class="m-sub" font-size="11.5" text-anchor="middle">⑦ 带初条件的响应</text>
+  </svg>
+  <figcaption><b>一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，七种读法。</b>整道题只做一件事：由已知 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 求出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，之后 ②③ 读系数与极点、④ 画零极点、⑤ 反变换得脉冲响应、⑥ 搬回微分方程、⑦ 带初条件求解。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q">从上面的阶跃响应出发，依次完成这七问。</span></p>
+  <div class="sol">
+    <span class="lbl">贯穿全题的一句话：一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，七种读法</span>
+
+    <p><strong>① 求传递函数。</strong>先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 做拉氏变换：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mn>2</mn><mo>/</mo><mn>3</mn></mrow><mrow><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow><mrow><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac></math></span>。传递函数 = 输出拉氏变换 ÷ 输入拉氏变换；输入是单位阶跃、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>/</mo><mi>s</mi></math></span>，所以除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>/</mo><mi>s</mi></math></span>（即乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>）：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mi>s</mi><mspace width="1em"></mspace><mi>Y</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mfrac><mrow><mi>s</mi></mrow><mrow><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mfrac><mrow><mi>s</mi></mrow><mrow><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow><mrow><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mo>(</mo><mi>s</mi><mo>+</mo><mn>2</mn><mo>)</mo></mrow><mrow><mo>(</mo><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo></mrow></mfrac></math></div>
+
+    <p><strong>② 求增益。</strong>写成尾一标准型，前面的系数即增益。分子尾项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>×</mo><mn>2</mn><mo>=</mo><mn>4</mn></math></span>、分母尾项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>×</mo><mn>4</mn><mo>=</mo><mn>4</mn></math></span>，故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>=</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>，一眼可得。</p>
+
+    <p><strong>③ 特征根与模态。</strong>令分母为零得特征根（极点）<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn></math></span>，各对应一个<strong>模态</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup></math></span>。模态是系统响应的"基本积木"；<mark>任一激励下的响应，都是这些模态按不同权重叠加出来的</mark>，脉冲响应尤其明显。</p>
+
+    <p><strong>④ 画零极点图。</strong>零点来自分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>+</mo><mn>2</mn><mo>=</mo><mn>0</mn></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></span>；极点来自分母，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn></math></span>。画在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 平面上：</p>
+
+    <figure class="fig">
+      <svg viewBox="0 15 640 191" role="img" aria-label="该系统的 s 平面零极点图：零点用空心圆圈标在 s 等于负 2 处，极点用叉号分别标在 s 等于负 1 和 s 等于负 4 处，三点都落在负实轴上">
+        <defs>
+          <marker id="g10a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+          </marker>
+        </defs>
+
+        <line x1="56" y1="120" x2="620" y2="120" class="m-line" marker-end="url(#g10a)"/>
+        <text x="622" y="112" class="m-sub" font-size="11.5" text-anchor="end">σ</text>
+        <line x1="330" y1="196" x2="330" y2="44" class="m-line" marker-end="url(#g10a)"/>
+        <text x="330" y="38" class="m-sub" font-size="11.5" text-anchor="middle">jω</text>
+        <text x="324" y="136" class="m-sub" font-size="11.5" text-anchor="end">O</text>
+
+        <line x1="124" y1="114" x2="136" y2="126" class="m-acc"/>
+        <line x1="124" y1="126" x2="136" y2="114" class="m-acc"/>
+        <text x="130" y="146" class="m-sub" font-size="11.5" text-anchor="middle">-4</text>
+
+        <circle cx="230" cy="120" r="6" class="m-hole"/>
+        <text x="230" y="146" class="m-sub" font-size="11.5" text-anchor="middle">-2</text>
+
+        <line x1="274" y1="114" x2="286" y2="126" class="m-acc"/>
+        <line x1="274" y1="126" x2="286" y2="114" class="m-acc"/>
+        <text x="280" y="146" class="m-sub" font-size="11.5" text-anchor="middle">-1</text>
+
+        <text x="130" y="176" class="m-sub" font-size="11.5" text-anchor="middle">极点 ×</text>
+        <text x="230" y="176" class="m-sub" font-size="11.5" text-anchor="middle">零点 ○</text>
+        <text x="470" y="176" class="m-sub" font-size="11.5" text-anchor="middle">全在负实轴 → 模态单调衰减</text>
+      </svg>
+      <figcaption><b>零极点图与传递函数一一对应（只差一个增益）。</b>空心圆圈是零点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></span>，两个叉号是极点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>4</mn></math></span>。<em>都在负实轴上</em>，意味着两个模态 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup></math></span> 单调衰减。它也提醒你性质 ⑤：<mark>图能还原零极点位置，却看不出增益大小。</mark></figcaption>
+    </figure>
+
+    <p><strong>⑤ 求单位脉冲响应。</strong>按性质 ④，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>h</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 的拉氏反变换。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 做部分分式分解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn><mo>(</mo><mi>s</mi><mo>+</mo><mn>2</mn><mo>)</mo></mrow><mrow><mo>(</mo><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>c</mi><mn>1</mn></msub></mrow><mrow><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><msub><mi>c</mi><mn>2</mn></msub></mrow><mrow><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac></math></span>，用单根留数法（在极点上取值）得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>c</mi><mn>1</mn></msub><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>c</mi><mn>2</mn></msub><mo>=</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>，反变换：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>h</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup><mo>+</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup><mspace width="1em"></mspace><mo>(</mo><mi>t</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>)</mo></math></div>
+    <p>果然，单位脉冲响应就是两个模态的线性组合——这正是"模态是基本积木"的直观体现。</p>
+
+    <p><strong>⑥ 求系统的微分方程。</strong>由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow><mrow><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac></math></span>，交叉相乘得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mo>(</mo><mn>2</mn><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。把每个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mi>k</mi></msup></math></span> 还原成对时间的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 阶导数：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>¨</mo></mover><mi>c</mi><mo>+</mo><mn>5</mn><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>c</mi><mo>+</mo><mn>4</mn><mi>c</mi><mo>=</mo><mn>2</mn><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>r</mi><mo>+</mo><mn>4</mn><mi>r</mi></math></div>
+    <p><mark>传递函数默认零初始条件，但写出的微分方程不受此限制</mark>——它对任何初始条件都成立，这为第 ⑦ 问埋下伏笔。</p>
+
+    <p><strong>⑦ 初条件不为零时的响应。</strong><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=9&amp;t=1650">27:30</a>现在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>c</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>(</mo><mi>t</mi><mo>)</mo></math></span>。传递函数这条路走不通了（它假定零初始条件），必须回到微分方程，带初始条件做拉氏变换。用微分定理并整理，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 解出：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn><mo stretchy="true">)</mo></mrow><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>2</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow><mrow><mi>s</mi></mrow></mfrac><mo>−</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>5</mn><mo>)</mo><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mfrac><mrow><mn>2</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow><mrow><mi>s</mi></mrow></mfrac><mo>−</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>5</mn><mo>)</mo></mrow><mrow><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac></math></div>
+    <p>拆成两块：第一块 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mn>2</mn><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo><mo>/</mo><mi>s</mi></mrow><mrow><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>5</mn><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac></math></span> 是<strong>输入单独作用</strong>的象函数，反变换正是题给的阶跃响应；第二块 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mi>s</mi><mo>+</mo><mn>5</mn></mrow><mrow><mo>(</mo><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>s</mi><mo>+</mo><mn>4</mn><mo>)</mo></mrow></mfrac></math></span> 是<strong>初始条件单独作用</strong>的部分，部分分式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>4</mn><mo>/</mo><mn>3</mn></mrow><mrow><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow><mrow><mi>s</mi><mo>+</mo><mn>4</mn></mrow></mfrac></math></span>，反变换为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup></math></span>。两部分相加（满足叠加原理）：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mrow><mo stretchy="true">[</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup><mo stretchy="true">]</mo></mrow><mo>+</mo><mrow><mo stretchy="true">[</mo><mo form="prefix">−</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup><mo stretchy="true">]</mo></mrow><mo>=</mo><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup><mspace width="1em"></mspace><mo>(</mo><mi>t</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>)</mo></math></div>
+    <p>两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>4</mn><mi>t</mi></mrow></msup></math></span> 项恰好抵消，结果异常干净。核对初始值：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mn>2</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，正是给定的初始位置 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>→</mo><mn>1</mn></math></span>，与稳态一致。</p>
+
+    <figure class="fig">
+      <svg viewBox="0 38 640 228" role="img" aria-label="两条响应曲线对比：单位阶跃响应从 0 开始单调上升到 1；初条件不为零时的响应从负 1 开始单调上升到 1，两条曲线最终都趋于稳态值 1">
+        <defs>
+          <marker id="g11a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+          </marker>
+        </defs>
+
+        <line x1="80" y1="250" x2="80" y2="78" class="m-line" marker-end="url(#g11a)"/>
+        <text x="68" y="74" class="m-sub" font-size="11.5" text-anchor="end">c(t)</text>
+        <line x1="80" y1="250" x2="626" y2="250" class="m-line" marker-end="url(#g11a)"/>
+        <text x="632" y="254" class="m-sub" font-size="11.5">t</text>
+
+        <line x1="80" y1="100" x2="600" y2="100" class="m-thin d-dash"/>
+        <line x1="80" y1="170" x2="600" y2="170" class="m-thin d-dash"/>
+        <text x="72" y="104" class="m-sub" font-size="11.5" text-anchor="end">1</text>
+        <text x="72" y="174" class="m-sub" font-size="11.5" text-anchor="end">0</text>
+
+        <polyline points="80,170 106,145 132,131 158,123 184,118 210,114 236,110 262,108 288,106 314,105 340,104 366,103 392,102 418,102 444,101 470,101 496,101 522,101 548,101 574,100 600,100" class="m-acc" fill="none"/>
+        <polyline points="80,240 106,209 132,185 158,166 184,152 210,140 236,131 262,124 288,119 314,115 340,111 366,109 392,107 418,105 444,104 470,103 496,103 522,102 548,102 574,101 600,101" class="m-vio" fill="none"/>
+
+        <circle cx="80" cy="170" r="3.5" class="m-fill-a"/>
+        <circle cx="80" cy="240" r="3.5" class="m-fill-v"/>
+
+        <line x1="300" y1="52" x2="336" y2="52" class="m-acc"/>
+        <text x="344" y="56" class="m-sub" font-size="11.5">单位阶跃响应（从 0 起）</text>
+        <line x1="300" y1="72" x2="336" y2="72" class="m-vio"/>
+        <text x="344" y="76" class="m-sub" font-size="11.5">初条件不为零的总响应（从 -1 起）</text>
+      </svg>
+      <figcaption><b>两条曲线，两种起点，同一个归宿。</b>红线是零初始条件下的阶跃响应，从 0 升到 1；紫线是初始位置 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 时的总响应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>2</mn><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup></math></span>，从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 升到 1。<em>终点相同</em>（稳态只由输入和系统结构决定），<em>起点不同</em>（初始条件不同）。<mark>零初始条件"丢掉"的只是初始储能那一块，稳态特性一点没丢。</mark></figcaption>
+    </figure>
+
+    <div class="trap">
+      <span class="lbl">全题三个高频坑</span>
+      <ul class="tight">
+        <li><strong>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 时忘了除输入。</strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 直接当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 就错了——除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>/</mo><mi>s</mi></math></span> 那一步不能省，它等价于乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>。</li>
+        <li><strong>第 ⑥ 问把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 当普通字母。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mi>k</mi></msup></math></span> 要还原成第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 阶导数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup><mo>→</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>¨</mo></mover><mi>c</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>→</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>c</mi></math></span>、常数项不动。写错阶次，后面全崩。</li>
+        <li><strong>第 ⑦ 问用传递函数硬套。</strong>初条件不为零时必须回到微分方程并<strong>带上初始值的尾巴</strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>s</mi><mspace width="1em"></mspace><mi>c</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>−</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>c</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 那一项），否则会漏掉整个自由响应分量。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2 id="s10">七、传递函数的三个局限：什么时候它不灵</h2>
+
+<p>传递函数强大，但绝非万能。老师连着强调：<strong>千万不敢把后续学到的理论随意扩充到它管不着的领域去。</strong>局限一共三条。</p>
+
+<h3 id="s11">7.1 局限一：定义于零初始条件</h3>
+
+<p>它在零初始条件下定义，因此<strong>不反映初始条件引起的那部分响应</strong>。但这不算致命：需要时先由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 还原微分方程、再带初始条件求解即可——七问第 ⑦ 问就是演示。<mark>所以这是"用法"上的局限，不是"能力"上的。</mark></p>
+
+<h3 id="s12">7.2 局限二：只适用于单输入单输出</h3>
+
+<p>它定义成"<strong>一个</strong>输出 ÷ <strong>一个</strong>输入"，本质是"一对一"。所以只能描述<strong>单输入单输出</strong>系统；多输入或多输出时一个分式装不下，得改用矩阵描述。</p>
+
+<h3 id="s13">7.3 局限三：只能表示线性定常系统</h3>
+
+<p>这一条"最遗憾"：传递函数<strong>只能用于线性且定常的系统</strong>。为什么？推导的起点是"两端取拉氏变换、再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 提出来做比"；这一步能否成功，取决于每项变换后能否整块提出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。</p>
+
+<div class="why">
+  <span class="lbl">为什么非线性项会"卡死"传递函数——一个手算例子</span>
+  <p>想象方程里出现交叉项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mspace width="1em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>c</mi></math></span>（输出乘它的导数）。它应"整体"变换，但结果并不等于"各自变换再相乘"。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>=</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>c</mi><mo>=</mo><mo form="prefix">−</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mi>t</mi></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mspace width="1em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>˙</mo></mover><mi>c</mi><mo>=</mo><mo form="prefix">−</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>2</mn><mi>t</mi></mrow></msup></math></span>，整体变换得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi><mo>+</mo><mn>2</mn></mrow></mfrac></math></span>；若错误地"分开变换再相乘"：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>⋅</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>s</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>。<mark>两个结果根本不等</mark>。交叉项变换后是一团纠缠的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 函数，提不出干净的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，传递函数就此无法定义。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么"时变"也不行</span>
+  <p>再看时变情形：哪怕方程线性，只要系数是时间的函数（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mn>2</mn></msub><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>¨</mo></mover><mi>c</mi></math></span>），取拉氏变换时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mn>2</mn></msub><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>¨</mo></mover><mi>c</mi></math></span> 会"搅"在一起，既不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mn>2</mn></msub><mspace width="0.25em"></mspace><msup><mi>s</mi><mn>2</mn></msup><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，也提不出统一的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，比值无从谈起。所以<strong>非线性不行、时变也不行</strong>。</p>
+</div>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 三个微分方程，一眼判类型</span>
+  <p>用三个方程练习"判类型"，这是每次考试都爱考的基本功：</p>
+  <ol class="tight">
+    <li><strong>线性定常</strong>：只有各阶导数的线性组合，系数全为常数，无相乘项、无高次项——符合传递函数的适用范围。</li>
+    <li><strong>非线性定常</strong>：出现交叉项、高次项、或常数项中的任一样即为非线性；但系数不随时间变，故称"非线性<strong>定常</strong>"。</li>
+    <li><strong>线性时变</strong>：方程线性（无交叉项、无高次项），但有一个或几个系数<strong>随时间变化</strong>。</li>
+  </ol>
+  <p><mark>口诀：先看有无交叉项 / 高次项 / 常数项（有则非线性），再看系数是否为常数（不是则时变）。只有"无交叉项 + 系数为常数"才落在传递函数的地盘里。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 26 640 192" role="img" aria-label="传递函数的适用边界示意：外框代表全部实际系统，内部实线框是传递函数适用区，只包含线性定常的单输入单输出系统；框外的非线性系统、时变系统、多输入多输出系统各打叉，表示不能用传递函数描述">
+    <rect x="32" y="36" width="576" height="172" rx="8" class="m-box-a"/>
+    <text x="46" y="58" class="m-sub" font-size="11.5">全部实际系统</text>
+
+    <rect x="196" y="88" width="248" height="76" rx="5" class="d-box-a"/>
+    <text x="320" y="118" class="m-txt" font-size="12.5" text-anchor="middle">传递函数适用区</text>
+    <text x="320" y="140" class="m-sub" font-size="11.5" text-anchor="middle">线性定常 · 单输入单输出</text>
+
+    <text x="60" y="110" class="m-sub" font-size="11.5">非线性系统</text>
+    <line x1="148" y1="102" x2="160" y2="114" class="m-warn"/>
+    <line x1="148" y1="114" x2="160" y2="102" class="m-warn"/>
+
+    <text x="60" y="152" class="m-sub" font-size="11.5">时变系统</text>
+    <line x1="122" y1="144" x2="134" y2="156" class="m-warn"/>
+    <line x1="122" y1="156" x2="134" y2="144" class="m-warn"/>
+
+    <text x="524" y="110" class="m-sub" font-size="11.5" text-anchor="middle">多输入多输出</text>
+    <line x1="466" y1="102" x2="478" y2="114" class="m-warn"/>
+    <line x1="466" y1="114" x2="478" y2="102" class="m-warn"/>
+  </svg>
+  <figcaption><b>给传递函数划一条使用红线。</b>虚线大框是"所有实际系统"，里面实线小框才是它能覆盖的——必须同时满足<em>线性、定常、单输入单输出</em>。框外三项各带一个叉：<mark>非线性、时变、多输入多输出，统统不能用它描述。</mark></figcaption>
+</figure>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · 模态这个词从哪来</span>
+  <p>"模态"是力学、振动领域的常客，在结构振动里又叫<strong>振型</strong>：复杂振动都是几种基本"形状"按比例叠加。<mark>控制系统的模态完全同构</mark>：系统一定，极点就定了，模态 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>p</mi><mi>i</mi></msub><mspace width="0.25em"></mspace><mi>t</mi></mrow></msup></math></span> 也定了；自由响应、脉冲响应、任意输入下的响应，都是这些模态的加权组合。理解这点，就明白"零极点图"为何重要——它一眼给出系统所有基本积木。</p>
+</div>
+
+<h2 id="s14">八、把这一页接到整章的主线上</h2>
+
+<p>回头看这条链：<strong>现实系统 → 控制目标 → 输入/输出 → 控制器 → 被控对象 → 反馈 → 误差 → 数学模型 → 数学分析 → 系统性能</strong>。这两节正是"数学模型"一环的落地：先把设备行为写成微分方程（实际模型），再用拉氏变换搬进复域，得到关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的有理分式——传递函数。<mark>从此"分析一个系统"就等于"分析它的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>"。</mark></p>
+
+<p>为什么这么看重它？因为它把最难处理的"微分"换成了"代数"：解方程变成解代数式、求响应变成查表反变换、判稳定变成看极点在不在左半平面。后面每一件大事都围绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>：</p>
+
+<ul class="tight">
+  <li><strong>第 3 章 时域分析</strong>：给定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，由极点位置算响应快不快、超调大不大。</li>
+  <li><strong>第 4 章 根轨迹</strong>：某参数（如开环增益）变化时，闭环极点在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 平面上怎么移动。</li>
+  <li><strong>第 5 章 频域分析</strong>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><mo>=</mo><mi>j</mi><mo>ω</mo></math></span> 代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>，画幅频、相频曲线。</li>
+  <li><strong>校正部分</strong>：按性能要求，往系统里加环节去"改造" <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。</li>
+</ul>
+
+<p>本页反复念叨的"增益、零点、极点、模态"，就是读 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 的四把钥匙：<strong>增益管幅值，零点极点管形状，模态管时域里长什么样。</strong></p>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>起点</b> 微分方程（实际模型）</span><span class="ar">→</span>
+    <span class="n"><b>拉氏变换</b> 零初条件，尾巴归零</span><span class="ar">→</span>
+    <span class="n"><b>比值</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mi>C</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>/</mo><mi>R</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span></span><span class="ar">→</span>
+    <span class="n"><b>读法</b> 首一 / 尾一 / 增益 / 零极点</span><span class="ar">→</span>
+    <span class="n"><b>终点</b> 通吃响应、稳定性、校正</span>
+  </div>
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>定义：<strong>零初始条件</strong>下，输出拉氏变换 ÷ 输入拉氏变换。</li>
+    <li>一般式：有理分式，分子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi></math></span> 阶、分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 阶，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>≤</mo><mspace width="0.25em"></mspace><mi>n</mi></math></span>。</li>
+    <li><strong>首一</strong>标准型前面是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup><mo>=</mo><msub><mi>b</mi><mi>m</mi></msub><mo>/</mo><msub><mi>a</mi><mi>n</mi></msub></math></span>；<strong>尾一</strong>标准型前面才是<strong>增益</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>/</mo><msub><mi>a</mi><mn>0</mn></msub><mo>=</mo><mi>G</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span>。</li>
+    <li>零点 = 分子根，极点 = 分母根（特征根）；零极点图<mark>缺增益</mark>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 与单位脉冲响应互为拉氏变换对；微分方程与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 知其一知其二。</li>
+  </ul>
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>提尾项时别把负号一起拎出去，保证分子分母首项系数为正。</li>
+    <li>初条件不为零时不能用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 硬套，要回微分方程带着初始值的尾巴再变换。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P008-拉氏反变换与传递函数（上）/index.html">拉氏反变换与传递函数（上）</a> 拉氏变换、部分分式分解与模态</li>
+      <li><span class="cur">KCL / KVL / 元件方程（本页补课）</span></li>
+      <li><span class="cur">微分方程与微分定理（前文已讲）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P010-复域数学模型（上）/index.html">复域数学模型（上）</a> 复域数学模型：用复阻抗直接列写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span></li>
+      <li><a href="../P012-结构图及其等效变换（上）/index.html">结构图及其等效变换（上）</a> 结构图及其等效变换，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 拼成系统</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>首一系数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>K</mi><mrow><mo>∗</mo></mrow></msup></math></span> 与增益 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span>：别看错前系数</li>
+      <li>零极点图能还原 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 的"形状"，却还原不出增益</li>
+    </ul>
+  </div>
+</div>
+  <footer class="doc-foot"><span>卢京潮《自动控制原理》· 西北工业大学 · 第 9 讲</span><a href="../P008-拉氏反变换与传递函数（上）/index.html">← P008</a><a href="../index.html">全部目录</a><a href="../P010-复域数学模型（上）/index.html">P010 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、一个系统的响应，到底由谁决定</a>
+    <a href="#s2">二、要比较不同系统，先&quot;统一赛道&quot;：规范输入与零初始条件</a>
+    <a class="sub" href="#s3">2.1 为什么偏偏选单位阶跃</a>
+    <a class="sub" href="#s4">2.2 什么是零初始条件</a>
+    <a href="#s5">三、传递函数：拉氏变换的&quot;主战场&quot;</a>
+    <a href="#s6">四、从微分方程推传递函数：一般式与两种标准型</a>
+    <a class="sub" href="#s7">4.1 首一标准型与尾一标准型</a>
+    <a href="#s8">五、传递函数的性质：六条一次记住</a>
+    <a href="#s9">六、一道七问综合题：把整条链一次走通</a>
+    <a href="#s10">七、传递函数的三个局限：什么时候它不灵</a>
+    <a class="sub" href="#s11">7.1 局限一：定义于零初始条件</a>
+    <a class="sub" href="#s12">7.2 局限二：只适用于单输入单输出</a>
+    <a class="sub" href="#s13">7.3 局限三：只能表示线性定常系统</a>
+    <a href="#s14">八、把这一页接到整章的主线上</a>
+  </aside>
+</div>
+</body>
+</html>

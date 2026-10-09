@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>间断点：连续三要素坏掉哪条，就归哪类 · 高等数学笔记</title>
+<meta name="description" content="间断点就是连续三要素里至少坏了一条的地方。按「左右极限是否存在」一刀切开：左右极限都存在的叫第一类（可去、跳跃），至少有一个不存在的叫第二类（无穷、震荡）。记住六字口诀：一可跳，二无荡。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 1 章  函数与极限</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 14 讲</div>
+    <h1 class="title"><span class="pnum">P014</span>间断点：连续三要素坏掉哪条，就归哪类</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>间断点就是<strong>连续三要素里至少坏了一条</strong>的地方。按「左右极限是否存在」一刀切开：左右极限<strong>都存在</strong>的叫<strong>第一类</strong>（可去、跳跃），至少有一个<strong>不存在</strong>的叫<strong>第二类</strong>（无穷、震荡）。记住六字口诀：<mark>一可跳，二无荡</mark>。</p></div>
+    <div class="meta"><span>时长 27m38s</span><span class="w" title="考试权重">●●●○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=0">00:00</a><span class="vv">间断的<b>总定义</b>：连续三要素（有定义 / 极限存在 / 极限等于函数值）坏掉任意一条，就间断。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=90">01:30</a><span class="vv">反例热身：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 无定义，极限是无穷大（不存在）。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=330">05:30</a><span class="vv"><b>无穷间断点</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mo>π</mo><mn>2</mn></mfrac></math></span> 处「唰」地断开，极限是无穷大。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=397">06:37</a><span class="vv"><b>震荡间断点</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 无定义，逼近时来回摆动，没有极限。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=524">08:44</a><span class="vv"><b>可去间断点</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>（极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，补定义即连续）。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=635">10:35</a><span class="vv">被「忽悠」一下：它的图像就是直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>，只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处挖了个空心。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=908">15:08</a><span class="vv"><b>跳跃间断点</b>：分段函数两段都断开，左右极限存在但不相等。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=985">16:25</a><span class="vv">用左右极限把四个例子重新梳理一遍——分类的依据就在这里。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1053">17:33</a><span class="vv"><b>分类总纲</b>：第一类（可去、跳跃）左右极限均存在；第二类（无穷、震荡）至少一个不存在。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1173">19:33</a><span class="vv">口诀：<b>一可跳，二无荡</b>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1254">20:54</a><span class="vv">判断思维导图：先看左右极限是否存在，再看是否相等、是否等于函数值。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1385">23:05</a><span class="vv"><b>例题</b>：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow></mfrac></math></span> 的间断点及类型（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 可去、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 无穷）。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">间断就是「三要素坏了一条」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=0">00:00</a>上一页把连续拆成三要素：在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 有定义、极限存在、极限等于函数值。<strong>这三样只要有一样不满足，函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 就不连续</strong>——不连续，就叫在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处<strong>间断</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 叫做一个<strong>间断点</strong>。所以判断间断点，本质上就是拿着三要素去逐条检查；而间断点的分类，也正是按「到底是哪条坏了、怎么坏的」来分的。</p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 间断点</span>
+  <p>设函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的<strong>某去心邻域</strong>内有定义。如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处<strong>不连续</strong>，就称 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的<strong>间断点</strong>（也叫不连续点）。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=0">00:00</a>为什么间断点的前提是「去心邻域」，连续却是「邻域」</span>
+  <p>连续的定义里出现了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> <strong>自己必须有定义</strong>，前提写成「邻域」（含芯）。而判断间断点靠的是两个单侧极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msubsup><mi>x</mi><mn>0</mn><mrow><mo form="prefix">±</mo></mrow></msubsup></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，它们只看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></math></span> 那部分函数值，<strong>压根用不到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span></strong>，于是前提就放宽成「去心邻域」（不含芯）。</p>
+  <p>这一步放宽是必需的：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 都是<strong>根本没定义</strong>的点，而它们恰恰是最典型的间断点。若坚持「邻域有定义」才算，这些例子反而被挡在门外了。所以定义先把中心点搁在一边，只要求它周围有定义；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 自己有没有定义，留给后面逐条检查。</p>
+</div>
+
+<p>老师一口气用几个例子把三种「坏法」都演示了一遍：</p>
+
+<dl class="kv">
+  <dt>坏第一条：没定义</dt>
+  <dd>比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>，分母为零，根本没定义。</dd>
+  <dt>坏第二条：极限不存在</dt>
+  <dd>同样是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的极限是无穷大（不存在）；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 则来回震荡，极限也不存在。</dd>
+  <dt>坏第三条：极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≠</mo></math></span> 函数值</dt>
+  <dd>点在曲线上，但「该在的位置」和「实际画的位置」对不上——图上会有一个孤零零挪了窝的点。</dd>
+</dl>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=217">03:37</a>视频原话（大意）</span>
+  <p><q>有一个函数，在这个点它给的定义是这么大；但朝这个点逼近的时候，函数值的极限是另一个值。它俩相不相等？不相等。那你画图的时候，这个点你是不是得把笔提起来单独画一下？</q></p>
+  <p>这正是「坏第三条」的画面：左右逼近给出的极限是一个高度，而函数在这一点被硬生生定义成了另一个高度，于是必须提笔补一个点——断开了。</p>
+</div>
+
+<h2 id="s2">四个代表函数，四种间断点</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=330">05:30</a>老师把四类典型间断点各配了一个函数，逐个画了草图。先各自看一眼，再在后面的对比表里归总。</p>
+
+<h3 id="s3">无穷间断点</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=330">05:30</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mo>π</mo><mn>2</mn></mfrac></math></span> 处，图像「唰」地一下冲到正无穷、再从负无穷回来，中间断开；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 也一样，两侧都趋于无穷。这类叫<strong>无穷间断点</strong>。注意：趋于无穷属于「极限不存在」的一种。</p>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=330">05:30</a>两侧跑向无穷，符号可以相反</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>：左极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>∞</mo></math></span>、右极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mo>π</mo><mn>2</mn></mfrac></math></span> 恰好反过来，左边冲到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>、右边掉到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>∞</mo></math></span>。符号相反不影响归类——<mark>只要有一侧的极限是无穷（也就是不存在），就归第二类·无穷间断点</mark>。几何上，曲线在这里是骑着一条<strong>竖直渐近线</strong>冲出去的，图像必然断开。</p>
+</div>
+
+<h3 id="s4">震荡间断点</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=397">06:37</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>：函数在那里没定义；而当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac><mo>→</mo><mo>∞</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span> 面对一个冲向无穷的自变量，只能一直上下波动。更糟的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 越靠近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 跑得越快，函数值就<strong>摆得越密集、越猛烈</strong>——上上下下，始终攒不出一个安定的值。这类叫<strong>震荡间断点</strong>。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=443">07:23</a>它凭什么不算「无穷间断点」</span>
+  <p>看图像就清楚：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的函数值<strong>被死死夹在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 之间</strong>（正弦的振幅恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>），它再怎么疯也「冲不上天」。既然不是趋于无穷，它就不是无穷间断点；又因为摆动不收敛，左、右极限都不存在，于是落到第二类的另一支——<strong>震荡</strong>。一句话区分：<mark>无穷是「没有界地冲出去」，震荡是「有界，但定不下来」</mark>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 240" role="img" aria-label="sin(1/x) 在零点附近：越靠近零震荡越密，振幅始终被夹在正负 1 之间">
+    <line x1="60" y1="120" x2="600" y2="120" class="m-thin" stroke-width="1.2"></line>
+    <line x1="320" y1="24" x2="320" y2="216" class="m-thin" stroke-width="1.2"></line>
+    <line x1="56" y1="45" x2="600" y2="45" class="m-acc" stroke-width="1" stroke-dasharray="5 4"></line>
+    <line x1="56" y1="195" x2="600" y2="195" class="m-acc" stroke-width="1" stroke-dasharray="5 4"></line>
+    <path d="M 332 120 Q 334.5 60 337 120 Q 339.5 180 342 120 Q 344.5 60 347 120 Q 349.5 180 352 120 Q 354.5 60 357 120 Q 359.5 180 362 120 Q 364.5 60 367 120 Q 369.5 180 372 120" fill="none" class="m-line" stroke-width="1.8"></path>
+    <path d="M 372 120 Q 379.5 60 387 120 Q 394.5 180 402 120 Q 409.5 60 417 120 Q 424.5 180 432 120" fill="none" class="m-line" stroke-width="1.8"></path>
+    <path d="M 432 120 Q 467 60 502 120 Q 537 180 572 120" fill="none" class="m-line" stroke-width="1.8"></path>
+    <path d="M 308 120 Q 305.5 60 303 120 Q 300.5 180 298 120 Q 295.5 60 293 120 Q 290.5 180 288 120 Q 285.5 60 283 120 Q 280.5 180 278 120 Q 275.5 60 273 120 Q 270.5 180 268 120" fill="none" class="m-line" stroke-width="1.8"></path>
+    <path d="M 268 120 Q 260.5 60 253 120 Q 245.5 180 238 120 Q 230.5 60 223 120 Q 215.5 180 208 120" fill="none" class="m-line" stroke-width="1.8"></path>
+    <path d="M 208 120 Q 173 60 138 120 Q 103 180 68 120" fill="none" class="m-line" stroke-width="1.8"></path>
+    <text x="58" y="18" class="m-txt" font-size="12.5">y = sin(1/x)</text>
+    <text x="512" y="38" class="m-sub" font-size="11.5">y = 1</text>
+    <text x="512" y="212" class="m-sub" font-size="11.5">y = -1</text>
+    <text x="326" y="234" class="m-sub" font-size="11.5">越靠近 x=0 震荡越密，但振幅始终有界</text>
+    <text x="602" y="134" class="m-sub" font-size="11.5">x</text>
+  </svg>
+  <figcaption><b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在原点附近的真实长相。</b>曲线左右两支都被两条虚线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 夹住——<strong>振幅有界</strong>；但越往中间挤，同样一段宽度里塞进去的震荡次数越多，频率趋向无穷。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时它既不发散、也不收敛，是震荡间断点的标准样本。<em>这也解释了它为什么不算无穷间断点：无穷是「冲出去」，它是「有界地抖」。</em></figcaption>
+</figure>
+
+<h3 id="s5">可去间断点</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=524">08:44</a>看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>。在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 分母为零，没定义，所以间断。但极限存在：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>2</mn></math></div>
+
+<p>极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，只是这一点「没画上去」或「画错了」。如果<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处的函数值补成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span></strong>，这个洞就填上了，函数立刻连续。正因为「这个间断可以去掉」，所以叫<strong>可去间断点</strong>。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=588">09:48</a>为什么叫「可去」而不是「我去」</span>
+  <p>老师特意吐槽了这个名字——它说的是「这个间断点可以被去掉」：只要重新定义（或补上）那一个点的函数值，洞就补圆了。它和「我去」毫无关系，纯属译名拗口。判断标准只有一句：<mark>左右极限都存在且相等，但函数在此没定义、或定义值不等于这个极限</mark>。</p>
+</div>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=635">10:35</a>视频原话（大意）</span>
+  <p><q>我问大家一个非常高级的问题，大家一定要仔细回答——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span> 这个函数的图像怎么画？一个二次的图像比上一个一次函数的图像……老师我没学过啊。我其实是在忽悠你，你是不是被我成功忽悠住了？</q></p>
+  <p>这个「忽悠」的谜底是：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不能等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>1</mn></math></span> 约掉之后式子就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mn>1</mn></math></span>。所以图像就是那条最熟的直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>，<strong>只把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 那一点抠掉、画成一个大空心</strong>。可去间断点长的正是这个样子：一条完完整整的直线，缺一个点。</p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=774">12:54</a>结论 · 可去间断点「补一刀」就连续</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的可去间断点，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>A</mi></math></span> 存在，那么只要<strong>重新规定</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mi>A</mi></math></span>（原本没定义的就补上，原本定义错的就改掉），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 就在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处连续。这就是「可去」两个字的全部含义——<mark>这个间断点可以被抹掉</mark>。四个类型里，只有它具有这个性质。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=837">13:57</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>x</mi><mspace width="1em"></mspace><mo>(</mo><mi>x</mi><mo>≠</mo><mn>1</mn><mo>)</mo></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>，判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处间断点的类型。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：这里函数「有定义」，坏的是第三条</span>
+    <p>和前面那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span> 不同，这个函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处<strong>是有定义的</strong>（硬性规定成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>），所以坏的不是第一条。先算极限：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><mi>x</mi><mo>=</mo><mn>1</mn></math></div>
+    <p>左极限、右极限都存在且相等，都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>；可是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>≠</mo><mn>1</mn></math></span>。极限存在、函数也有定义，唯独<strong>「极限值等于函数值」这一条塌了</strong>。</p>
+    <p>结论：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 是<strong>第一类·可去间断点</strong>。要让它连续，只需把定义改回来——令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>1</mn></math></span>。几何上，直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 本该经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，这个点却被挪到了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="true">)</mo></mrow></math></span>，成了「孤零零挪了窝的点」。</p>
+    <div class="trap">
+      <span class="lbl">别以为「有定义」就万事大吉</span>
+      <p><span class="bad">一个有定义的点也可以是间断点。</span>三要素里第三条（极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo></math></span> 函数值）独立于前两条：有定义、极限也存在，两样都齐了，照样可能因为「对不上」而间断。这类间断点最好认——图像上总有一个<strong>离开曲线、单独挂着的实心点</strong>。</p>
+    </div>
+  </div>
+</div>
+
+<h3 id="s6">跳跃间断点</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=908">15:08</a>再看分段函数：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>−</mo><mn>1</mn><mo>,</mo></mtd><mtd><mi>x</mi><mo>&lt;</mo><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn><mo>,</mo></mtd><mtd><mi>x</mi><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mi>x</mi><mo>+</mo><mn>1</mn><mo>,</mo></mtd><mtd><mi>x</mi><mo>&gt;</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div>
+
+<p>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处，左极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，右极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>1</mn></math></span>，<strong>两边极限都存在，但不相等</strong>——图像像下台阶一样「蹦」了一下。这类叫<strong>跳跃间断点</strong>。左右极限不相等，那个「台阶」补不上，所以不可去。</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=946">15:46</a>视频原话（大意）</span>
+  <p><q>这不蹦了一下嘛，就叫跳跃间断点。</q></p>
+  <p>老师随便换一个图，左右两段高度对不上，他也说「这不嘚儿嘚儿跳了一下嘛」——<strong>「跳」这个字，说的就是左极限与右极限各站一个高度、中间落差补不上</strong>。记住这个画面，就不会再把跳跃和可去搞混：可去是「同一个高度、只缺一个点」，跳跃是「两个高度、怎么补都接不上」。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="四类间断点的示意草图：可去、跳跃、无穷、震荡">
+    <text x="40" y="26" class="m-txt" font-size="12.5">可去间断点  y=(x^2-1)/(x-1)</text>
+    <line x1="60" y1="86" x2="200" y2="86" class="m-thin" stroke-width="1.1"></line>
+    <line x1="130" y1="110" x2="130" y2="40" class="m-thin" stroke-width="1.1"></line>
+    <line x1="70" y1="100" x2="128" y2="62" class="m-acc" stroke-width="1.8"></line>
+    <line x1="132" y1="62" x2="200" y2="24" class="m-acc" stroke-width="1.8"></line>
+    <circle cx="130" cy="62" r="4.5" fill="none" class="m-warn" stroke-width="1.6"></circle>
+    <text x="112" y="80" class="m-warn" font-size="11.5">洞(可补)</text>
+
+    <text x="250" y="26" class="m-txt" font-size="12.5">跳跃间断点  分段函数</text>
+    <line x1="270" y1="86" x2="410" y2="86" class="m-thin" stroke-width="1.1"></line>
+    <line x1="340" y1="110" x2="340" y2="40" class="m-thin" stroke-width="1.1"></line>
+    <line x1="280" y1="104" x2="338" y2="104" class="m-acc" stroke-width="1.8"></line>
+    <line x1="342" y1="50" x2="400" y2="50" class="m-acc" stroke-width="1.8"></line>
+    <circle cx="338" cy="104" r="4.5" class="m-fill-g"></circle>
+    <circle cx="342" cy="50" r="4.5" fill="none" class="m-warn" stroke-width="1.6"></circle>
+    <text x="300" y="78" class="m-warn" font-size="11.5">跳一下</text>
+
+    <text x="440" y="26" class="m-txt" font-size="12.5">无穷间断点  y=1/x</text>
+    <line x1="460" y1="120" x2="600" y2="120" class="m-thin" stroke-width="1.1"></line>
+    <line x1="530" y1="150" x2="530" y2="20" class="m-thin" stroke-width="1.1"></line>
+    <path d="M 470 150 C 510 130, 525 128, 528 150" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <path d="M 532 20 C 535 50, 550 60, 590 40" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <text x="500" y="175" class="m-warn" font-size="11.5">两端冲向无穷</text>
+
+    <text x="40" y="156" class="m-txt" font-size="12.5">震荡间断点  y=sin(1/x)</text>
+    <line x1="60" y1="216" x2="200" y2="216" class="m-thin" stroke-width="1.1"></line>
+    <line x1="130" y1="240" x2="130" y2="170" class="m-thin" stroke-width="1.1"></line>
+    <path d="M 70 200 Q 85 178 100 200 Q 115 222 130 200 Q 145 178 160 200 Q 175 222 190 200" fill="none" class="m-acc" stroke-width="1.8"></path>
+    <text x="95" y="236" class="m-warn" font-size="11.5">越近 0 摆越猛</text>
+
+    <text x="250" y="156" class="m-txt" font-size="12.5">对比：连续（无间断）</text>
+    <line x1="270" y1="216" x2="410" y2="216" class="m-thin" stroke-width="1.1"></line>
+    <path d="M 280 216 Q 325 170 370 216 Q 385 232 400 216" fill="none" class="m-good" stroke-width="1.8"></path>
+    <text x="300" y="200" class="m-good" font-size="11.5">一笔过，不断</text>
+  </svg>
+  <figcaption><b>四种间断点的长相。</b>可去：只有一个洞，补上即连续；跳跃：左右极限都在但不相等，像下台阶；无穷：两侧奔向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mo>∞</mo></math></span>；震荡：在一点附近疯狂上下摆动、没有极限。前两种的左右极限都「存在」，后两种至少有一侧「不存在」——这正是一切分类的分水岭。</figcaption>
+</figure>
+
+<h2 id="s7">分类总纲：第一类与第二类</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1053">17:33</a>把所有间断点按「左右极限是否存在」一刀切开：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>类别</th><th>判定（看左右极限）</th><th>包含</th><th>典型函数</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>第一类</strong>间断点</td>
+        <td>左极限、右极限<strong>都存在</strong></td>
+        <td>可去间断点（左右极限相等）<br>跳跃间断点（左右极限不等）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>、左右跳变的分段函数</td>
+      </tr>
+      <tr>
+        <td><strong>第二类</strong>间断点</td>
+        <td>左、右极限<strong>至少有一个不存在</strong>（含趋于无穷）</td>
+        <td>无穷间断点<br>震荡间断点</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="blk plain">
+  <span class="lbl">关键提醒 · <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1053">17:33</a>「无穷」属于极限不存在</span>
+  <p>很多人下意识觉得「趋于无穷也算个极限」。不对——在严格的极限语言里，趋于无穷是<strong>极限不存在</strong>的一种。所以「左右极限至少有一个是无穷」仍然归到第二类。只要左右极限「安定不下来」，无论是因为冲上天还是因为乱摆动，都算第二类。</p>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1053">17:33</a>第二类真的只有「无穷」和「震荡」两种吗</span>
+  <p>老师专门点了一句：教材在这一点上写得并不死。按定义，<strong>第二类 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo></math></span> 左、右极限至少有一个不存在</strong>，凡是「极限安定不下来」的点都算，无穷与震荡只是最常撞见的两副面孔。所以做题别去背名字，抓住那句判据——<mark>先看左右极限是否存在</mark>——比什么都牢靠。考试里你真能碰到的第二类，基本就是这两类。</p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl">六字口诀 · <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1173">19:33</a>一可跳，二无荡</span>
+  <p>第一类间断点 = <strong>可去</strong> + <strong>跳跃</strong>；第二类间断点 = <strong>无穷</strong> + <strong>震荡</strong>。背成「一（类）可（去）跳（跃），二（类）无（穷）荡（震荡）」，谁属哪类就再也不会混。</p>
+</div>
+
+<h2 id="s8">判断间断点的思维导图</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1254">20:54</a>见到一个函数问「在某某点是什么间断点」，按下面这条顺序走，不会乱。注意这三步是<strong>依次递进</strong>的，跳步就会出错：</p>
+
+<ol class="steps">
+  <li><span class="sh">算左极限、右极限，看是否都存在。</span>这是<strong>总开关</strong>：有一侧不存在（含趋于无穷）→ 直接归第二类；两侧都存在 → 第一类，继续往下。</li>
+  <li><span class="sh">都存在时，看两者是否相等。</span>相等 → <strong>可去</strong>；不相等 → <strong>跳跃</strong>。到这一步只定出了第一类的两种，还没收工。</li>
+  <li><span class="sh">最后看极限值是否等于函数值。</span>极限存在、函数也有定义，可两者<strong>对不上</strong>，那依旧是可去间断点（把定义改过来就连续）；只有「有定义 + 极限存在 + 两者相等」三条全占，才判为连续、不是间断点。</li>
+</ol>
+
+<p>把三步连成一句话：<mark>先问「存在不存在」，再问「相等不相等」，最后问「等不等于函数值」</mark>。顺序一颠倒，最容易把趋于无穷误判成可去。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="间断点类型判别流程：先看左右极限是否存在，再看是否相等，最后看是否等于函数值">
+    <rect x="40" y="26" width="200" height="36" rx="8" class="m-panel"></rect>
+    <text x="140" y="49" text-anchor="middle" class="m-txt" font-size="12">① 左右极限都存在？</text>
+    <rect x="40" y="102" width="200" height="36" rx="8" class="m-panel"></rect>
+    <text x="140" y="125" text-anchor="middle" class="m-txt" font-size="12">② 左极限 = 右极限？</text>
+    <rect x="40" y="178" width="200" height="36" rx="8" class="m-panel"></rect>
+    <text x="140" y="201" text-anchor="middle" class="m-txt" font-size="12">③ 极限 = f(x0)？</text>
+    <rect x="40" y="254" width="200" height="36" rx="8" class="m-panel-a"></rect>
+    <text x="140" y="277" text-anchor="middle" class="m-txt" font-size="12">连续，不是间断点</text>
+
+    <rect x="330" y="20" width="270" height="48" rx="8" class="m-panel-s"></rect>
+    <text x="344" y="40" class="m-txt" font-size="12">第二类：至少一侧极限不存在</text>
+    <text x="344" y="58" class="m-sub" font-size="11.5">趋于无穷→无穷；来回摆动→震荡</text>
+
+    <rect x="330" y="96" width="270" height="48" rx="8" class="m-panel-s"></rect>
+    <text x="344" y="116" class="m-txt" font-size="12">第一类 · 跳跃间断点</text>
+    <text x="344" y="134" class="m-sub" font-size="11.5">左右极限都存在，但不相等</text>
+
+    <rect x="330" y="172" width="270" height="48" rx="8" class="m-panel-s"></rect>
+    <text x="344" y="192" class="m-txt" font-size="12">第一类 · 可去间断点</text>
+    <text x="344" y="210" class="m-sub" font-size="11.5">极限存在但不对上 f(x0)，补定义即连续</text>
+
+    <line x1="140" y1="62" x2="140" y2="102" class="m-line" stroke-width="1.5"></line>
+    <line x1="140" y1="138" x2="140" y2="178" class="m-line" stroke-width="1.5"></line>
+    <line x1="140" y1="214" x2="140" y2="254" class="m-line" stroke-width="1.5"></line>
+    <line x1="240" y1="44" x2="330" y2="44" class="m-warn" stroke-width="1.5"></line>
+    <line x1="240" y1="120" x2="330" y2="120" class="m-warn" stroke-width="1.5"></line>
+    <line x1="240" y1="196" x2="330" y2="196" class="m-warn" stroke-width="1.5"></line>
+
+    <text x="146" y="86" class="m-sub" font-size="11.5">是</text>
+    <text x="146" y="162" class="m-sub" font-size="11.5">是</text>
+    <text x="146" y="238" class="m-sub" font-size="11.5">是</text>
+    <text x="274" y="38" class="m-fill-w" font-size="11.5">否</text>
+    <text x="274" y="114" class="m-fill-w" font-size="11.5">否</text>
+    <text x="274" y="190" class="m-fill-w" font-size="11.5">否</text>
+  </svg>
+  <figcaption><b>判类三步走，顺序不能颠倒。</b>左边是三个依次通过的关卡，右边是每步答「否」之后的落点。<strong>第①步是总开关</strong>，它把间断点劈成第一类与第二类；第②步在第一类内部再分可去与跳跃；第③步才决定这个点到底连不连续。注意第③步只在第②步通过后才有意义——极限压根不存在时，根本轮不到谈「等不等于函数值」。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么一定要先分「左右极限是否存在」</span>
+  <p>因为第一、二类的分界线就钉死在这一步。如果不先分，直接在「可去还是无穷」之间纠结，很容易把趋于无穷误判成可去。<strong>先问「存在不存在」，再问「相等不相等」</strong>，顺序不能反。</p>
+</div>
+
+<h2 id="s9">例题：同一个分母零点，类型却不同</h2>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1385">23:05</a>视频原话（大意）</span>
+  <p><q>我想先问一件事：这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>1</mn></math></span> 跟这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mn>1</mn></math></span> 能不能直接约掉？我举个例子，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>x</mi></math></span>——老师，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 跟 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 比掉不就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 吗，这俩有什么区别？这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 可以随便取，那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不能等于零，当然是有区别的呀。</q></p>
+  <p>所以<strong>约分只在「算极限」时用得上，不能当成「函数没这回事」</strong>。分母的零点永远都是候选间断点，一个都不能漏。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1385">23:05</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mo>(</mo><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></mrow></mfrac></math></span> 的间断点，并判断类型。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：分母为 0 的点就是候选间断点</span>
+    <p>分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 给出两个候选：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span>。注意这里分子也有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></math></span>，<strong>绝不能随手约掉就当没这回事</strong>——约掉只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>1</mn></math></span> 时合法，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 恰恰是正要检查的点。</p>
+    <p>先看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span>：分母趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，分子趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>3</mn><mo>≠</mo><mn>0</mn></math></span>，所以</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>2</mn></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>∞</mo></math></div>
+    <p>再细一点：两侧的符号其实是相反的，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>2</mn><mrow><mo form="prefix">−</mo></mrow></msup></math></span> 时趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>∞</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>2</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>。这不要紧——两侧都是无穷、都不存在，故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 是<strong>第二类·无穷间断点</strong>。</p>
+    <p>再看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>：此处 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>1</mn></math></span> 时可约去 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo></math></span>，于是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>1</mn></mrow></munder><mfrac><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></div>
+    <p>极限存在（等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span>），只是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处没定义（原式分母为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）。补上定义 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></span> 即可连续，故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 是<strong>第一类·可去间断点</strong>。</p>
+    <div class="trap">
+      <span class="lbl">这道题最坑的地方</span>
+      <p><span class="bad"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 都是分母为零，却不是同一种间断点。</span>一个可去、一个无穷，差别全在「约去之后极限是否存在」。所以<strong>不能用「分母为零 = 无穷间断点」一刀切</strong>，必须把每个点单独算极限。</p>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=14&amp;t=1644">27:24</a>教材与讲义的小吐槽</span>
+  <p>老师点出一个现实：教材讲完间断点分类后，往往没有足够的配套题目；而考试偏偏爱考「判断间断点类型」。所以这类题一定要自己多练——套路固定（看左右极限），但符号容易看花眼。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句总纲</h3>
+  <p>间断 = 连续三要素（有定义 / 极限存在 / 极限=函数值）<strong>至少坏一条</strong>；前提是函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 的<mark>某去心邻域</mark>有定义。</p>
+
+  <h3>判类三步（顺序不能反）</h3>
+  <ol class="tight">
+    <li>左右极限<strong>是否都存在</strong>？——总开关，分第一 / 第二类</li>
+    <li>都存在时<strong>是否相等</strong>？——分可去 / 跳跃</li>
+    <li>极限<strong>是否等于</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>？——决定这一点连不连续</li>
+  </ol>
+
+  <h3>分类（按左右极限）</h3>
+  <div class="chain">
+    <span class="n"><b>左右极限都存在</b> → 第一类</span>
+    <span class="ar">→</span>
+    <span class="n">相等=可去；不等=跳跃</span>
+  </div>
+  <div class="chain">
+    <span class="n"><b>至少一个不存在</b> → 第二类</span>
+    <span class="ar">→</span>
+    <span class="n">冲向无穷=无穷；摆动=震荡</span>
+  </div>
+
+  <h3>六字口诀</h3>
+  <p><mark>一可跳，二无荡</mark>：第一类（可去、跳跃）；第二类（无穷、震荡）。</p>
+
+  <h3>四个代表</h3>
+  <ul class="tight">
+    <li>可去：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><mi>x</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>，极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，补定义即连续）</li>
+    <li>跳跃：分段函数左右极限不等（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>）</li>
+    <li>无穷：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>（两侧冲向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mo>∞</mo></math></span>）</li>
+    <li>震荡：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>（近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 猛摆，但振幅有界）</li>
+  </ul>
+
+  <h3>一条独家结论</h3>
+  <p>四类里<strong>只有可去间断点能被「抹掉」</strong>：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>x</mi><mn>0</mn></msub></mrow></munder><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，它就连续了。其余三类无论怎么改定义都救不回来。</p>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li>趋于无穷 <strong>算极限不存在</strong>，归第二类</li>
+    <li>分母为零 ≠ 必为无穷间断点，要逐个算极限（如本页例题的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>）</li>
+    <li>「有定义」不等于连续——极限和函数值对不上，照样是可去间断点</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P013-连续/index.html">连续</a> 连续的三要素与左右连续</li>
+      <li><a href="../P007-函数极限定义/index.html">函数极限定义</a> 函数极限、左极限与右极限</li>
+      <li><a href="../P009-无穷小与无穷大/index.html">无穷小与无穷大</a> 无穷小与无穷大（无穷间断的来源）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P015-连续函数运算 反函数复合函数的连续/index.html">连续函数运算 反函数复合函数的连续</a> 连续函数的运算与复合、反函数的连续</li>
+      <li><a href="../P016-闭区间连续函数的性质/index.html">闭区间连续函数的性质</a> 闭区间上连续函数的性质（最值、介值定理）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>间断点前提是<strong>去心邻域</strong>；连续要的是<strong>邻域</strong>（含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>）</li>
+      <li>「趋于无穷」是<strong>极限不存在</strong>，不是极限存在</li>
+      <li>可去（左右极限相等）与跳跃（左右极限不等）同属第一类</li>
+      <li>约分只能在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo></math></span> 该点时进行，不能据此抹掉间断点</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 14 讲</span><a href="../P013-连续/index.html">← P013</a><a href="../index.html">全部目录</a><a href="../P015-连续函数运算 反函数复合函数的连续/index.html">P015 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">间断就是「三要素坏了一条」</a>
+    <a href="#s2">四个代表函数，四种间断点</a>
+    <a class="sub" href="#s3">无穷间断点</a>
+    <a class="sub" href="#s4">震荡间断点</a>
+    <a class="sub" href="#s5">可去间断点</a>
+    <a class="sub" href="#s6">跳跃间断点</a>
+    <a href="#s7">分类总纲：第一类与第二类</a>
+    <a href="#s8">判断间断点的思维导图</a>
+    <a href="#s9">例题：同一个分母零点，类型却不同</a>
+  </aside>
+</div>
+</body>
+</html>

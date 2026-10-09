@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>复域数学模型（上）：从元部件到传递函数 · 自动控制原理笔记</title>
+<meta name="description" content="先走一遍「由物理系统求闭环传递函数」的完整流程；再把电位器、自整角机、测速发电机、电动机等元部件逐个拆开求传函。它们原理各异，数学上却只落在少数几种「典型环节」里——这是后面频率法与根轨迹的地基。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   自动控制原理笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+/* ==========================================================================
+   ↓↓↓ 以下为【自动控制原理】系列专用组件 ↓↓↓
+   与上方通用骨架并存：通用骨架管「怎么排版」，本节管「自控怎么表达」。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   17. 内容角色标记
+   本系列硬性要求区分四类内容来源，视觉上必须一眼可辨：
+     视频核心 core（靛蓝）· 前置补课 pre（紫）· 考研补充 exam（琥珀）· 知识拓展 ext（灰）
+   -------------------------------------------------------------------------- */
+.blk.core { border-left-color: var(--accent); background: var(--accent-bg); }
+.blk.core .lbl { color: var(--accent-ink); }
+.blk.pre  { border-left-color: var(--violet); background: var(--violet-bg); }
+.blk.pre  .lbl { color: var(--violet); }
+.blk.exam { border-left-color: var(--warn);   background: var(--warn-bg); }
+.blk.exam .lbl { color: var(--warn); }
+.blk.ext  { border-left-color: var(--ink-4);  background: var(--paper-2); }
+.blk.ext  .lbl { color: var(--ink-3); }
+
+/* 行内角色徽章：小圆点 + 文字，颜色即语义 */
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: .38em;
+  font-size: .72rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.role::before {
+  content: "";
+  width: .44em; height: .44em;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.role.r-core { color: var(--accent); }
+.role.r-pre  { color: var(--violet); }
+.role.r-exam { color: var(--warn); }
+.role.r-ext  { color: var(--ink-3); }
+
+/* 页首角色图例 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.5rem;
+  margin: 1.2rem 0 0;
+  padding: .8rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: .78rem;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+.legend .role { font-size: .78rem; }
+
+/* --------------------------------------------------------------------------
+   18. 方框图组件
+   控制系统方框图的五大要素：方框 · 信号线 · 比较点 · 引出点 · 负号。
+   颜色一律走 class —— SVG 表示属性里不能写 var()。
+   -------------------------------------------------------------------------- */
+/* 方框：看得见摸得着的元部件 */
+figure.fig svg .d-box   { fill: var(--paper);     stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-box-a { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.4; }
+figure.fig svg .d-box-v { fill: var(--violet-bg); stroke: var(--violet); stroke-width: 1.4; }
+figure.fig svg .d-box-w { fill: var(--warn-bg);   stroke: var(--warn);   stroke-width: 1.4; }
+
+/* 信号线 */
+figure.fig svg .d-line  { stroke: var(--ink-2);  stroke-width: 1.3; fill: none; }
+figure.fig svg .d-thin  { stroke: var(--line-2); stroke-width: 1.1; fill: none; }
+figure.fig svg .d-acc   { stroke: var(--accent); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-fb    { stroke: var(--violet); stroke-width: 1.9; fill: none; }
+figure.fig svg .d-warn  { stroke: var(--warn);   stroke-width: 1.6; fill: none; }
+figure.fig svg .d-dash  { stroke-dasharray: 5 4; }
+
+/* 比较点 / 引出点 / 箭头 */
+figure.fig svg .d-sum   { fill: var(--paper); stroke: var(--ink-2);  stroke-width: 1.3; }
+figure.fig svg .d-sum-a { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; }
+figure.fig svg .d-tap   { fill: var(--ink-2); stroke: none; }
+figure.fig svg .d-arrow   { fill: var(--ink-2);  stroke: none; }
+figure.fig svg .d-arrow-a { fill: var(--accent); stroke: none; }
+figure.fig svg .d-arrow-v { fill: var(--violet); stroke: none; }
+figure.fig svg .d-arrow-w { fill: var(--warn);   stroke: none; }
+
+/* 区域底色（把前向通道 / 反馈通道整片标出来） */
+figure.fig svg .d-band   { fill: var(--accent-bg); stroke: none; opacity: .55; }
+figure.fig svg .d-band-v { fill: var(--violet-bg); stroke: none; opacity: .55; }
+
+/* 窄屏微调 */
+@media (max-width: 46rem) {
+  .legend { gap: .35rem .95rem; font-size: .74rem; }
+  .legend .role { font-size: .74rem; }
+}
+
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  控制系统的数学模型</b><span class="sep">·</span>卢京潮《自动控制原理》· 西北工业大学<span class="sep">·</span>第 10 讲</div>
+    <h1 class="title"><span class="pnum">P010</span>复域数学模型（上）：从元部件到传递函数</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>先走一遍<strong>「由物理系统求闭环传递函数」</strong>的完整流程；再把电位器、自整角机、测速发电机、电动机等元部件逐个拆开求传函。<mark>它们原理各异，数学上却只落在少数几种「典型环节」里</mark>——这是后面频率法与根轨迹的地基。</p></div>
+    <div class="meta"><span>时长 51m26s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=22">00:22</a><span class="vv"><b>开场复习</b>：传递函数的定义、五性质与三局限。</span></li>
+    <li class="sep"><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=207">03:27</a><span class="vv"><b>作业题</b>：运放闭环系统，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 的闭环传递函数。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=763">12:43</a><span class="vv"><b>回到主线</b>：从实际系统到结构图，卡点是「每个方框的传递函数」。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=902">15:02</a><span class="vv"><b>电位器</b>：线位移 / 角位移 → 电压。</span></li>
+    <li class="sep"><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1224">20:24</a><span class="vv"><b>误差角检测器</b>：两电位器搭成电桥，输出偏差电压。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1548">25:48</a><span class="vv"><b>自整角机</b>：三相定子绕组把角度信号搬到远处。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1915">31:55</a><span class="vv"><b>测速发电机</b>：直流、交流都把角速度变成电压。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2419">40:19</a><span class="vv"><b>执行电动机</b>：直流电枢控制 + 两相异步。</span></li>
+  </ol>
+</div>
+
+<div class="legend">
+  <span class="role r-core">视频核心</span> 老师课上实际讲授的内容（本页正文默认即为此类）
+  <span class="role r-pre">前置补课</span> 为听懂本课而补的基础
+  <span class="role r-exam">考研补充</span> 对做题有用、课上未展开
+  <span class="role r-ext">知识拓展</span> 有价值但当前非必须
+</div>
+
+<h2 id="s1">一、先复习：传递函数是干什么的</h2>
+
+<div class="blk pre">
+  <span class="lbl">前置补课 · 三个符号先扫盲（这里只要会用即可）</span>
+  <p><strong>拉普拉斯变换</strong>：把一个"随时间变化的信号" <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 换成"用另一个变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 写的信号" <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>U</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。像把一段旋律记成"乐谱"：换了种写法，算起来方便。</p>
+  <p><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 是什么</strong>：就是这场"换写法"里用的新变量。先别追问它的物理含义，当成一个占位符号；用到时只在分母上做代数运算。</p>
+  <p><strong>传递函数</strong>：在"初始时刻系统静止"（零初始条件）下，输出信号的像与输入信号的像之比。信号穿过系统，就像穿过一个"加工厂"。</p>
+</div>
+
+<div class="blk def">
+  <span class="lbl">定义回顾 · 传递函数</span>
+  <p>对<strong>线性定常系统</strong>，零初始条件下，输出信号的拉氏变换与输入信号的拉氏变换之比，就是它的传递函数：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mi>c</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><msub><mi>U</mi><mi>r</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac></math></div>
+  <p>关键一句：系统一定，这个比值就定了，与输入、输出具体长什么样无关。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="传递函数直观图：第一行是时域里输入信号 ur(t) 经过一个黑箱系统后得到输出 uc(t)；第二行是同一件事换到 s 域，输入像 Ur(s) 乘上方框 G(s) 得到输出像 Uc(s)，并给出 G(s) 等于 Uc(s) 除以 Ur(s)；底部说明 s 只是换写法用的新变量">
+    <defs>
+      <marker id="ar1k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="320" y="26" class="m-sub" font-size="11.5" text-anchor="middle">传递函数：把系统当「黑箱」，只看它对信号做了什么</text>
+
+    <text x="20" y="60" class="m-txt" font-size="11.5" text-anchor="start">① 时域：信号随时间走</text>
+    <text x="20" y="106" class="m-math" font-size="12" text-anchor="start">u_r(t)</text>
+    <line x1="82" y1="101" x2="246" y2="101" class="d-line" marker-end="url(#ar1k)"/>
+    <rect x="250" y="80" width="140" height="42" rx="3" class="d-box"/>
+    <text x="320" y="106" class="m-txt" font-size="12" text-anchor="middle">系统（黑箱）</text>
+    <line x1="392" y1="101" x2="556" y2="101" class="d-line" marker-end="url(#ar1k)"/>
+    <text x="562" y="106" class="m-math" font-size="12" text-anchor="start">u_c(t)</text>
+
+    <line x1="20" y1="140" x2="620" y2="140" class="d-thin" fill="none"/>
+
+    <text x="20" y="166" class="m-txt" font-size="11.5" text-anchor="start">② s 域：换成「乐谱」再相除</text>
+    <text x="20" y="224" class="m-math" font-size="12" text-anchor="start">U_r(s)</text>
+    <line x1="86" y1="219" x2="246" y2="219" class="d-line" marker-end="url(#ar1k)"/>
+    <rect x="250" y="198" width="140" height="42" rx="3" class="d-box-a"/>
+    <text x="320" y="224" class="m-math" font-size="12" text-anchor="middle">G(s)</text>
+    <line x1="392" y1="219" x2="556" y2="219" class="d-line" marker-end="url(#ar1k)"/>
+    <text x="562" y="224" class="m-math" font-size="12" text-anchor="start">U_c(s)</text>
+
+    <text x="320" y="266" class="m-math" font-size="12" text-anchor="middle">G(s) = U_c(s) / U_r(s)</text>
+    <text x="320" y="292" class="m-sub" font-size="11.5" text-anchor="middle">s 只是换写法用的新变量；零初始条件下这个比值只由系统自己决定</text>
+  </svg>
+  <figcaption><b>传递函数就是"出口信号 ÷ 入口信号"。</b>上图时域：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 进、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 出，黑箱内部接线暂不管。下图把它搬进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 域：出口的像除以入口的像，得到方框 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。<em>换到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 域只为做代数乘除，不必解微分方程。</em></figcaption>
+</figure>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=114">01:54</a>老师把传递函数的<strong>五条性质</strong>过了一遍，后面每章都用；紧接着念<strong>三条局限</strong>，给整门课圈范围。合起来就是它的"使用说明书"。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 258" role="img" aria-label="传递函数使用说明图：左栏是五条性质——是 s 的复函数、只由系统结构与参数决定、与时域微分方程等价、与单位脉冲响应互为拉氏变换对、是有理分式且分子根为零点分母根为极点；右栏是三条局限——零初始条件、单输入单输出、只适用线性定常系统">
+    <text x="320" y="24" class="m-sub" font-size="11.5" text-anchor="middle">传递函数：五条性质（能干什么）· 三条局限（不能碰什么）</text>
+
+    <rect x="10" y="40" width="384" height="206" rx="4" class="m-panel-s"/>
+    <text x="26" y="64" class="m-txt" font-size="12" text-anchor="start">五条性质</text>
+    <text x="26" y="92" class="m-sub" font-size="11.5" text-anchor="start">① 是 s 的复函数，具复数的全部性质</text>
+    <text x="26" y="118" class="m-sub" font-size="11.5" text-anchor="start">② 只由系统自身的结构与参数决定</text>
+    <text x="26" y="144" class="m-sub" font-size="11.5" text-anchor="start">③ 与时域微分方程等价，可互相换算</text>
+    <text x="26" y="170" class="m-sub" font-size="11.5" text-anchor="start">④ 与单位脉冲响应互为拉氏变换对</text>
+    <text x="26" y="196" class="m-sub" font-size="11.5" text-anchor="start">⑤ 有理分式：分子根零点、分母根极点</text>
+    <text x="26" y="226" class="m-sub" font-size="11.5" text-anchor="start">（零点、极点分布图与它一一对应）</text>
+
+    <rect x="404" y="40" width="226" height="206" rx="4" class="m-panel-s"/>
+    <text x="420" y="64" class="m-txt" font-size="12" text-anchor="start">三条局限</text>
+    <text x="420" y="92" class="m-sub" font-size="11.5" text-anchor="start">① 零初始条件</text>
+    <text x="420" y="110" class="m-sub" font-size="11.5" text-anchor="start">自由响应分量暂不计</text>
+    <text x="420" y="142" class="m-sub" font-size="11.5" text-anchor="start">② 单输入单输出</text>
+    <text x="420" y="160" class="m-sub" font-size="11.5" text-anchor="start">一进一出，多变量不涉及</text>
+    <text x="420" y="192" class="m-sub" font-size="11.5" text-anchor="start">③ 只适用线性定常系统</text>
+    <text x="420" y="210" class="m-sub" font-size="11.5" text-anchor="start">非线性要另想办法</text>
+  </svg>
+  <figcaption><b>左边记"能干什么"，右边记"不能碰什么"。</b>性质里最常引用第②条（只由系统自身决定）与第⑤条（分子根零点、分母根极点）；局限里最关键第③条 —— <em>只有线性定常系统才有传递函数</em>。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么先把"局限"念一遍</span>
+  <p>后面所有结论（稳定性判据、根轨迹、频率法）都以"传递函数存在"为前提。碰到<strong>饱和、死区、继电器</strong>这类非线性环节，还硬写一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi><mo>(</mo><mi>s</mi><mo>)</mo></math></span> 去算，等于抽掉地基还盖楼 —— 这条红线要提前画好。</p>
+</div>
+
+<h2 id="s2">二、一道作业题：运放闭环系统的闭环传递函数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=207">03:27</a>复习完，老师用一道作业题把概念落地 —— 他明说作业里要考。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=207">03:27</a>被控对象输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>a</mi></msub></math></span>、输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span>，方程为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mn>0</mn></msub><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><msub><mi>u</mi><mi>c</mi></msub></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>+</mo><msub><mi>u</mi><mi>c</mi></msub><mo>=</mo><msub><mi>K</mi><mn>0</mn></msub><msub><mi>u</mi><mi>a</mi></msub></math></span>；对象的输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 经一个运算放大器电路反馈回来，与给定输入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span> 一起构成闭环。求以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span> 为输入、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 为输出的<strong>闭环传递函数</strong>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：分三步 —— 对象单独求传函 → 补上运放电路关系 → 消中间变量</span>
+
+    <p><span class="sh">第一步：由微分方程求被控对象的传递函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>G</mi><mn>0</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo></math></span>。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=252">04:12</a>这是最熟的一步。对微分方程<strong>在零初始条件下</strong>两端取拉氏变换，右端那个由初始条件引起、随时间衰减的"尾巴"不要（传递函数按定义就是零初始条件下的）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>T</mi><mn>0</mn></msub><mspace width="1em"></mspace><mi>s</mi><msub><mi>U</mi><mi>c</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>+</mo><msub><mi>U</mi><mi>c</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><msub><mi>K</mi><mn>0</mn></msub><msub><mi>U</mi><mi>a</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msub><mi>G</mi><mn>0</mn></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>U</mi><mi>c</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><msub><mi>U</mi><mi>a</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>K</mi><mn>0</mn></msub></mrow><mrow><msub><mi>T</mi><mn>0</mn></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+    <p>这是第一个关系式，描述中间变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>a</mi></msub></math></span> 与对象输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 的关系。它是<strong>惯性环节</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mn>0</mn></msub></math></span> 是时间常数（跟上得多慢），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>0</mn></msub></math></span> 是增益（放大多少倍）。记住这个形状，后面反复出现。</p>
+
+    <p><span class="sh">第二步：分析运放电路，写出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>a</mi></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 的关系。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=391">06:31</a>运放有两个特点：<strong>放大倍数极高、输入阻抗极大</strong>。输出有限而放大倍数极高，反推回输入端，那点电压就几乎为零 ——</p>
+
+    <div class="blk pre">
+      <span class="lbl">前置补课 · "虚地点"两句话（够用即可）</span>
+      <p>运放是"放大倍数极大的放大器"。倍数极大、输出又有限，两输入端电压差必然极小、可认为相等；输入电流也小到可忽略。把一端<strong>接地</strong>，另一端（反相端）电位就近似为零，这点叫<strong>虚地点</strong>。靠深度负反馈把输入差值"压"到几乎为零。<em>运放细节不在本课范围，会用"在虚地点做电流平衡"即可。</em></p>
+    </div>
+
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=436">07:16</a>在虚地节点列<strong>电流平衡</strong>：灌进等于流出。灌进的两路（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 各经 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>R</mi><mn>0</mn></msub></math></span>）合起来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>u</mi><mi>r</mi></msub><mo>+</mo><msub><mi>u</mi><mi>c</mi></msub></mrow><mrow><msub><mi>R</mi><mn>0</mn></msub></mrow></mfrac></math></span>；运放几乎不吸电流，全部从"<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 并联"的阻抗流出。电容阻抗是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>C</mi><mi>s</mi></mrow></mfrac></math></span>，并联取倒数和再倒数得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi><mo>=</mo><mfrac><mrow><mi>R</mi></mrow><mrow><mn>1</mn><mo>+</mo><mi>R</mi><mi>C</mi><mi>s</mi></mrow></mfrac></math></span>，令流入等于流出即得（负号表示反相）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mspace width="1em"></mspace><msub><mi>u</mi><mi>a</mi></msub><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>R</mi></mrow><mrow><msub><mi>R</mi><mn>0</mn></msub><mo>(</mo><mn>1</mn><mo>+</mo><mi>R</mi><mi>C</mi><mi>s</mi><mo>)</mo></mrow></mfrac><mspace width="1em"></mspace><mo>(</mo><msub><mi>u</mi><mi>r</mi></msub><mo>+</mo><msub><mi>u</mi><mi>c</mi></msub><mo>)</mo></math></div>
+    <p>这是第二个关系式，也是整个推导里最容易写错的一步。</p>
+
+    <p><span class="sh">第三步：消去中间变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>a</mi></msub></math></span>，得到闭环传递函数。</span><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=625">10:25</a>把第一步与第二步的两式相乘 —— <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>a</mi></msub></math></span> 一个在分母、一个在分子，一乘就消掉了。再交叉相乘、整理成"输出比输入"的形式，最后<strong>化尾一标准型</strong>（把分母的常数项提成 1）：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>s</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>u</mi><mi>c</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><msub><mi>u</mi><mi>r</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>K</mi><mn>0</mn></msub><mi>R</mi></mrow><mrow><msub><mi>R</mi><mn>0</mn></msub><mo>(</mo><msub><mi>T</mi><mn>0</mn></msub><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>(</mo><mn>1</mn><mo>+</mo><mi>R</mi><mi>C</mi><mi>s</mi><mo>)</mo><mo>+</mo><msub><mi>K</mi><mn>0</mn></msub><mi>R</mi></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=673">11:13</a>尾一标准型分子的系数就是<strong>闭环增益</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo><mo>(</mo><mn>0</mn><mo>)</mo></math></span>；分母出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>s</mi><mn>2</mn></msup></math></span>，说明闭环系统是<strong>二阶</strong>的；负号是运放反相留下的印记。</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>K</mi><mo>Φ</mo></msub><mo>=</mo><mo>Φ</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>K</mi><mn>0</mn></msub><mi>R</mi></mrow><mrow><msub><mi>R</mi><mn>0</mn></msub><mo>+</mo><msub><mi>K</mi><mn>0</mn></msub><mi>R</mi></mrow></mfrac></math></div>
+
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">忘记零初始条件。</span>若把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><msub><mi>u</mi><mi>c</mi></msub></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span> 的拉氏变换写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><msub><mi>U</mi><mi>c</mi></msub><mo>(</mo><mi>s</mi><mo>)</mo><mo>−</mo><msub><mi>u</mi><mi>c</mi></msub><mo>(</mo><mn>0</mn><mo>)</mo></math></span>，就多出一项，结果不再是传递函数。</p>
+      <p><span class="bad">把虚地当普通节点。</span>正因是虚地，节点电位取零、两路电流才直接相加为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>u</mi><mi>r</mi></msub><mo>+</mo><msub><mi>u</mi><mi>c</mi></msub></mrow><mrow><msub><mi>R</mi><mn>0</mn></msub></mrow></mfrac></math></span>。</p>
+      <p><span class="bad">忘了反相。</span>运放输出与输入反号，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 带负号是物理事实。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 233" role="img" aria-label="运放闭环系统结构图：给定输入 ur 与反馈量 uc 一起送入运算放大器（阴影区是它的综合与放大职责），运放输出 ua 驱动被控对象 K0/(T0s+1)，对象输出 uc 经引出点引回运放输入端构成闭环；紫色线是反馈通道，底部给出 ua 与 ur、uc 的关系式">
+    <defs>
+      <marker id="ar2k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar2v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-v"/>
+      </marker>
+    </defs>
+    <text x="320" y="74" class="m-sub" font-size="11.5" text-anchor="middle">运放闭环系统：u_r 与 u_c 经运放综合后驱动被控对象</text>
+
+    <text x="30" y="131" class="m-math" font-size="12" text-anchor="start">u_r</text>
+    <line x1="56" y1="126" x2="172" y2="126" class="d-line" marker-end="url(#ar2k)"/>
+    <rect x="175" y="100" width="150" height="52" rx="3" class="d-box"/>
+    <text x="250" y="123" class="m-txt" font-size="11.5" text-anchor="middle">运算放大器</text>
+    <text x="250" y="140" class="m-sub" font-size="11.5" text-anchor="middle">虚地点 · 电流平衡</text>
+    <line x1="325" y1="126" x2="402" y2="126" class="d-line" marker-end="url(#ar2k)"/>
+    <text x="364" y="118" class="m-math" font-size="11.5" text-anchor="middle">u_a</text>
+
+    <rect x="405" y="98" width="160" height="56" rx="3" class="d-box-a"/>
+    <text x="485" y="121" class="m-txt" font-size="11.5" text-anchor="middle">被控对象</text>
+    <text x="485" y="139" class="m-math" font-size="11.5" text-anchor="middle">K0/(T0 s+1)</text>
+
+    <line x1="565" y1="126" x2="606" y2="126" class="d-line"/>
+    <circle cx="606" cy="126" r="3.5" class="d-tap"/>
+    <text x="612" y="131" class="m-math" font-size="12" text-anchor="start">u_c</text>
+
+    <line x1="606" y1="126" x2="606" y2="205" class="d-fb"/>
+    <line x1="606" y1="205" x2="250" y2="205" class="d-fb"/>
+    <line x1="250" y1="205" x2="250" y2="152" class="d-fb" marker-end="url(#ar2v)"/>
+    <text x="300" y="222" class="m-sub" font-size="11.5" text-anchor="middle">u_c 反馈（经运放反相后成为负反馈）</text>
+
+    <text x="30" y="228" class="m-sub" font-size="11.5" text-anchor="start">u_a = -R/(R0(1+RC·s)) · (u_r + u_c)</text>
+  </svg>
+  <figcaption><b>把物理系统画成结构图，闭环传递函数就有了"看得见"的来路。</b>给定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>r</mi></msub></math></span> 与反馈量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 一起送进运放，运放输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>a</mi></msub></math></span> 推动被控对象 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>0</mn></msub><mo>/</mo><mo>(</mo><msub><mi>T</mi><mn>0</mn></msub><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span>，输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 再引回运放输入端（紫色线）。<em>运放对两输入同号相加、再整体反相</em>，正因多了一次反相，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>c</mi></msub></math></span> 这一路才成为负反馈。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么"闭环增益"不等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>0</mn></msub></math></span></span>
+  <p>有人会想：被控对象增益是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>0</mn></msub></math></span>，闭环增益不就该是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>0</mn></msub></math></span>？看结果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mo>Φ</mo></msub><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>K</mi><mn>0</mn></msub><mi>R</mi></mrow><mrow><msub><mi>R</mi><mn>0</mn></msub><mo>+</mo><msub><mi>K</mi><mn>0</mn></msub><mi>R</mi></mrow></mfrac></math></span>，分母多了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>R</mi><mn>0</mn></msub></math></span> —— 那是运放输入电阻"分走"了一部分信号。这正是普遍规律：<mark>闭环增益由前向通路与反馈通路共同决定，不再是单个环节的增益</mark>。后面讲结构图等效变换、反馈如何改善性能，都要回到这个直觉。</p>
+</div>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 这类题的标准打法</span>
+  <p>"由物理系统求传递函数"是第 2 章高频题型，三步固定：<strong>① 每个元部件单独列物理方程，零初始条件下取拉氏变换，写出自己的传递函数；② 把中间变量用输入、输出表示；③ 消中间变量，整理成输出与输入之比，需要时化成尾一标准型读出增益。</strong>含运放的题，第 ② 步核心工具就是"虚地点列电流平衡"；带电容支路记住 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>Z</mi><mi>C</mi></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>C</mi><mi>s</mi></mrow></mfrac></math></span>，并联取倒数和。</p>
+</div>
+
+<h2 id="s3">三、从实际系统到结构图：还差"每个方框的传递函数"</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=763">12:43</a>例题讲完，老师把话题拉回主线。面对一个实际系统，第一步都是<strong>把工作原理搞清楚</strong>，然后画出<strong>方框图</strong>；方框图一画出来，信号从哪流到哪就清楚了。图里每个方框对应一个特定的元部件。</p>
+
+<div class="blk core">
+  <span class="lbl">视频核心 · 建模主线的最后一块拼图 <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=808">13:28</a></span>
+  <p>关键一步：<strong>若每个方框（元部件）的输入输出传递函数都已知，就用传递函数去"代表它的名字"填进方框</strong>。这样信号关系与量的精确关系都清楚了。这张图叫<strong>结构图</strong>，精确描述输入、输出与中间变量之间的数学关系，可直接作为系统的数学模型。本讲要解决的就是"给一个元部件，怎么写出它的传递函数"。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 256" role="img" aria-label="方框图升级为结构图：上一行的方框图里方框只写元部件名字（电位器、放大器、电动机）；中间箭头表示把每个名字换成它的传递函数；下一行的结构图里方框换成对应的传递函数，变量也从物理量换成它们的像函数">
+    <defs>
+      <marker id="ar3k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+      <marker id="ar3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow-a"/>
+      </marker>
+    </defs>
+    <text x="320" y="24" class="m-sub" font-size="11.5" text-anchor="middle">方框图只讲「谁连着谁」，结构图把每个方框填上传函</text>
+
+    <text x="320" y="48" class="m-txt" font-size="11.5" text-anchor="middle">① 方框图：方框里只写元部件名字</text>
+    <text x="14" y="81" class="m-math" font-size="12" text-anchor="start">θ</text>
+    <line x1="34" y1="76" x2="58" y2="76" class="d-line" marker-end="url(#ar3k)"/>
+    <rect x="60" y="58" width="130" height="36" rx="3" class="d-box"/>
+    <text x="125" y="81" class="m-txt" font-size="11.5" text-anchor="middle">电位器</text>
+    <line x1="190" y1="76" x2="218" y2="76" class="d-line" marker-end="url(#ar3k)"/>
+    <rect x="220" y="58" width="130" height="36" rx="3" class="d-box"/>
+    <text x="285" y="81" class="m-txt" font-size="11.5" text-anchor="middle">放大器</text>
+    <line x1="350" y1="76" x2="378" y2="76" class="d-line" marker-end="url(#ar3k)"/>
+    <rect x="380" y="58" width="130" height="36" rx="3" class="d-box"/>
+    <text x="445" y="81" class="m-txt" font-size="11.5" text-anchor="middle">电动机</text>
+    <line x1="510" y1="76" x2="538" y2="76" class="d-line" marker-end="url(#ar3k)"/>
+    <text x="546" y="81" class="m-math" font-size="12" text-anchor="start">ω</text>
+
+    <text x="320" y="110" class="m-sub" font-size="11.5" text-anchor="middle">把每个方框的名字换成它的传递函数</text>
+    <line x1="320" y1="118" x2="320" y2="152" class="d-acc" marker-end="url(#ar3a)"/>
+
+    <text x="320" y="170" class="m-txt" font-size="11.5" text-anchor="middle">② 结构图：方框 = 传递函数，变量 = 像函数</text>
+    <text x="8" y="201" class="m-math" font-size="12" text-anchor="start">Θ(s)</text>
+    <line x1="52" y1="196" x2="74" y2="196" class="d-line" marker-end="url(#ar3k)"/>
+    <rect x="76" y="178" width="120" height="36" rx="3" class="d-box-a"/>
+    <text x="136" y="201" class="m-math" font-size="11.5" text-anchor="middle">比例 Kp</text>
+    <line x1="196" y1="196" x2="222" y2="196" class="d-line" marker-end="url(#ar3k)"/>
+    <rect x="224" y="178" width="130" height="36" rx="3" class="d-box-a"/>
+    <text x="289" y="201" class="m-math" font-size="11.5" text-anchor="middle">放大器 Ka</text>
+    <line x1="354" y1="196" x2="380" y2="196" class="d-line" marker-end="url(#ar3k)"/>
+    <rect x="382" y="178" width="130" height="36" rx="3" class="d-box-a"/>
+    <text x="447" y="201" class="m-math" font-size="11.5" text-anchor="middle">惯性 Km/(Tms+1)</text>
+    <line x1="512" y1="196" x2="538" y2="196" class="d-line" marker-end="url(#ar3k)"/>
+    <text x="546" y="201" class="m-math" font-size="12" text-anchor="start">Ω(s)</text>
+
+    <text x="320" y="242" class="m-sub" font-size="11.5" text-anchor="middle">整张结构图可直接作为系统的数学模型，最终求出闭环传递函数</text>
+  </svg>
+  <figcaption><b>同一台设备，两张图的差别只在方框里写什么。</b>上一行方框只写名字（θ → 电位器 → 放大器 → 电动机 → ω），回答"谁连着谁"；下一行换成传递函数与像函数（Θ(s) → Kp → Ka → 惯性 → Ω(s)），回答"信号被改变了多少"。<em>结构图才能写进数学、继续化简。</em></figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么"方框图"和"结构图"要分两步</span>
+  <p>方框图回答"谁连着谁、信号往哪流"，只讲结构；结构图在每个方框上写清传递函数，回答"信号被改变了多少"。先画结构、后填数值，复杂设备也能先拆成看得懂的方块、再逐个数学化 —— 本讲要给的正是这座"从物理到数学"的翻译字典。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=855">14:15</a>老师说得直白：控制系统遍布电子、化工、能源、航空航天，元部件繁多，课上不可能穷尽。只要<strong>通过典型元部件，学会"看原理 → 写输入输出传递函数"这套抽象方法</strong>，将来碰到陌生元部件也照样能抽象成数学问题。</p>
+
+<h2 id="s4">四、位置（角度）类元部件：把转角变成电压</h2>
+
+<h3 id="s5">4.1 电位器：把位置变成电压</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=902">15:02</a>第一个登场的是<strong>电位器</strong>，控制系统里用得最普遍、原理也最简单。功能一句话：<strong>把位置信号变成电压信号</strong>。做成条形测线位移，电阻体弯成圆弧测角位移。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=995">16:35</a>弧形电位器接法：电源加在电阻体两端，总电势 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mn>0</mn></msub></math></span>；从<strong>中间</strong>引一个抽头接地作参考零电位；一个<strong>电刷</strong>绕中心转动，输出电压从电刷取。电刷停在中间输出为零，往一边转输出越来越大。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 214" role="img" aria-label="电位器原理与结构图：左侧是电位器示意，电阻体两端接电源，中间抽头接地作为参考零电位，电刷偏离中心取输出电压，越偏离输出越大；右侧是它的结构图，转角 theta 的像函数经方框 Kp 变成电压 u，关系为 u 等于 Kp 乘 theta">
+    <defs>
+      <marker id="ar4k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="320" y="36" class="m-sub" font-size="11.5" text-anchor="middle">电位器：电刷的位置，被翻译成电压的高低</text>
+
+    <text x="170" y="66" class="m-sub" font-size="11.5" text-anchor="middle">电阻体两端加电源，总电压 u0</text>
+    <rect x="60" y="80" width="220" height="22" rx="3" class="d-box"/>
+    <line x1="60" y1="91" x2="30" y2="91" class="d-line"/>
+    <line x1="30" y1="91" x2="30" y2="76" class="d-line"/>
+    <text x="30" y="72" class="m-sub" font-size="11.5" text-anchor="middle">＋</text>
+    <line x1="280" y1="91" x2="310" y2="91" class="d-line"/>
+    <line x1="310" y1="91" x2="310" y2="76" class="d-line"/>
+    <text x="310" y="72" class="m-sub" font-size="11.5" text-anchor="middle">－</text>
+
+    <line x1="240" y1="80" x2="240" y2="50" class="d-line" marker-end="url(#ar4k)"/>
+    <text x="240" y="46" class="m-sub" font-size="11.5" text-anchor="middle">电刷（取输出 u）</text>
+
+    <circle cx="170" cy="102" r="3.5" class="d-tap"/>
+    <line x1="170" y1="103" x2="170" y2="140" class="d-line"/>
+    <line x1="154" y1="140" x2="186" y2="140" class="d-line"/>
+    <line x1="159" y1="146" x2="181" y2="146" class="d-line"/>
+    <line x1="165" y1="152" x2="175" y2="152" class="d-line"/>
+    <text x="170" y="172" class="m-sub" font-size="11.5" text-anchor="middle">中间抽头接地 = 参考零电位</text>
+    <text x="170" y="196" class="m-sub" font-size="11.5" text-anchor="middle">离中心越远，输出电压越大</text>
+
+    <line x1="330" y1="60" x2="330" y2="204" class="d-thin" fill="none"/>
+
+    <text x="486" y="66" class="m-txt" font-size="11.5" text-anchor="middle">结构图</text>
+    <text x="352" y="131" class="m-math" font-size="12" text-anchor="middle">θ</text>
+    <line x1="370" y1="126" x2="400" y2="126" class="d-line" marker-end="url(#ar4k)"/>
+    <rect x="402" y="106" width="130" height="40" rx="3" class="d-box"/>
+    <text x="467" y="124" class="m-txt" font-size="11.5" text-anchor="middle">电位器</text>
+    <text x="467" y="140" class="m-math" font-size="11.5" text-anchor="middle">Kp</text>
+    <line x1="532" y1="126" x2="558" y2="126" class="d-line" marker-end="url(#ar4k)"/>
+    <text x="566" y="131" class="m-math" font-size="12" text-anchor="middle">u</text>
+    <text x="486" y="180" class="m-math" font-size="12" text-anchor="middle">u = Kp · θ</text>
+    <text x="486" y="200" class="m-sub" font-size="11.5" text-anchor="middle">代数方程，传函是常数 Kp</text>
+  </svg>
+  <figcaption><b>电位器把"位置"翻译成"电压"，关系是纯比例。</b>左图：电阻体两端共 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mn>0</mn></msub></math></span>，中间抽头接地作参考零电位；电刷偏离中心越多，取到的电压越大。从中间到一端 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>u</mi><mn>0</mn></msub></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 对应半量程，故输出与转角成正比。<em>右图结构图：输入转角、输出电压，中间常数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>p</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>u</mi><mn>0</mn></msub></mrow><mrow><msub><mo>θ</mo><mrow><mo largeop="true" movablelimits="true">max</mo></mrow></msub></mrow></mfrac></math></span></em>——由电位器自身参数决定。</figcaption>
+</figure>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1085">18:05</a>为什么成正比？从中间抽头到一端压降 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>u</mi><mn>0</mn></msub></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，对应角度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mo>θ</mo><mrow><mo largeop="true" movablelimits="true">max</mo></mrow></msub></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>；电刷转过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 就按同一比例分：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>u</mi></mrow><mrow><msub><mi>u</mi><mn>0</mn></msub><mo>/</mo><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>θ</mo></mrow><mrow><msub><mo>θ</mo><mrow><mo largeop="true" movablelimits="true">max</mo></mrow></msub><mo>/</mo><mn>2</mn></mrow></mfrac><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>u</mi><mo>=</mo><msub><mi>K</mi><mi>p</mi></msub><mo>θ</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>K</mi><mi>p</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>u</mi><mn>0</mn></msub></mrow><mrow><msub><mo>θ</mo><mrow><mo largeop="true" movablelimits="true">max</mo></mrow></msub></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1085">18:05</a>输入输出之间是<strong>代数方程</strong>（没有变化率），两端直接取拉氏变换，传递函数就是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>p</mi></msub></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1132">18:52</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>p</mi></msub></math></span> 只含电源电压与总量程，由电位器自己决定。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1177">19:37</a>结构图的方框上要写<strong>像函数</strong>；写具体物理量名字的只能叫方框图。</p>
+
+<h3 id="s6">4.2 误差角检测器：两个电位器搭成电桥</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1224">20:24</a>第二个是<strong>误差角检测器</strong>（电桥式误差测量装置），工作在直流状态，用来<strong>测量两个位移量的相对偏差，输出偏差电压</strong>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1270">21:10</a>做法：两个完全相同的电位器接成<strong>电桥</strong>，两电刷之间的电压作系统输出。以中间抽头为参考，两电刷各自输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mn>1</mn></msub><mo>=</mo><msub><mi>K</mi><mn>1</mn></msub><msub><mo>θ</mo><mn>1</mn></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>g</mi></msub><mo>=</mo><msub><mi>K</mi><mn>1</mn></msub><msub><mo>θ</mo><mn>2</mn></msub></math></span>（参数相同，系数才一样）。输出取两者之差：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>=</mo><msub><mi>u</mi><mn>1</mn></msub><mo>−</mo><msub><mi>u</mi><mi>g</mi></msub><mo>=</mo><msub><mi>K</mi><mn>1</mn></msub><mo>(</mo><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>)</mo><mo>=</mo><msub><mi>K</mi><mn>1</mn></msub><mspace width="1em"></mspace><mo>Δ</mo><mo>θ</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1362">22:42</a>两指针指在同一位置，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>，输出为零；有了相对偏差输出才不为零。老师给的场景很具体：<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1270">21:10</a>一个电位器装在<strong>瞄准具</strong>上（角度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>1</mn></msub></math></span>）、另一个装在<strong>火炮</strong>上（角度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>2</mn></msub></math></span>），失谐时输出的偏差电压就驱动火炮转动、跟踪瞄准具 —— <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1408">23:28</a>完成一个完整的随动（跟踪）功能。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1453">24:13</a>输出与误差角仍是代数方程，拉氏变换后传递函数是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub></math></span>，属<strong>比例环节</strong>。结构图上：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>1</mn></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>2</mn></msub></math></span> 先进<strong>比较点</strong>相减得误差角，再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub></math></span> 变成电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 176" role="img" aria-label="左：电位器结构图，转角 theta 的像函数经方框（传递函数 Kp）变成电压 u；右：误差角检测器结构图，theta1 与 theta2 在比较点相减得到误差角，再经方框（传递函数 K1）变成偏差电压 u。两者的传递函数都是常数，即比例环节">
+    <defs>
+      <marker id="ar5k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="150" y="72" class="m-sub" font-size="11.5" text-anchor="middle">① 电位器：θ → u</text>
+
+    <text x="55" y="143" class="m-math" font-size="12" text-anchor="middle">θ</text>
+    <line x1="72" y1="138" x2="116" y2="138" class="d-line" marker-end="url(#ar5k)"/>
+    <rect x="118" y="118" width="130" height="40" rx="3" class="d-box"/>
+    <text x="183" y="136" class="m-txt" font-size="11.5" text-anchor="middle">电位器</text>
+    <text x="183" y="151" class="m-math" font-size="11.5" text-anchor="middle">Kp</text>
+    <line x1="248" y1="138" x2="288" y2="138" class="d-line" marker-end="url(#ar5k)"/>
+    <text x="300" y="143" class="m-math" font-size="12" text-anchor="middle">u</text>
+
+    <line x1="330" y1="60" x2="330" y2="214" class="d-thin" fill="none"/>
+
+    <text x="470" y="72" class="m-sub" font-size="11.5" text-anchor="middle">② 误差角检测器：θ1 − θ2 → u</text>
+
+    <text x="344" y="143" class="m-math" font-size="12" text-anchor="middle">θ1</text>
+    <line x1="362" y1="138" x2="397" y2="138" class="d-line" marker-end="url(#ar5k)"/>
+    <circle cx="410" cy="138" r="13" class="d-sum-a"/>
+    <line x1="397" y1="138" x2="423" y2="138" class="d-line"/>
+    <line x1="410" y1="125" x2="410" y2="151" class="d-line"/>
+    <text x="398" y="132" class="m-sub" font-size="11.5" text-anchor="end">+</text>
+    <text x="424" y="128" class="m-sub" font-size="12" text-anchor="start">−</text>
+    <text x="410" y="104" class="m-math" font-size="12" text-anchor="middle">θ2</text>
+    <line x1="410" y1="110" x2="410" y2="123" class="d-line" marker-end="url(#ar5k)"/>
+
+    <line x1="423" y1="138" x2="455" y2="138" class="d-line" marker-end="url(#ar5k)"/>
+    <rect x="457" y="118" width="120" height="40" rx="3" class="d-box"/>
+    <text x="517" y="136" class="m-txt" font-size="11.5" text-anchor="middle">误差角检测器</text>
+    <text x="517" y="151" class="m-math" font-size="11.5" text-anchor="middle">K1</text>
+    <line x1="577" y1="138" x2="600" y2="138" class="d-line" marker-end="url(#ar5k)"/>
+    <text x="606" y="143" class="m-math" font-size="12" text-anchor="start">u</text>
+
+    <text x="320" y="205" class="m-sub" font-size="11.5" text-anchor="middle">两者的传递函数都是常数 —— 数学上是同一类：比例环节</text>
+  </svg>
+  <figcaption><b>位置类元部件的共同点：输入是角度，输出是常数倍的电压。</b>左边电位器是"一根电阻 + 一个电刷"，传函 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>p</mi></msub></math></span>；右边误差角检测器是两个电位器搭成电桥，先用比较点把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>2</mn></msub></math></span> 相减得误差角，再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub></math></span>。<em>两个方框形状完全一样</em> —— 一个感知绝对角度、一个感知相对偏差，数学上却同类。这是"元部件 → 典型环节"的第一处归并。</figcaption>
+</figure>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 这两处的易错点</span>
+  <p><strong>①</strong> 电位器输出只有在"中间抽头接地"时才与转角成正比；参考点若取在电阻体一端，输出就不再关于零对称。<strong>②</strong> 误差角检测器输出是"两电刷电压之差"，别把某个电刷对地电压当输出。<strong>③</strong> 两者传递函数都是<strong>常数</strong>（不含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>），属比例环节，别凭空添时间常数。</p>
+</div>
+
+<h2 id="s7">五、自整角机：把角度信号搬到几十米外</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1548">25:48</a>第三个是<strong>自整角机</strong>。它检测角位移、以交流电压形式输出，精度较高。分<strong>发送机</strong>与<strong>接收机</strong>，两者用三根线相连 —— 三根线可拉得很远，故能把角度信号传到很远处。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1593">26:33</a>原理本质上是"把磁场搬过去"：发送机转子绕组加交变电压，转子转到哪个方向，磁场就指向哪个方向；这个磁场通过<strong>三相定子绕组</strong>耦合到接收机，在那边复现出同方向的磁场。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1638">27:18</a>角度信息就这样被"搬"到远处。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1685">28:05</a>关键在接收机：它的磁场与自己的转子绕组相互作用。把磁场分解成两个方向 —— 与转子绕组<strong>垂直</strong>的分量不起作用，与它<strong>同向</strong>的分量才在绕组里产生感应电压。故输出电压与误差角的正弦成正比：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>=</mo><mi>K</mi><mi mathvariant="normal">sin</mi><mo>(</mo><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>)</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1732">28:52</a>这是一个非线性关系。老师接着做了本课程反复出现的动作 —— <strong>线性化</strong>：实际工作时误差角不会太大，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>Δ</mo><mo>θ</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>θ</mo></math></span> 差不多，可以直接近似：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">sin</mi><mo>Δ</mo><mo>θ</mo><mo>≈</mo><mo>Δ</mo><mo>θ</mo><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>u</mi><mo>≈</mo><mspace width="0.25em"></mspace><mi>K</mi><mo>(</mo><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>)</mo><mo>=</mo><mi>K</mi><mo>Δ</mo><mo>θ</mo></math></div>
+
+<p>于是非线性的方程在小误差下被"摊平"成线性代数方程，两端取拉氏变换，传递函数又是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1779">29:39</a>画出结构图会发现：它和上面的误差角检测器<strong>形式完全一致</strong>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 210" role="img" aria-label="自整角机结构图：角度 theta1 送入发送机，发送机与接收机之间用三根线（三相定子绕组）相连，可以拉得很远；接收机同时接收角度 theta2，两角之差经磁场耦合产生交流输出电压 u，关系为 u 正比于 sin(theta1 减 theta2)">
+    <defs>
+      <marker id="ar6k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="320" y="70" class="m-sub" font-size="11.5" text-anchor="middle">自整角机：用三相定子绕组把角度信号搬到远处</text>
+
+    <text x="28" y="147" class="m-math" font-size="12" text-anchor="start">θ1</text>
+    <line x1="52" y1="142" x2="78" y2="142" class="d-line" marker-end="url(#ar6k)"/>
+    <rect x="80" y="120" width="150" height="44" rx="3" class="d-box"/>
+    <text x="155" y="140" class="m-txt" font-size="11.5" text-anchor="middle">发送机</text>
+    <text x="155" y="156" class="m-sub" font-size="11.5" text-anchor="middle">转子绕组加交变电压</text>
+
+    <line x1="230" y1="128" x2="410" y2="128" class="d-thin" fill="none"/>
+    <line x1="230" y1="142" x2="410" y2="142" class="d-thin" fill="none"/>
+    <line x1="230" y1="156" x2="410" y2="156" class="d-thin" fill="none"/>
+    <text x="320" y="116" class="m-sub" font-size="11.5" text-anchor="middle">三相定子绕组（三根线，可拉很远）</text>
+
+    <rect x="410" y="120" width="150" height="44" rx="3" class="d-box"/>
+    <text x="485" y="140" class="m-txt" font-size="11.5" text-anchor="middle">接收机</text>
+    <text x="485" y="156" class="m-sub" font-size="11.5" text-anchor="middle">转子绕组感应输出</text>
+    <text x="485" y="104" class="m-math" font-size="12" text-anchor="middle">θ2</text>
+    <line x1="485" y1="110" x2="485" y2="118" class="d-line" marker-end="url(#ar6k)"/>
+
+    <line x1="560" y1="142" x2="600" y2="142" class="d-line" marker-end="url(#ar6k)"/>
+    <text x="606" y="147" class="m-math" font-size="12" text-anchor="start">u</text>
+
+    <text x="320" y="190" class="m-sub" font-size="11.5" text-anchor="middle">u = K·sin(θ1 − θ2)，小误差时 sinΔθ ≈ Δθ，线性化为 u ≈ K(θ1 − θ2)</text>
+  </svg>
+  <figcaption><b>自整角机解决的是"把角度信号传到远处"。</b>发送机的转子磁场经<em>三根定子绕组</em>耦合到接收机，接收机再用转子绕组读出"相差多少"。输出是误差角的正弦函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>K</mi><mi mathvariant="normal">sin</mi><mo>(</mo><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>)</mo></math></span>，只有小误差下才线性化成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>(</mo><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>)</mo></math></span>。</figcaption>
+</figure>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 240" role="img" aria-label="自整角机线性化曲线：横轴为误差角 delta theta，纵轴为归一化电压；真实关系是正弦曲线 u 等于 K sin(delta theta)，线性近似是直线 u 等于 K delta theta；小误差区两条线几乎重合，误差一大就明显分开">
+    <defs>
+      <marker id="ar7k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="320" y="44" class="m-sub" font-size="11.5" text-anchor="middle">自整角机：真实输出是正弦，小误差下才敢用直线</text>
+
+    <rect x="80" y="60" width="96" height="190" class="m-area"/>
+    <text x="128" y="82" class="m-sub" font-size="11.5" text-anchor="middle">小误差区：</text>
+    <text x="128" y="99" class="m-sub" font-size="11.5" text-anchor="middle">两线几乎重合</text>
+
+    <line x1="80" y1="250" x2="600" y2="250" class="d-line" marker-end="url(#ar7k)"/>
+    <line x1="80" y1="250" x2="80" y2="60" class="d-line" marker-end="url(#ar7k)"/>
+    <text x="596" y="272" class="m-sub" font-size="11.5" text-anchor="end">误差角 Δθ（弧度）</text>
+    <text x="76" y="56" class="m-sub" font-size="11.5" text-anchor="end">u / K</text>
+
+    <polyline points="80,250 144,218 208,188 272,160 336,135 400,115 464,101 528,92 592,90" class="d-acc" fill="none"/>
+    <line x1="80" y1="250" x2="460" y2="60" class="d-dash m-thin" fill="none"/>
+
+    <text x="150" y="150" class="m-math" font-size="11.5" text-anchor="start">u = K·sin Δθ</text>
+    <text x="470" y="80" class="m-math" font-size="11.5" text-anchor="middle">u ≈ K·Δθ</text>
+    <text x="500" y="150" class="m-sub" font-size="11.5" text-anchor="middle">误差一大</text>
+    <text x="500" y="167" class="m-sub" font-size="11.5" text-anchor="middle">两条线分开</text>
+  </svg>
+  <figcaption><b>"先精确、后近似"：正弦曲线只在原点附近才和直线重合。</b>实线是真实关系 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>K</mi><mi mathvariant="normal">sin</mi><mo>Δ</mo><mo>θ</mo></math></span>，虚线是近似关系 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>≈</mo><mspace width="0.25em"></mspace><mi>K</mi><mo>Δ</mo><mo>θ</mo></math></span>。阴影区（小误差）两者几乎重合；误差一大就明显分开。<em>这正是"随动系统误差不会太大"这句话的数学价值</em>，也是本课程处理非线性最常用的手法：工作点附近小偏差线性化。</figcaption>
+</figure>
+
+<h3 id="s8">5.1 误差角检测器 vs 自整角机：为什么老师要把两者放在一起讲</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1824">30:24</a>讲完自整角机，老师刻意做了一次对比，因为两者<strong>功能相同、原理完全不同</strong>，正好强化"看数学形式、不看物理外形"的观念。</p>
+
+<div class="tbl-wrap">
+<table class="cmp">
+  <thead><tr><th>对比项</th><th>误差角检测器（电位器电桥）</th><th>自整角机</th></tr></thead>
+  <tbody>
+    <tr><td>工作状态</td><td>直流</td><td>交流</td></tr>
+    <tr><td>信号传递方式</td><td>两个电刷在电阻体上滑动摩擦</td><td>转子与定子不接触，靠磁场耦合</td></tr>
+    <tr><td>摩擦力矩 / 负载</td><td>较大，误差也较大</td><td>很小，转轴灵活</td></tr>
+    <tr><td>运动范围</td><td>受限：电位器最多弯到约 360°，转到头回不去</td><td>不受 360° 限制，怎么转都行</td></tr>
+    <tr><td>精度</td><td>相对较低</td><td>很高，可达<strong>角秒级</strong>（如 9″ 量级）</td></tr>
+    <tr><td>成本</td><td>低</td><td>较高</td></tr>
+    <tr><td>传递函数 / 结构图</td><td>常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mn>1</mn></msub></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>→</mo><mspace width="0.25em"></mspace><msub><mi>K</mi><mn>1</mn></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>u</mi></math></span></td><td>常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>K</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>u</mi></math></span>，<strong>形式完全一致</strong></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么"小误差"这三个字这么重要</span>
+  <p>自整角机的真实输出是曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mi mathvariant="normal">sin</mi><mo>Δ</mo><mo>θ</mo></math></span>，我们却一直按直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi><mo>Δ</mo><mo>θ</mo></math></span> 用。两者只在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>θ</mo></math></span> 很小时才几乎重合 —— 这就是"随动系统误差不会太大"的数学价值。误差角一大，线性模型就明显失真。以后分析"小偏差线性化"（P071 起）会再见到它。</p>
+</div>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · 为什么"角秒级"值得惊讶</span>
+  <p>1 度 = 60 角分，1 角分 = 60 角秒；好的自整角机精度可达 9 角秒量级，约 0.0025°。若装在半径 1 米的转台边缘，对应弧长约几十微米——不接触的角度传递装置能做到这个精度，正是它被用于雷达、火炮随动、平台调平的原因。</p>
+</div>
+
+<h2 id="s9">六、测速发电机：把角速度变成电压</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1915">31:55</a>接下来是<strong>测速发电机</strong>。它常作<strong>测速反馈</strong>元件，用来改善系统动态性能（<a href="../P002-自动控制的一般概念（下）/index.html">自动控制的一般概念（下）</a> 的双回路记录仪里见过一次）。老师先讲直流、再讲交流，因为两者原理不同、结果一样。</p>
+
+<h3 id="s10">6.1 直流测速发电机</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1915">31:55</a>原理很朴素：发电机嘛，用原动机带着转子转，转子绕组在磁场中切割磁力线就产生输出，而且是直流。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=1960">32:40</a>发电机制成后绕组匝数、尺寸固定，输出电压就只和转子<strong>角速度</strong>有关：转得越快，切割越厉害，输出越大。</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>=</mo><mi>K</mi><mo>ω</mo></math></div>
+
+<p>代数方程，两端取拉氏变换，传递函数还是常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span>。</p>
+
+<h3 id="s11">6.2 交流测速发电机</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2006">33:26</a>它把角速度变成电压。结构：<strong>转子</strong>装三相绕组、空间互成 120°；<strong>定子</strong>有两相绕组、空间互成 90°。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2096">34:56</a>先看<strong>转子不转</strong>：给一相定子绕组加交变电压，产生交变磁场；转子三相绕组的总磁场总是"逆着"它变化，而这个合成磁场与输出绕组（垂直摆放）恰好垂直 —— <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2142">35:42</a>垂直磁场不在输出绕组中感应，故转子不转时输出为零。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2187">36:27</a>再看<strong>转子转起来</strong>：切割磁力线会在绕组中产生感应电流（方向用右手定则：手心朝 N 极、拇指指运动方向、四指指电流方向）。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2329">38:49</a>三相电流合成后，在<strong>垂直于输出绕组</strong>的方向产生一个磁场，只有转动时才出现、转得越快越强。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2374">39:34</a>它与输出绕组同向，于是在输出绕组中产生感应电压：转就有输出、转得快输出大、不转则不输出，即</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>=</mo><mi>K</mi><mo>ω</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2374">39:34</a>传递函数又是一个常数。老师在此做了关键对比：<strong>交流与直流测速发电机原理完全不同（交流态 vs 直流态），但功能、传递函数、结构图都一样</strong>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 252" role="img" aria-label="左：交流测速发电机截面示意，定子上两相绕组在空间正交，水平为控制绕组加交流电压、垂直为输出绕组，转子旋转切割磁力线；右：结构图，角速度 omega 的像函数经方框（传递函数 K）变成电压 u，转得越快输出越大，不转则不输出">
+    <defs>
+      <marker id="ar8k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="320" y="74" class="m-sub" font-size="11.5" text-anchor="middle">交流测速发电机：两相定子正交，转子旋转切割磁力线</text>
+
+    <text x="150" y="88" class="m-sub" font-size="11.5" text-anchor="middle">输出绕组（垂直）</text>
+    <circle cx="150" cy="160" r="68" class="d-line"/>
+    <line x1="150" y1="94" x2="150" y2="226" class="d-line" marker-start="url(#ar8k)" marker-end="url(#ar8k)"/>
+    <line x1="84" y1="160" x2="216" y2="160" class="d-line" marker-start="url(#ar8k)" marker-end="url(#ar8k)"/>
+    <text x="150" y="244" class="m-sub" font-size="11.5" text-anchor="middle">控制绕组（水平，加交流电压）</text>
+    <line x1="150" y1="160" x2="182" y2="121" class="d-acc" marker-end="url(#ar8k)"/>
+    <text x="190" y="116" class="m-math" font-size="11.5" text-anchor="start">转子 ω</text>
+
+    <text x="330" y="150" class="m-math" font-size="12" text-anchor="middle">ω</text>
+    <line x1="348" y1="156" x2="384" y2="156" class="d-line" marker-end="url(#ar8k)"/>
+    <rect x="386" y="136" width="150" height="40" rx="3" class="d-box"/>
+    <text x="461" y="161" class="m-txt" font-size="11.5" text-anchor="middle">交流测速发电机</text>
+    <line x1="536" y1="156" x2="574" y2="156" class="d-line" marker-end="url(#ar8k)"/>
+    <text x="580" y="161" class="m-math" font-size="12" text-anchor="start">u</text>
+    <text x="461" y="200" class="m-math" font-size="12" text-anchor="middle">u = K · ω</text>
+    <text x="461" y="222" class="m-sub" font-size="11.5" text-anchor="middle">不转则输出为零；转得越快输出越大</text>
+  </svg>
+  <figcaption><b>交流测速发电机：靠"旋转"把角速度变成电压。</b>定子两相绕组空间互成 90°；转子旋转切割磁力线产生合成磁场，只有这个"因旋转而出现"的磁场才能在输出绕组中感应出电压。<em>故输出天然与角速度成正比、与转角无关</em>，且不转就不输出。右图结构图与直流测速发电机完全一致 —— 又一次"原理不同、数学同形"。</figcaption>
+</figure>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · "旋转磁场"与一个熟悉的图形</span>
+  <p>老师讲两相异步电动机时打过一个比方：两个空间垂直摆放的绕组，加上两个<strong>频率相同、相位差 90°</strong> 的信号，合成磁场就会<strong>旋转</strong>。这正对应示波器 XY 模式的<strong>李萨如图形</strong>：两个互相垂直的端口加正弦与余弦，同频且相差 90° 时屏上正好是一个圆。"空间正交 + 时间相差 90°"就等价于"旋转"，是理解两相伺服电动机的地基。</p>
+</div>
+
+<h2 id="s12">七、执行类元部件：电动机的两副面孔</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2419">40:19</a>最后是<strong>电动机</strong>，在控制系统里通常作为<strong>执行机构</strong>的一部分。老师讲了两种：电枢控制的直流电动机，和两相异步（交流伺服）电动机。</p>
+
+<h3 id="s13">7.1 电枢控制式直流电动机</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2419">40:19</a>它的原理前面分析过（<a href="../P008-拉氏反变换与传递函数（上）/index.html">拉氏反变换与传递函数（上）</a>），这里不重复推导，只把结果拿来用。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2467">41:07</a>写成微分方程：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>T</mi><mi>m</mi></msub><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>ω</mo></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>+</mo><mo>ω</mo><mo>=</mo><msub><mi>K</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>u</mi></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2467">41:07</a>注意两种输出口径：以角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 为输出，是一阶微分方程；以角度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 为输出，角速度再积一次分，就成了二阶。两端取拉氏变换：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mspace width="1em"></mspace><mfrac><mrow><mo>ω</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>u</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>θ</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>u</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><mi>s</mi><mo>(</mo><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2512">41:52</a>画成结构图：电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 先经 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub><mo>/</mo><mo>(</mo><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span> 到角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 再经 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>（积分）到角度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2512">41:52</a>多出的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>，物理含义就是"角速度对时间积分得角度"。</p>
+
+<h3 id="s14">7.2 两相异步电动机（交流伺服电动机）</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2558">42:38</a>它把交流电能转化为转动机械能。老师点明：<strong>以控制电压为输入、转速为输出时，它可抽象为一个惯性环节</strong>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2604">43:24</a>结构与交流发电机类似，原理刚好倒过来 —— 发电机"先转再输出电压"，电动机"先加电压再转"。两相定子绕组空间<strong>垂直</strong>摆放，其中一相作<strong>控制绕组</strong>：<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2649">44:09</a>控制电压为零时，另一相的脉动磁场形不成旋转磁场，转子无转矩、<strong>不转</strong>；<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2694">44:54</a>控制电压加上、且与另一相相差 90° 时，两个正交绕组合成<strong>旋转磁场</strong>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2740">45:40</a>旋转磁场相对不动的转子绕组，相当于"在切割磁力线"，转子绕组产生感应电流、受力跟着转 —— <a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2786">46:26</a>就是中学那个实验：把马蹄形磁铁转起来，磁场里的线圈会跟着转。为什么叫<strong>两相异步</strong>？两相指定子绕组是两相；异步指转子转速一定比旋转磁场<strong>慢</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2831">47:11</a>反过来想：若转子真与磁场同步，相对速度为零就不再切割磁力线、没有转矩，自然又会慢下来。<mark>"异步"不是缺陷，而是它能产生转矩的前提。</mark></p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2877">47:57</a>建模时直接从原理列方程不容易，老师改用"实验 + 方程"。先做<strong>堵转实验</strong>：加电压、硬把转子憋住不让它动，测出转子上的堵转力矩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>d</mi></msub></math></span>，它随电压增大而增大，比例系数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>m</mi></msub></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>d</mi></msub><mo>=</mo><msub><mi>C</mi><mi>m</mi></msub><mi>u</mi></math></span>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=2923">48:43</a>但电机不能老被卡住，放开让它转：轴上实际产生的<strong>电磁力矩</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>e</mi></msub></math></span> 等于堵转力矩<strong>减去</strong>一个随角速度增大的项 —— 转得越快，转子相对旋转磁场越慢、力矩越小。这条"力矩随转速下降"的关系由实验测得，叫<strong>机械特性</strong>：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>T</mi><mi>e</mi></msub><mo>=</mo><msub><mi>C</mi><mi>m</mi></msub><mi>u</mi><mo>−</mo><mi>c</mi><mspace width="1em"></mspace><mo>ω</mo></math></div>
+
+<p>再对电机轴用牛顿定律（力矩平衡）：主动力矩是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>e</mi></msub></math></span>，负载这边有惯量项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>J</mi><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>ω</mo></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span> 与粘性摩擦项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>m</mi></msub><mo>ω</mo></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>m</mi></msub></math></span> 是粘着摩擦系数）：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>T</mi><mi>e</mi></msub><mo>=</mo><mi>J</mi><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>ω</mo></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>+</mo><msub><mi>f</mi><mi>m</mi></msub><mo>ω</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=3019">50:19</a>到这里输入是电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>、输出是角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>，中间引入了两个中间变量（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>d</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>e</mi></msub></math></span>），共三个方程。用两个方程把中间变量消掉：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>T</mi><mi>m</mi></msub><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mo>ω</mo></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac><mo>+</mo><mo>ω</mo><mo>=</mo><msub><mi>K</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>u</mi><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>ω</mo><mo>(</mo><mi>s</mi><mo>)</mo></mrow><mrow><mi>u</mi><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=3019">50:19</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>m</mi></msub></math></span> 是电机的时间常数、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub></math></span> 是传递系数，完全由固有参数组合而成。<a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=3064">51:04</a>结论：这个结构图与传递函数，和直流电动机<strong>形式完全一样</strong> —— 交流态、直流态原理不同，抽出来的数学模型却同为惯性环节。这就是"物理不同、数学同形"最有力的例证。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 145" role="img" aria-label="执行电动机结构图：输入电压 U 经方框（传递函数 Km/(Tm s+1)，惯性的电动机）得到角速度 omega，角速度再经方框（1/s，积分）得到角度 theta；直流电枢控制电动机与两相异步电动机的传递函数形式完全相同">
+    <defs>
+      <marker id="ar9k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="320" y="36" class="m-sub" font-size="11.5" text-anchor="middle">执行电动机：电压 → 转速 / 转角（直流与两相交流同形）</text>
+
+    <text x="30" y="96" class="m-math" font-size="12" text-anchor="middle">U</text>
+    <line x1="46" y1="91" x2="84" y2="91" class="d-line" marker-end="url(#ar9k)"/>
+    <rect x="86" y="71" width="168" height="40" rx="3" class="d-box-a"/>
+    <text x="170" y="96" class="m-txt" font-size="11.5" text-anchor="middle">电动机 Km/(Tm s+1)</text>
+    <line x1="254" y1="91" x2="298" y2="91" class="d-line" marker-end="url(#ar9k)"/>
+    <circle cx="306" cy="91" r="3.5" class="d-tap"/>
+    <text x="306" y="82" class="m-math" font-size="11.5" text-anchor="middle">ω</text>
+
+    <line x1="306" y1="91" x2="352" y2="91" class="d-line" marker-end="url(#ar9k)"/>
+    <rect x="354" y="71" width="120" height="40" rx="3" class="d-box"/>
+    <text x="414" y="96" class="m-txt" font-size="11.5" text-anchor="middle">积分器 1/s</text>
+    <line x1="474" y1="91" x2="520" y2="91" class="d-line" marker-end="url(#ar9k)"/>
+    <text x="526" y="96" class="m-math" font-size="12" text-anchor="start">θ</text>
+
+    <text x="170" y="132" class="m-sub" font-size="11.5" text-anchor="middle">以角速度为输出：G = Km/(Tm s+1)（惯性环节）</text>
+    <text x="414" y="132" class="m-sub" font-size="11.5" text-anchor="middle">以角度为输出：再串 1/s</text>
+  </svg>
+  <figcaption><b>电动机的两种输出口径，只差一个积分。</b>取角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 为输出时，电动机是惯性环节 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub><mo>/</mo><mo>(</mo><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span>；取角度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 为输出时，再串一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>K</mi><mi>m</mi></msub><mo>/</mo><mo>[</mo><mi>s</mi><mo>(</mo><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>]</mo></math></span>。<em>直流与两相交流电动机的方框完全一样</em> —— 做题时见到"电动机 + 减速器 + 转台"的随动系统，可直接套用同一个惯性环节模型。</figcaption>
+</figure>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 178" role="img" aria-label="两相异步电动机机械特性曲线：横轴为角速度 omega，纵轴为电磁力矩 Te；直线从纵轴上的堵转点（omega 等于 0，力矩最大等于 Cm 乘 U）向右下倾斜，直到横轴上的理想空载点；说明转速越高电磁力矩越小">
+    <defs>
+      <marker id="ar10k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="d-arrow"/>
+      </marker>
+    </defs>
+    <text x="350" y="72" class="m-sub" font-size="11.5" text-anchor="middle">两相异步电动机的机械特性（控制电压 U 一定）</text>
+
+    <line x1="110" y1="215" x2="110" y2="82" class="d-line" marker-end="url(#ar10k)"/>
+    <line x1="110" y1="215" x2="588" y2="215" class="d-line" marker-end="url(#ar10k)"/>
+    <text x="102" y="76" class="m-sub" font-size="11.5" text-anchor="end">T_e</text>
+    <text x="594" y="219" class="m-sub" font-size="11.5" text-anchor="start">ω</text>
+
+    <line x1="110" y1="105" x2="500" y2="215" class="d-acc"/>
+    <circle cx="110" cy="105" r="3.5" class="d-tap"/>
+    <circle cx="500" cy="215" r="3.5" class="d-tap"/>
+    <text x="118" y="100" class="m-sub" font-size="11.5" text-anchor="start">堵转点：ω = 0，T_e = Cm·U（最大）</text>
+    <text x="500" y="205" class="m-sub" font-size="11.5" text-anchor="middle">理想空载点</text>
+    <text x="350" y="230" class="m-sub" font-size="11.5" text-anchor="middle">斜率由电机固有参数决定；转速越高，转子相对旋转磁场越慢，电磁力矩越小</text>
+  </svg>
+  <figcaption><b>机械特性：一条从堵转点向右下倾斜的直线。</b>横轴是角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span>、纵轴是电磁力矩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>T</mi><mi>e</mi></msub></math></span>。电机被憋住不转时（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo><mo>=</mo><mn>0</mn></math></span>）力矩最大，等于堵转力矩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mi>m</mi></msub><mi>U</mi></math></span>；转起来以后，转速越高、转子相对旋转磁场越慢，电磁力矩越小，直到理想空载点力矩为零。<em>这条曲线由实验测出</em>，它正是把"堵转力矩"与"电磁力矩"两个中间变量联系起来的桥梁。</figcaption>
+</figure>
+
+<div class="blk exam">
+  <span class="lbl">考研补充 · 直流电动机 vs 两相异步电动机</span>
+  <div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>对比项</th><th>电枢控制直流电动机</th><th>两相异步（交流伺服）电动机</th></tr></thead>
+    <tbody>
+      <tr><td>工作状态</td><td>直流</td><td>交流</td></tr>
+      <tr><td>输入 / 输出</td><td>电枢电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> / 角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span> 或角度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span></td><td>控制电压 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> / 角速度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ω</mo></math></span></td></tr>
+      <tr><td>传递函数</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>（ω）或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><mi>s</mi><mo>(</mo><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac></math></span>（θ）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>（ω）</td></tr>
+      <tr><td>建模方法</td><td>直接由电路 + 力学方程列写</td><td>堵转实验得机械特性 + 力矩平衡方程</td></tr>
+      <tr><td>结论</td><td colspan="2">两者的结构图与传递函数<strong>形式完全相同</strong> —— 抽掉物理外衣后是同一个惯性环节</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>做题时的实用结论：先判断"以角速度为输出"还是"以角度为输出"，后者别忘了那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>；凡涉及"减速器"，就在模型里再乘一个常数比。</p>
+</div>
+
+<h2 id="s15">八、典型环节：六个"性格"不同的小伙伴</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1F34y1h7so/?p=10&amp;t=3064">51:04</a>一节课讲了六七个元部件，原理五花八门，但把它们的传递函数并排一放，反复出现的只有几种"形状"。<strong>典型环节</strong>就是按传递函数的<strong>数学形状</strong>给系统分类，而不是按物理原理分类。控制系统里最常打交道的六种，先看图认它们的"脾气"：给一个一步到位的阶跃输入，看输出各自怎么反应。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 296" role="img" aria-label="六种典型环节对照小图：比例环节 G(s)=K 阶跃响应是阶跃；惯性环节 G(s)=K/(Ts+1) 阶跃响应慢慢逼近；积分环节 G(s)=1/s 阶跃响应是直线上升；微分环节 G(s)=s 对变化敏感输出尖峰；振荡环节阶跃响应来回摆几下才稳；延迟环节先等一会儿再响应">
+    <text x="320" y="22" class="m-sub" font-size="11.5" text-anchor="middle">六种典型环节：给一个阶跃，看它们各自的「反应」</text>
+
+    <rect x="12" y="34" width="200" height="112" rx="4" class="m-panel-s"/>
+    <text x="112" y="54" class="m-txt" font-size="11.5" text-anchor="middle">① 比例环节</text>
+    <text x="112" y="70" class="m-math" font-size="11.5" text-anchor="middle">G(s) = K</text>
+    <line x1="32" y1="126" x2="198" y2="126" class="d-thin" fill="none"/>
+    <line x1="32" y1="126" x2="32" y2="84" class="d-thin" fill="none"/>
+    <polyline points="32,126 46,126 46,98 198,98" class="d-acc" fill="none"/>
+    <text x="112" y="140" class="m-sub" font-size="11.5" text-anchor="middle">阶跃 → 阶跃，原样放大</text>
+
+    <rect x="220" y="34" width="200" height="112" rx="4" class="m-panel-s"/>
+    <text x="320" y="54" class="m-txt" font-size="11.5" text-anchor="middle">② 惯性环节</text>
+    <text x="320" y="70" class="m-math" font-size="11.5" text-anchor="middle">G(s) = K/(T s+1)</text>
+    <line x1="240" y1="126" x2="406" y2="126" class="d-thin" fill="none"/>
+    <line x1="240" y1="126" x2="240" y2="84" class="d-thin" fill="none"/>
+    <line x1="240" y1="95" x2="406" y2="95" class="d-dash m-thin" fill="none"/>
+    <polyline points="240,126 260,113 281,106 302,101 322,98 363,96 406,95" class="d-acc" fill="none"/>
+    <text x="320" y="140" class="m-sub" font-size="11.5" text-anchor="middle">慢慢逼近，快慢看 T</text>
+
+    <rect x="428" y="34" width="200" height="112" rx="4" class="m-panel-s"/>
+    <text x="528" y="54" class="m-txt" font-size="11.5" text-anchor="middle">③ 积分环节</text>
+    <text x="528" y="70" class="m-math" font-size="11.5" text-anchor="middle">G(s) = 1/s</text>
+    <line x1="448" y1="126" x2="614" y2="126" class="d-thin" fill="none"/>
+    <line x1="448" y1="126" x2="448" y2="84" class="d-thin" fill="none"/>
+    <polyline points="448,126 614,98" class="d-acc" fill="none"/>
+    <text x="528" y="140" class="m-sub" font-size="11.5" text-anchor="middle">一直往上涨（累积）</text>
+
+    <rect x="12" y="158" width="200" height="112" rx="4" class="m-panel-s"/>
+    <text x="112" y="178" class="m-txt" font-size="11.5" text-anchor="middle">④ 微分环节</text>
+    <text x="112" y="194" class="m-math" font-size="11.5" text-anchor="middle">G(s) = s</text>
+    <line x1="32" y1="250" x2="198" y2="250" class="d-thin" fill="none"/>
+    <line x1="32" y1="250" x2="32" y2="208" class="d-thin" fill="none"/>
+    <polyline points="32,250 42,250 44,208 46,250 198,250" class="d-warn" fill="none"/>
+    <text x="112" y="264" class="m-sub" font-size="11.5" text-anchor="middle">输入越陡，输出越大</text>
+
+    <rect x="220" y="158" width="200" height="112" rx="4" class="m-panel-s"/>
+    <text x="320" y="178" class="m-txt" font-size="11.5" text-anchor="middle">⑤ 振荡环节</text>
+    <text x="320" y="194" class="m-math" font-size="11.5" text-anchor="middle">G(s) = K/(T²s²+2ξTs+1)</text>
+    <line x1="240" y1="250" x2="406" y2="250" class="d-thin" fill="none"/>
+    <line x1="240" y1="250" x2="240" y2="208" class="d-thin" fill="none"/>
+    <line x1="240" y1="228" x2="406" y2="228" class="d-dash m-thin" fill="none"/>
+    <polyline points="240,250 250,222 258,208 268,220 278,238 288,240 300,228 312,224 324,231 336,229 348,227 360,228 382,228 406,228" class="d-acc" fill="none"/>
+    <text x="320" y="264" class="m-sub" font-size="11.5" text-anchor="middle">来回摆几下才稳</text>
+
+    <rect x="428" y="158" width="200" height="112" rx="4" class="m-panel-s"/>
+    <text x="528" y="178" class="m-txt" font-size="11.5" text-anchor="middle">⑥ 延迟环节</text>
+    <text x="528" y="194" class="m-math" font-size="11.5" text-anchor="middle">G(s) = e^(-τs)</text>
+    <line x1="448" y1="250" x2="614" y2="250" class="d-thin" fill="none"/>
+    <line x1="448" y1="250" x2="448" y2="208" class="d-thin" fill="none"/>
+    <polyline points="448,250 500,250 500,208 614,208" class="d-line" fill="none"/>
+    <text x="528" y="264" class="m-sub" font-size="11.5" text-anchor="middle">先等一会儿再照做</text>
+
+    <text x="320" y="288" class="m-sub" font-size="11.5" text-anchor="middle">前三种本讲已亲手算过；后三种下一讲系统展开</text>
+  </svg>
+  <figcaption><b>六个环节的"脾气"，看阶跃响应最直观。</b>比例环节原样放大；惯性环节想跟上但跟不上、慢慢逼近（快慢由时间常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi></math></span> 定）；积分环节把输入"攒起来"，输出是直线上升；微分环节对变化敏感，输入越陡输出越大；振荡环节一步到位做不到，要来回摆几下才稳定（摆得凶不凶由阻尼比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span> 定，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span> 越小越凶）；延迟环节先"等一会儿"再照做，等待时间叫滞后时间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>τ</mo></math></span>。<em>记住形状，比记住名字更重要。</em></figcaption>
+</figure>
+
+<div class="tbl-wrap">
+<table class="cmp">
+  <thead><tr><th>典型环节</th><th>传递函数</th><th>一句话脾气</th><th>本讲的对应元部件 / 例子</th></tr></thead>
+  <tbody>
+    <tr><td>比例环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span></td><td>输出照输入等比放大，波形不走样</td><td>电位器、误差角检测器、自整角机、测速发电机</td></tr>
+    <tr><td>惯性环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>K</mi></mrow><mrow><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span></td><td>想跟上但跟不上，慢慢逼近，快慢由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi></math></span> 定</td><td>直流电动机、两相异步电动机（以转速为输出）</td></tr>
+    <tr><td>积分环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span></td><td>把输入"攒起来"，输出是输入的累积</td><td>电动机以角度为输出时多出的那一节 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span></td></tr>
+    <tr><td>微分环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span></td><td>对变化敏感，输入越陡输出越大</td><td>课上未展开，<a href="../P011-复域数学模型（下）/index.html">复域数学模型（下）</a> 起补充</td></tr>
+    <tr><td>振荡环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>K</mi></mrow><mrow><msup><mi>T</mi><mn>2</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>2</mn><mo>ξ</mo><mspace width="0.25em"></mspace><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span></td><td>一步到位做不到，要来回摆几下才稳</td><td>课上未展开，<a href="../P011-复域数学模型（下）/index.html">复域数学模型（下）</a> 起补充（RLC 电路等）</td></tr>
+    <tr><td>延迟环节</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mo>τ</mo><mspace width="0.25em"></mspace><mi>s</mi></mrow></msup></math></span></td><td>先等一会儿，再照做</td><td>课上未展开（长管道、传送带等）</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="blk ext">
+  <span class="lbl">知识拓展 · 三个"脾气"符号先认识一下</span>
+  <p><strong>时间常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi></math></span></strong>：惯性环节"跟上得快不快"的度量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi></math></span> 越小越快。<strong>阻尼比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span></strong>（读作"克西"）：振荡环节"摆得凶不凶"的度量，取值在 0 到 1 之间，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo></math></span> 越小摆得越厉害。<strong>滞后时间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>τ</mo></math></span></strong>：延迟环节"先等多久"的度量。这三个符号本讲只要认得、会读题即可，下一讲 <a href="../P011-复域数学模型（下）/index.html">复域数学模型（下）</a> 会连同七个典型环节一起系统推它们。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么"物理不同、数学同形"是这门课最重要的思想</span>
+  <p>一台电位器、一台自整角机、一台测速发电机，材料结构风马牛不相及；两台电动机，一个直流、一个交流。可它们抽出来的数学模型只有两三种形状。<strong>这意味着：你分析其中任意一台得到的结论，可以原封不动搬到同类设备上。</strong>整门课之所以能"一套理论管所有行业"，靠的就是这种"抽掉物理、只留数学"的抽象。老师花一整节课讲元部件，目的不是让你记住接线，而是让你亲手完成一次"从物理到数学"的翻译 —— 翻译熟了，后面几百页的公式才有落脚点。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>实际系统</b> 先搞清工作原理</span><span class="ar">→</span>
+    <span class="n"><b>方框图</b> 谁连着谁</span><span class="ar">→</span>
+    <span class="n"><b>结构图</b> 每框填传递函数</span><span class="ar">→</span>
+    <span class="n"><b>闭环传递函数</b> 消中间变量 + 化尾一</span>
+  </div>
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li><strong>传递函数五性质</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span> 的复函数 / 只与结构参数有关 / 与时域微分方程等价 / 与单位脉冲响应互为拉氏变换对 / 分子根零点、分母根极点。</li>
+    <li><strong>三条局限</strong>：零初始条件、单输入单输出、只适用线性定常系统。</li>
+    <li><strong>运放虚地点</strong>：输入电流在虚地节点相加，输出经并联阻抗 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi><mo>=</mo><mfrac><mrow><mi>R</mi></mrow><mrow><mn>1</mn><mo>+</mo><mi>R</mi><mi>C</mi><mi>s</mi></mrow></mfrac></math></span>；运放反相 → 负反馈。</li>
+    <li><strong>位置类</strong>：电位器 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msub><mi>K</mi><mi>p</mi></msub><mo>θ</mo></math></span>；误差角检测器、自整角机 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>≈</mo><mspace width="0.25em"></mspace><mi>K</mi><mo>(</mo><msub><mo>θ</mo><mn>1</mn></msub><mo>−</mo><msub><mo>θ</mo><mn>2</mn></msub><mo>)</mo></math></span>。</li>
+    <li><strong>测速发电机</strong>：直流、交流都满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>K</mi><mo>ω</mo></math></span>（比例环节）。</li>
+    <li><strong>电动机</strong>：角速度输出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>K</mi><mi>m</mi></msub></mrow><mrow><msub><mi>T</mi><mi>m</mi></msub><mspace width="0.25em"></mspace><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>（惯性），角度输出再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>。</li>
+    <li><strong>六种典型环节</strong>：比例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span>、惯性 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>K</mi></mrow><mrow><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>、积分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span>、微分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi></math></span>、振荡 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>K</mi></mrow><mrow><msup><mi>T</mi><mn>2</mn></msup><msup><mi>s</mi><mn>2</mn></msup><mo>+</mo><mn>2</mn><mo>ξ</mo><mspace width="0.25em"></mspace><mi>T</mi><mi>s</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>、延迟 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mo>τ</mo><mspace width="0.25em"></mspace><mi>s</mi></mrow></msup></math></span>。</li>
+  </ul>
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li><strong>零初始条件</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><msub><mi>u</mi><mi>c</mi></msub></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span> 的拉氏变换别写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>s</mi><msub><mi>U</mi><mi>c</mi></msub><mo>−</mo><msub><mi>u</mi><mi>c</mi></msub><mo>(</mo><mn>0</mn><mo>)</mo></math></span>，否则求出来的不是传递函数。</li>
+    <li><strong>角度输出别忘了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>s</mi></mrow></mfrac></math></span></strong>；比例环节别凭空添时间常数。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P009-拉氏反变换与传递函数（下）/index.html">拉氏反变换与传递函数（下）</a> 拉氏变换与传递函数（定义、性质、局限、尾一标准型）</li>
+      <li><span class="cur">微分方程在零初始条件下取拉氏变换</span></li>
+      <li><span class="cur">虚地点 / 电流平衡（运放）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P011-复域数学模型（下）/index.html">复域数学模型（下）</a> 复域数学模型（下）：结构图法、齿轮减速器与典型环节</li>
+      <li><a href="../P012-结构图及其等效变换（上）/index.html">结构图及其等效变换（上）</a> 结构图及其等效变换（上）</li>
+      <li><a href="../P013-结构图及其等效变换（下）/index.html">结构图及其等效变换（下）</a> 结构图及其等效变换（下）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>电位器（绝对角）↔ 误差角检测器（相对角）</li>
+      <li>直流测速发电机 ↔ 交流测速发电机（原理不同、传递函数相同）</li>
+      <li>角速度输出（惯性）↔ 角度输出（惯性 + 积分）</li>
+    </ul>
+  </div>
+</div>
+  <footer class="doc-foot"><span>卢京潮《自动控制原理》· 西北工业大学 · 第 10 讲</span><a href="../P009-拉氏反变换与传递函数（下）/index.html">← P009</a><a href="../index.html">全部目录</a><a href="../P011-复域数学模型（下）/index.html">P011 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、先复习：传递函数是干什么的</a>
+    <a href="#s2">二、一道作业题：运放闭环系统的闭环传递函数</a>
+    <a href="#s3">三、从实际系统到结构图：还差&quot;每个方框的传递函数&quot;</a>
+    <a href="#s4">四、位置（角度）类元部件：把转角变成电压</a>
+    <a class="sub" href="#s5">4.1 电位器：把位置变成电压</a>
+    <a class="sub" href="#s6">4.2 误差角检测器：两个电位器搭成电桥</a>
+    <a href="#s7">五、自整角机：把角度信号搬到几十米外</a>
+    <a class="sub" href="#s8">5.1 误差角检测器 vs 自整角机：为什么老师要把两者放在一起讲</a>
+    <a href="#s9">六、测速发电机：把角速度变成电压</a>
+    <a class="sub" href="#s10">6.1 直流测速发电机</a>
+    <a class="sub" href="#s11">6.2 交流测速发电机</a>
+    <a href="#s12">七、执行类元部件：电动机的两副面孔</a>
+    <a class="sub" href="#s13">7.1 电枢控制式直流电动机</a>
+    <a class="sub" href="#s14">7.2 两相异步电动机（交流伺服电动机）</a>
+    <a href="#s15">八、典型环节：六个&quot;性格&quot;不同的小伙伴</a>
+  </aside>
+</div>
+</body>
+</html>

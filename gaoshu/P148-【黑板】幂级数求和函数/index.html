@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】幂级数求和函数：你会求和的和函数只有一个 · 高等数学笔记</title>
+<meta name="description" content="到现在为止，你真正会求和的级数只有等比级数 ∑n=0∞xn=11−x。所以求和函数的全部工作就是把题目扭成等比：n 在分母就先求导再积分，n 在分子就先积分再求导（或者一步认出它是等比级数的导数）。四步走完还要回头补两件事：端点重新验、结果分母带 x 就单独算 S(0)。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 148 讲</div>
+    <h1 class="title"><span class="pnum">P148</span>【黑板】幂级数求和函数：你会求和的和函数只有一个</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>到现在为止，你真正会求和的级数<strong>只有等比级数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span>。所以求和函数的全部工作就是<mark>把题目扭成等比</mark>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分母就<strong>先求导再积分</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分子就<strong>先积分再求导</strong>（或者一步认出它是等比级数的导数）。四步走完还要回头补两件事：端点重新验、结果分母带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 就单独算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span>。</p></div>
+    <div class="meta"><span>时长 48m00s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=0">00:00</a><span class="vv"><b>开场</b>：课本把和函数写得「非常隐晦」，老师直接上常见题型全清单。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=44">00:44</a><span class="vv"><b>性质一</b>：和函数连续 → 可积；可积的要求比连续更低。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=113">01:53</a><span class="vv"><b>逐项积分</b>：先求和再积分 = 先积分再求和。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=245">04:05</a><span class="vv"><b>逐项求导</b>：先求和再求导 = 先求导再求和，<strong>收敛半径相同</strong>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=441">07:21</a><span class="vv"><b>唯一的底牌</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span>，其余全靠它变出来。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=501">08:21</a><span class="vv"><b>例 1</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>，分母有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> → 先求导消掉它。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=968">16:08</a><span class="vv"><b>例 1 收尾</b>：收敛域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>x</mi><mo>&amp;</mo><mi>g</mi><mi>t</mi><mo>;</mo><mn>0</mn></math></span> 绝对值可以去掉。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1130">18:50</a><span class="vv"><b>例 2</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>，多出来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span> 抵消不掉 → 先乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1354">22:34</a><span class="vv"><b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 陷阱</b>：老师自述第一次讲时也以为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，其实是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1801">30:01</a><span class="vv"><b>两个变式</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span> 提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2067">34:27</a><span class="vv"><b>第二类</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分子（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup></math></span>）→ 先积分再求导。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2398">39:58</a><span class="vv"><b>更快一手</b>：认出它是等比级数的导数，先求和再求导一行搞定。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2813">46:53</a><span class="vv"><b>总结</b>：两大类题目 + <strong>提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 必须讨论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span></strong>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">黑板课先把话说死：你只会一个和函数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=0">00:00</a>上一页（<a href="../P147-【黑板】幂级数求收敛半径和收敛域/index.html">【黑板】幂级数求收敛半径和收敛域</a>）我们练的是求收敛半径和收敛域。这一页是它的下半场：<strong>把和函数求出来</strong>。老师说课本这一节写得「非常隐晦」，「该讲的例题他都没怎么明确地说出来」，所以黑板课直接给全清单。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=572">09:32</a>他也点明了这类题的固定结构：<strong>正课里每道题都是两步——先求收敛域，再求和函数</strong>。既然收敛域在上一页练透了，本页的例题就<mark>默认略去半径与端点的重复计算</mark>，把注意力全部放在「怎么求和」上；但你自己做题时不能省第一步，最后仍要回到原级数把端点补上。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=441">07:21</a>求和函数只有一条信念，老师反复强调到近乎唠叨：<strong>你会求和的和函数，只有等比级数一个</strong>。</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac><mspace width="2em"></mspace><mo>(</mo><mo>|</mo><mi>x</mi><mo>|</mo><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mn>1</mn><mo>)</mo></math></div>
+
+<p>其余所有级数——不管长得多花哨——都要想办法变成它。所以「求和函数」这四个字，翻译过来就是：<strong>找一个合法的操作，把原级数扭成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mi>n</mi></msup></math></span>，算出闭式，再做逆操作扭回去。</strong>合法操作只有两种：逐项求导、逐项积分。这就是全部。</p>
+
+<h2 id="s2">两条性质：交换求和与求导/积分的许可</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=44">00:44</a>第一条性质是和函数连续，进而可积。老师顺口对比了一句：<strong>连续的要求比可积高，连续一定可积</strong>，所以这条几乎不需要单独记。真正要记的是逐项积分与逐项求导这两条，它们是全页的工具箱。</p>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=113">01:53</a>性质 · 逐项积分</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msub><mi>a</mi><mi>n</mi></msub><msup><mi>x</mi><mi>n</mi></msup></math></span> 在收敛域上，则可逐项积分：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mi>x</mi></mrow></munderover><mi>S</mi><mo>(</mo><mi>t</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msub><mi>a</mi><mi>n</mi></msub><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+  <p>核心就是一句话：<strong>先求和再积分 = 先积分再求和</strong>，两个运算的次序可以交换。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=181">03:01</a>而且书上还注明了一句关键的话：逐项积分以后的幂级数与原来的级数<strong>有相同的收敛半径</strong>。</p>
+</div>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=245">04:05</a>性质 · 逐项求导</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msub><mi>a</mi><mi>n</mi></msub><msup><mi>x</mi><mi>n</mi></msup></math></span>，则在收敛区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mi>R</mi><mo>,</mo><mi>R</mi><mo>)</mo></math></span> 内可逐项求导：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msub><mi>a</mi><mi>n</mi></msub><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></div>
+  <p>即<strong>先求和再求导 = 先求导再求和</strong>。同样地，逐项求导以后收敛半径不变。</p>
+</div>
+
+<p>老师把这两条性质的核心各压成一句：<q>先求和再求积分等于先求积分再求和，先求和再求导等于先求导再求和，就是它的运算这个顺序啊是可以交换的，并且它的收敛半径是相同的。</q>后面每一道例题，实际上都在用这两句话中的一句。</p>
+
+<div class="why">
+  <span class="lbl">为什么收敛半径不变，端点却可能变</span>
+  <p>逐项求导让通项多乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>，逐项积分让通项多除一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>。在区间<strong>内部</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>|</mo><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mi>R</mi></math></span> 的地方<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>|</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span> 差距有限，乘除一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 不足以改变「收敛还是发散」的定性判断，所以半径纹丝不动。但在<strong>端点</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>|</mo><mo>=</mo><mi>R</mi></math></span> 处，级数本来就走在临界线上、靠 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 的高次幂或阶乘的衰减勉强收敛，这时乘上或除掉一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 就足以让它翻盘。</p>
+  <p>最典型的例子是例 1：原级数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 收敛（交错），但求导后得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mo>⋯</mo></math></span>，发散。<mark>所以你每一步求导或积分之后，都不能把中间那一步的收敛域当最终答案，必须回到原级数在端点上重新验一遍。</mark>这一条是本页最容易被扣分的地方，没有之一。</p>
+</div>
+
+<h2 id="s3">四步套路：先定域、再看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>、凑等比、还原补漏</h2>
+
+<p>把上面的话整理成流程，就是下面四步。老师上课时省掉了第一步和第四步的一半，但你自己做题必须走全。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 310" role="img" aria-label="幂级数求和函数的四步流程图：求收敛域、判断n的位置、凑成等比级数、还原并补端点与S0">
+    <text x="30" y="20" class="m-txt" font-size="12">求和函数四步：一步都不能跳</text>
+
+    <rect x="180" y="34" width="280" height="40" rx="6" class="m-panel"></rect>
+    <text x="320" y="59" text-anchor="middle" class="m-txt" font-size="12">① 先求收敛域（半径 + 两端点）</text>
+    <line x1="320" y1="74" x2="320" y2="94" class="m-acc" stroke-width="1.4"></line>
+    <path d="M0 0 L-8 -3.5 L-8 3.5 z" class="m-fill-a" transform="translate(320,100) rotate(90)"></path>
+
+    <rect x="180" y="104" width="280" height="40" rx="6" class="m-panel-a"></rect>
+    <text x="320" y="129" text-anchor="middle" class="m-txt" font-size="12">② 看碍事的 n 在分母还是分子</text>
+    <line x1="320" y1="144" x2="150" y2="168" class="m-acc" stroke-width="1.4"></line>
+    <line x1="320" y1="144" x2="490" y2="168" class="m-acc" stroke-width="1.4"></line>
+
+    <rect x="40" y="168" width="220" height="52" rx="6" class="m-panel-s"></rect>
+    <text x="150" y="190" text-anchor="middle" class="m-txt" font-size="11.5">n 在分母 → 先求导再积分</text>
+    <text x="150" y="209" text-anchor="middle" class="m-sub" font-size="11.5">求导把分母的 n 消掉</text>
+    <rect x="380" y="168" width="220" height="52" rx="6" class="m-panel-s"></rect>
+    <text x="490" y="190" text-anchor="middle" class="m-txt" font-size="11.5">n 在分子 → 先积分再求导</text>
+    <text x="490" y="209" text-anchor="middle" class="m-sub" font-size="11.5">或直接认出是等比级数的导数</text>
+
+    <line x1="150" y1="220" x2="320" y2="244" class="m-acc" stroke-width="1.4"></line>
+    <line x1="490" y1="220" x2="320" y2="244" class="m-acc" stroke-width="1.4"></line>
+    <rect x="180" y="244" width="280" height="38" rx="6" class="m-panel"></rect>
+    <text x="320" y="268" text-anchor="middle" class="m-txt" font-size="12">③ 凑出等比闭式 1/(1−x) 或其导数</text>
+
+    <line x1="320" y1="282" x2="320" y2="288" class="m-acc" stroke-width="1.4"></line>
+    <text x="320" y="302" text-anchor="middle" class="m-fill-a" font-size="11.5">④ 还原；重验端点；结果分母有 x 就补 S(0)</text>
+  </svg>
+  <figcaption><b>第二步是整条流程的分岔口，其余三步是固定动作。</b>判断依据只有一个信号——那个让你不舒服的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 待在分母还是分子。分母有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>）就求导把它消掉；分子有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span>）就积分把它收进原函数，或者更省事地认出「它本来就是某个等比级数求导的结果」。<em>第四步的还原最容易被当成小事，但考试里丢分往往就丢在这里：忘了积分回去、忘了补端点、忘了补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span>。</em></figcaption>
+</figure>
+
+<h2 id="s4">第一类：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分母，先求导再积分</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=501">08:21</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 的收敛域与和函数。</span></p>
+  <div class="sol">
+    <span class="lbl">收敛域先摆着（最后要回来补）</span>
+    <p>标准型，系数比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>n</mi></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>→</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>=</mo><mn>1</mn></math></span>，收敛区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。端点留到最后判。</p>
+    <span class="lbl">思路：分母有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> → 求导消掉它</span>
+    <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=615">10:15</a>老师把动机讲得很直白：<q>这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 你要把这个分母这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 给它搞掉，那这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 怎么给它去掉呢？如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 次方求导是不是出来一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>……出来一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 和这个分母的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 能不能抵消？那不就没了吗？哎，先求导。</q>于是用逐项求导：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><mi>n</mi><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mn>1</mn><mo>+</mo><mi>x</mi><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mo>⋯</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=764">12:44</a>这正是等比级数（首项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、公比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>），所以闭式出来了。再做逆操作——从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 积分：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>+</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mi>x</mi></mrow></munderover><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>t</mi></mrow></mfrac><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mn>0</mn><mo>+</mo><msubsup><mrow><mo stretchy="true">[</mo><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>t</mi><mo>)</mo><mo stretchy="true">]</mo></mrow><mrow><mn>0</mn></mrow><mrow><mi>x</mi></mrow></msubsup><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></div>
+    <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，因为原级数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处每一项都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</p>
+    <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=821">13:41</a>还原之后回头判端点</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=968">16:08</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 时原级数变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mn>1</mn><mi>n</mi></mfrac></math></span>，调和级数，<strong>发散</strong>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 时变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>，交错级数，<strong>收敛</strong>。所以收敛域是 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></strong>。</p>
+    <div class="trap">
+      <span class="lbl">绝对值能不能去，取决于收敛域</span>
+      <p>积分出来严格写法是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mn>1</mn><mo>−</mo><mi>t</mi><mo>|</mo></math></span>。老师说：<q>这个地方其实这个绝对值是可以去的，为什么呢？因为我这个题偷了个懒，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span> 的取值范围咱没给你求，但这个地方还是得求，咱来试一下。</q>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>x</mi><mo>&amp;</mo><mi>g</mi><mi>t</mi><mo>;</mo><mn>0</mn></math></span>，绝对值确实可以去掉——<strong>但必须先求出收敛域才能去掉</strong>。先写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>|</mo></math></span>，再用收敛域把绝对值摘掉，是更稳的书写顺序。</p>
+    </div>
+    <div class="trap">
+      <span class="lbl">求导那一步的收敛域不是最终答案</span>
+      <p><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span> 的收敛域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 直接当原级数的收敛域。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>'</mo></math></span> 的级数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mo>⋯</mo></math></span>，发散；而原级数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 收敛。两者端点行为不同，最终答案必须由<strong>原级数</strong>决定：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1130">18:50</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span> 的收敛域与和函数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：直接求导消不掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span>，先乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 凑</span>
+    <p>收敛半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>=</mo><mn>1</mn></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1197">19:57</a>老师指出这道题和例 1 差一点点，但「计算起来巨复杂」：如果直接对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span> 求导，会得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>n</mi><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>，分子冒出一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>、分母还留着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span>，<strong>抵消不掉</strong>。要抵消，就得让求导后出来的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></math></span> 的导数恰好是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup></math></span>。于是两边先乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+    <p>再求导，指数上的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span> 正好抵消分母：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><mi>x</mi><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></div>
+    <p>积分还原：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>t</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></span>（这里用了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）。于是当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span> 时</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></div>
+    <div class="trap">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1249">20:49</a>提了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>，就必须讨论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span></span>
+      <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1249">20:49</a>老师的原话：<q>任何时候你把一个东西放在分母上，都要讨论它怎么样等于零的这个问题。</q>原级数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 时是第一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mn>0</mn><mn>0</mn></msup></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>=</mo><mn>0</mn></math></span> 项约定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mn>0</mn></msup><mo>=</mo><mn>1</mn></math></span>），后面全是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>1</mn></math></span></strong>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 分母为零、用不了。所以答案要分两段写：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>1</mn></math></span>。</p>
+    </div>
+    <div class="said">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1354">22:34</a>老师自曝的糗事</span>
+      <p><q>这个地方啊，各位同学在求和函数的时候，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 到底等于几，有些同学，包括我刚上班给大家讲课的时候，我第一次讲的时候，我老觉得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 就应该等于零——那零朝里代不是零吗？不是！你看这个零朝里带，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 就等于一。这个地方大家一定要小心：零朝里带的时候啊，它不一定等于几。</q></p>
+      <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1425">23:45</a>诀窍就一句：<strong>把级数写开，一项一项看</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 是「所有项在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处的取值之和」，不是「把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 代进那个闭式」。只要第一项不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 就不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</p>
+    </div>
+    <span class="lbl">端点</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mn>1</mn><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span> 发散；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mi>n</mi></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span> 交错收敛。收敛域 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></strong>，与例 1 相同。</p>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1801">30:01</a>这两个例题吃透以后，「第一类」的变式就都能拆解了。老师当场又给了两个：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>2</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></mfrac></math></span>（<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=1867">31:07</a>他先提示「你这里是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></math></span>，想出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span> 怎么办？提出来一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span>」）。前者把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 提出来就变回例 1：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mi>x</mi><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mi>x</mi><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></span>。后者提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><msup><mi>x</mi><mrow><mi>m</mi></mrow></msup></mrow><mrow><mi>m</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><msup><mi>x</mi><mn>2</mn></msup><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>m</mi><mo>=</mo><mi>n</mi><mo>−</mo><mn>1</mn></math></span>）。<strong>分母的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>−</mo><mn>1</mn></math></span> 都在求导下消失，这就是「第一类」的共同特征。</strong></p>
+
+<h2 id="s5">第二类：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分子，先积分再求导（或认出导数）</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2067">34:27</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup></math></span> 的收敛域与和函数。</span></p>
+  <div class="sol">
+    <span class="lbl">为什么这次不能求导</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2105">35:05</a>老师说得很直接：<q>这次求导啊，就白忙活了。为什么呢？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mi>n</mi></msup></math></span> 一求导是不是又出来个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>？好嘛，原来你有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span>，好嘛，求导又出来个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>，那更麻烦了。</q>分子上的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span> 求导后会变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span>，越搞越大。所以这次反过来——<strong>先积分</strong>。</p>
+    <span class="lbl">做法一：先积分再求导</span>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mi>x</mi></mrow></munderover><mi>S</mi><mo>(</mo><mi>t</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><mfrac><mrow><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></div>
+    <p>再用变上限积分求导把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span> 还原：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn><mo>⋅</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>x</mi><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></div>
+    <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2398">39:58</a>做法二：一行认出它是导数（老师推荐）</span>
+    <p>注意到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup></math></span> 本身就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mo>'</mo></math></span>，所以可以直接<strong>先求和再求导</strong>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2470">41:10</a>老师说这种题<q>不用那么麻烦</q>，一行就能出来。收敛域：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>|</mo><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mn>1</mn></math></span> 内部成立，端点处通项不趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，故收敛域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4 与例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2657">44:17</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mi>n</mi></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>2</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup></math></span> 的和函数。</span></p>
+  <div class="sol">
+    <span class="lbl">例 4：提一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，化归例 3</span>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 提到外面：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mi>x</mi><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span>。而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mrow><mo stretchy="true">(</mo><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mi>n</mi></msup><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>，所以</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac><mspace width="2em"></mspace><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></div>
+    <div class="note">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2762">46:02</a>提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不用讨论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span></span>
+      <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2762">46:02</a>老师的两句口诀：<q>朝外边提个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi></math></span>，你不用讨论它等不等于零；但是你朝外边提个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>X</mi></mfrac></math></span>，你就得讨论它等于零还是不等于零。</q>例 4 提的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 时原级数各项为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、和为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span> 也得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，完全一致，<strong>不必单独讨论</strong>。</p>
+    </div>
+    <span class="lbl">例 5：提一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>，就躲不掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span></span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>2</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup></math></span> 的指数比例 4 少两次，只能提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>2</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>2</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac><mo>−</mo><mn>1</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>化简：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac><mo>−</mo><mn>1</mn><mo>=</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mo>(</mo><mn>1</mn><mo>−</mo><mn>2</mn><mi>x</mi><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup><mo>)</mo></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mi>x</mi><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>，除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 得</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>2</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup><mo>=</mo><mfrac><mrow><mn>2</mn><mo>−</mo><mi>x</mi></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac><mspace width="2em"></mspace><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></div>
+    <p>按口诀，这里提了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>，本该单独讨论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>。但有趣的是：原级数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 时只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>=</mo><mn>2</mn></math></span> 这一项，值恰好是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>；而化简后的式子代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 也得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn><mo>−</mo><mn>0</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><mn>2</mn></math></span>。所以这个「洞」被代数化简自动补上了，可以直接写成统一的一个式子。<mark>不过要先按规矩讨论、再说明能合并，不能一开始就跳过。</mark></p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="两类求和函数的结果卡：n在分母的四例与n在分子的三例">
+    <text x="30" y="20" class="m-txt" font-size="12">两类题目的结果卡（收敛域都要回到原级数单独验）</text>
+
+    <rect x="30" y="32" width="286" height="182" rx="8" class="m-panel-a"></rect>
+    <text x="46" y="54" class="m-txt" font-size="12">第一类：n 在分母 → 先求导再积分</text>
+    <text x="46" y="82" class="m-math" font-size="11.5">∑ xⁿ / n = −ln(1−x)</text>
+    <text x="46" y="108" class="m-math" font-size="11.5">∑ xⁿ / (n+1) = −ln(1−x) / x</text>
+    <text x="60" y="126" class="m-sub" font-size="11">（x ≠ 0；S(0) = 1）</text>
+    <text x="46" y="152" class="m-math" font-size="11.5">∑ xⁿ⁺¹ / n = −x·ln(1−x)</text>
+    <text x="46" y="178" class="m-math" font-size="11.5">∑ xⁿ⁺¹ / (n−1) = −x²·ln(1−x)</text>
+    <text x="46" y="202" class="m-sub" font-size="11">共同点：求导让分母的 n 消失</text>
+
+    <rect x="330" y="32" width="280" height="182" rx="8" class="m-panel"></rect>
+    <text x="346" y="54" class="m-txt" font-size="12">第二类：n 在分子 → 先积分再求导</text>
+    <text x="346" y="82" class="m-math" font-size="11.5">∑ (n+1)xⁿ = 1 / (1−x)²</text>
+    <text x="346" y="108" class="m-math" font-size="11.5">∑ n·xⁿ = x / (1−x)²</text>
+    <text x="346" y="134" class="m-math" font-size="11.5">∑ n·xⁿ⁻² = (2−x) / (1−x)²</text>
+    <text x="346" y="160" class="m-math" font-size="11.5">∑ n·xⁿ⁻¹ = 1 / (1−x)²</text>
+    <text x="346" y="186" class="m-sub" font-size="11">共同点：都是等比级数的导数</text>
+    <text x="346" y="206" class="m-sub" font-size="11">提 1/x 的题要单独看 x = 0</text>
+  </svg>
+  <figcaption><b>背下这七行，求和的题就只剩机械化操作。</b>左边一类的共同点是「分母上有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>」——求导以后分母的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 被消掉，级数立刻退回等比；右边一类的共同点是「分子上有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>」——它们的闭式全部是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span> 的变形，因为它就是等比级数求一次导的结果。<em>两类的分界线只有一个：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 到底待在分母还是分子。</em></figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">结果卡里的七个式子其实是同一条链</span>
+  <p>把结果卡竖着读一遍就会看出来：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>；反过来就是除法与积分。也就是说，左边「第一类」和右边「第二类」的答案并不是七条互不相干的结果，而是<strong>同一个等比级数在求导与积分下的一条链</strong>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mi>n</mi></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup></math></span> 的和函数依次是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>，每求一次导，答案换一个。</p>
+  <p>这也解释了为什么两类题的做法看起来相反、却都能成功：第一类是「先求导把分母的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 消掉，再积分退回来」，第二类是「先积分把分子的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 收进去，再求导送回去」——它们走的是同一条链的两个方向。<mark>所以与其硬背七个公式，不如记住这条链的起点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span>：往左走是积分，往右走是求导。</mark>考场上忘了某个答案，顺着链推一步就能救回来。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么「先积分再求导」等于「先求和再求导」</span>
+  <p>例 3 的两种做法看起来是两件事，其实是同一条性质的两次使用。做法一是：先逐项积分（性质三），算出原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span>，再对结果求导还原。做法二是：直接看出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mo>(</mo><msup><mi>x</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup><mo>)</mo><mo>'</mo></math></span>，于是把「逐项求导再求和」交换成「先求和再求导」（性质四的逆用）。两条路的差别只在<strong>哪一步先做</strong>，数学上是恒等的。</p>
+  <p>更值得注意的是：做法二的合法性依赖性质四，而性质四只在收敛区间<strong>内部</strong>成立。所以无论走哪条路，你都得先确认 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>|</mo><mo>&amp;</mo><mi>l</mi><mi>t</mi><mo>;</mo><mn>1</mn></math></span>，否则整个操作就没有依据。<mark>「先求收敛域」之所以必须是第一步，不只是为了答案完整，而是因为后面每一步求导/积分都要踩在收敛域内部才合法。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 196" role="img" aria-label="提x与提x分之一的区别：提x不必讨论零点，提x分之一必须单独讨论S0">
+    <text x="30" y="20" class="m-txt" font-size="12">x = 0 这个点：什么时候要单独讨论</text>
+
+    <line x1="60" y1="76" x2="580" y2="76" class="m-line" stroke-width="1.2"></line>
+    <circle cx="320" cy="76" r="7" class="m-hole" stroke-width="1.6"></circle>
+    <text x="320" y="52" text-anchor="middle" class="m-sub" font-size="11.5">x = 0</text>
+    <text x="60" y="100" class="m-sub" font-size="11">变形之前：级数在 0 处有确定的和</text>
+    <text x="580" y="100" text-anchor="end" class="m-sub" font-size="11">变形之后：闭式未必在 0 处有定义</text>
+
+    <rect x="40" y="116" width="270" height="64" rx="6" class="m-panel-s"></rect>
+    <text x="54" y="138" class="m-txt" font-size="11.5">往外提 x（乘 x 再求导）</text>
+    <text x="54" y="158" class="m-good" font-size="11.5">不必讨论：代入后自动对上</text>
+    <text x="54" y="174" class="m-sub" font-size="11">例 4：∑ n·xⁿ = x / (1−x)²，x=0 得 0</text>
+
+    <rect x="330" y="116" width="270" height="64" rx="6" class="m-panel-hi" stroke-width="1.3"></rect>
+    <text x="344" y="138" class="m-txt" font-size="11.5">往外提 1/x（把 x 放到分母）</text>
+    <text x="344" y="158" class="m-warn" font-size="11.5">必须讨论：闭式在 0 处失效</text>
+    <text x="344" y="174" class="m-sub" font-size="11">例 2、例 5：先分 x=0 与 x≠0 写</text>
+  </svg>
+  <figcaption><b>判断标准只有一条：你有没有把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 放到分母上。</b>往外提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是「乘」，原级数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 的取值不会被破坏；往外提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 是「除」，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 被硬生生挖掉，而这一点的和函数值原本是存在的。<em>碰到提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的题，按规矩写两段；如果化简后两个式子能拼成一个（如例 5），再说明可以合并——顺序不能颠倒。</em></figcaption>
+</figure>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>题面信号</th><th>先做什么</th><th>为什么</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分母（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span>）</td><td><strong>求导</strong>，再积分还原</td><td>求导让分子冒出一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>，与分母的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 相消</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分子（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><msup><mi>x</mi><mi>n</mi></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup></math></span>）</td><td><strong>积分</strong>，再求导还原</td><td>积分把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 收进原函数（除掉了）</td></tr>
+      <tr><td>能一眼看出是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mi>k</mi></mrow></msup><mo>)</mo><mo>'</mo></math></span> 的形状</td><td>直接「先求和再求导」</td><td>省掉积分还原，一行出结果</td></tr>
+      <tr><td>指数比标准少一次（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup></math></span>）</td><td>提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 后再照上面的做</td><td>提了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>，<strong>必须</strong>补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=148&amp;t=2874">47:54</a>考场上的书写顺序</span>
+  <p>① 先算出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span>、判两个端点，把收敛域写在最前面；② 设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo largeop="true" movablelimits="true">∑</mo><mo>⋯</mo></math></span> 并声明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的取值范围；③ 写出求导或积分的那一步，把「先求和再求导 = 先求导再求和」这类性质用文字点一句，这是采分点；④ 算出等比闭式；⑤ 还原，补常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span>；⑥ 若提过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 或结果分母带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，单列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>；⑦ 最后回看端点是否要并入。老师形容这部分内容是「课本上你几乎自己看你啥也看不出来」，所以步骤写全本身就是分数。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>你只会一个和函数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>−</mo><mi>x</mi></mrow></mfrac></math></span>。求和的全部工作就是<strong>用求导或积分把原级数扭成它，再扭回来</strong>。</p>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>求收敛域</b> 半径 + 端点</span><span class="ar">→</span>
+    <span class="n"><b>看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 的位置</b></span><span class="ar">→</span>
+    <span class="n"><b>求导或积分</b> 凑等比</span><span class="ar">→</span>
+    <span class="n"><b>还原</b> 补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span></span><span class="ar">→</span>
+    <span class="n"><b>重验端点</b></span>
+  </div>
+
+  <h3>要背的结果</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>（分母有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>，先求导）。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><msup><mi>x</mi><mi>n</mi></msup></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>≠</mo><mn>0</mn></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>1</mn></math></span>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mn>1</mn><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分子，先积分）。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><mi>n</mi><msup><mi>x</mi><mi>n</mi></msup><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><mi>n</mi><msup><mi>x</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup><mo>=</mo><mfrac><mrow><mn>2</mn><mo>−</mo><mi>x</mi></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow></mfrac></math></span>。</li>
+  </ul>
+
+  <h3>两个开关</h3>
+  <dl class="kv">
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分母</dt><dd>先求导消 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>，再积分还原（第一类，较麻烦）。</dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分子</dt><dd>先积分收 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>，或认出它是等比级数的导数（第二类，较简单）。</dd>
+  </dl>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li><span class="bad">以为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>。</span>把级数写开一项项看：例 2 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>1</mn></math></span>。</li>
+    <li><span class="bad">提了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 却不讨论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>。</span>提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不用管，提 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 必讨论。</li>
+    <li><span class="bad">把中间步骤的收敛域当最终答案。</span>求导/积分后半径不变，但端点必须回到原级数重新验。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P101-幂级数（1）/index.html">幂级数（1）</a> 幂级数（一）：先算出收敛域，才能谈和函数</li>
+      <li><a href="../P102-幂级数（2）/index.html">幂级数（2）</a> 幂级数（二）：逐项求导 / 逐项积分的正课推导</li>
+      <li><a href="../P099-常数项级数的概念与性质/index.html">常数项级数的概念与性质</a> 常数项级数：等比级数求和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>a</mi><mn>1</mn></msub></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span> 是唯一的底牌</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P149-【黑板】函数的幂级数展开/index.html">【黑板】函数的幂级数展开</a> 【黑板】函数的幂级数展开（把右边的和函数，反过来还原成函数）</li>
+      <li><span class="cur">级数章到此收口：收敛域 → 和函数 → 展开，一条线走完</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分母先求导」和「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 在分子先积分」方向别记反——记反了会多出消不掉的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span>。</li>
+      <li>逐项求导的收敛域写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mi>R</mi><mo>,</mo><mi>R</mi><mo>)</mo></math></span>（开）；逐项积分也要回到原级数确认端点。</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 与「闭式在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 处的值」是两回事：前者由级数定义，后者可能不存在。</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 148 讲</span><a href="../P147-【黑板】幂级数求收敛半径和收敛域/index.html">← P147</a><a href="../index.html">全部目录</a><a href="../P149-【黑板】函数的幂级数展开/index.html">P149 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">黑板课先把话说死：你只会一个和函数</a>
+    <a href="#s2">两条性质：交换求和与求导/积分的许可</a>
+    <a href="#s3">四步套路：先定域、再看 n、凑等比、还原补漏</a>
+    <a href="#s4">第一类：n 在分母，先求导再积分</a>
+    <a href="#s5">第二类：n 在分子，先积分再求导（或认出导数）</a>
+  </aside>
+</div>
+</body>
+</html>

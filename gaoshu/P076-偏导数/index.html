@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>偏导数：把另一个变量钉死，就退回一元 · 高等数学笔记</title>
+<meta name="description" content="偏导数没有新东西。求 ∂z∂x 就是把 y 当成一个常数，然后对 x 用一元函数的求导法则；求 ∂z∂y 就把 x 当常数。真正要花力气理解的是两件事：它的几何意义（拿刀把曲面切开，看截面曲线的切线斜率），以及它带来的第一个反直觉结论——两个偏导数都存在，函数仍可能不连续。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 9 章  多元函数微分法及其应用</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 76 讲</div>
+    <h1 class="title"><span class="pnum">P076</span>偏导数：把另一个变量钉死，就退回一元</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>偏导数没有新东西。<strong>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 就是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 当成一个常数</strong>，然后对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 用一元函数的求导法则；求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span> 就把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 当常数。真正要花力气理解的是两件事：它的<mark>几何意义</mark>（拿刀把曲面切开，看截面曲线的切线斜率），以及它带来的第一个反直觉结论——<strong>两个偏导数都存在，函数仍可能不连续</strong>。</p></div>
+    <div class="meta"><span>时长 34m37s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=0">00:00</a><span class="vv">从一元导数定义复习起：偏导数就是它「按下一个键」之后的版本。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=87">01:27</a><span class="vv">正式定义 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>：<b>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 保持不变</b>，再让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 变。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=190">03:10</a><span class="vv">符号很花哨：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∂</mo></math></span> 不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span>，六种写法都要认得。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=308">05:08</a><span class="vv">定义 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>：这次换成 <b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 保持不变</b>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=416">06:56</a><span class="vv">一句话记住：<b>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 不动，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不动</b>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=501">08:21</a><span class="vv">求法：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi></math></span>——把另一个变量看成系数，别提它就行。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=568">09:28</a><span class="vv"><b>例一</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 处，求出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>8</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>7</mn></math></span>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=665">11:05</a><span class="vv">先代入再求导的讨论：<b>一元不许，二元可以</b>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=825">13:45</a><span class="vv"><b>例三</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mi>y</mi></mrow></msup></math></span>：对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是幂函数，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是指数函数。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=958">15:58</a><span class="vv"><b>几何意义</b>：拿刀过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 垂直切一刀，截出一条曲线，偏导数就是它的切线斜率。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=1267">21:07</a><span class="vv">一元函数<b>可导必连续</b>，老师当场证了一遍，说这一证要掌握。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=1409">23:29</a><span class="vv">照着一元的证法套到二元，只能推出<b>四条平行于坐标轴的方向</b>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=1763">29:23</a><span class="vv">反例：分段函数在原点两个偏导都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，却<b>不连续</b>。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=2070">34:30</a><span class="vv">本节结论：偏导存在推不出连续，算偏导本身没什么障碍。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">偏导数没有新东西：把另一个变量钉死</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=0">00:00</a>老师开场就把话说清了：「从偏导数这一部分，我们就进入到了学习的重点。」但重点的门槛其实很低——<strong>偏导数在计算上完全没有引入新工具</strong>，它只是把一元函数的导数按不同的变量各做一遍。真正的新东西只有两个：几何意义，和一个反直觉的结论。</p>
+
+<p>先把一元导数的定义摆出来对照。一元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处的导数是</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div>
+
+<p>老师提醒我们看清分子的身份：它是<strong>变化以后的函数值减去变化以前的函数值</strong>，也就是增量的精确值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span>，整个式子就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 的极限。偏导数要做的事，就是把这里「变一个变量」改成「只变其中一个变量」。</p>
+
+<h2 id="s2">定义：每次只放一个变量动</h2>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=87">01:27</a>定义 · 偏导数</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 的某邻域内有定义。把 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 固定在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span></strong>，让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处有增量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>。如果极限</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mspace width="1em"></mspace><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div>
+  <p>存在，就叫这个极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 处<strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的偏导数</strong>，记作</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mrow><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo stretchy="true">|</mo></mrow><mrow><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow></msub><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mrow><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo stretchy="true">|</mo></mrow><mrow><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow></msub><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>z</mi><mi>x</mi></msub><msub><mo>|</mo><mrow><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow></msub></math></div>
+  <p>同理，把 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 固定在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span></strong>，让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 动，极限</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></div>
+  <p>存在，就叫<strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的偏导数</strong>。</p>
+</div>
+
+<p>定义里最要紧的是那句「令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 保持不变」。老师强调：「因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 是不变的，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 这个式子里的两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 都不变；变化以后的函数值减变化以前的函数值，比上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>。」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=308">05:08</a>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的偏导数完全对称：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是不动的，只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 发生了变化——原来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span>，现在变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span>。」</p>
+
+<div class="why">
+  <span class="lbl">为什么钉死一个变量之后，问题就退回一元了</span>
+  <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 代进去之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 里只剩下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 一个字母，<strong>它就是一个彻头彻尾的一元函数</strong>。既然只是一元函数，那个极限就是一元函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处的导数，一切一元求导法则照搬即可。</p>
+  <p>所以老师给的那句口诀并不是「简化技巧」，而是定义的直接改写：<mark>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 不动，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不动</mark>。「这两个原始定义非常重要，咱做题的时候经常会用。并且这两个偏导数的定义大家先记住一句话——对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的偏导数求的时候是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 不动，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的偏导数求的时候是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不动。」</p>
+</div>
+
+<h3 id="s3">符号：一堆写法都要认，但意思是同一个</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=190">03:10</a>偏导数最烦人的地方是符号。老师原话：「这个符号就比较花哨了。」最直观的差别是：一元求导的记号是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span>（derivative），偏导数用的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∂</mo></math></span>——一个「圆肚子的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span>」。下面这几种写法指的是同一个东西：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>写法</th><th>怎么读</th><th>用在哪</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span></td><td>偏 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 偏 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></td><td>最标准的写法，把函数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 时用</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span></td><td>偏 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 偏 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></td><td>把函数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 时用</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>x</mi></msub></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导</td><td>手写最快，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 写在右下角、别写太大</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导</td><td>强调「结果还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的函数」时用</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>'</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span></td><td>同上，多一撇</td><td>加撇不加撇都行，同济课本不加、很多书加</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mrow><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo stretchy="true">|</mo></mrow><mrow><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow></msub></math></span></td><td>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 处的值</td><td>写成具体的数、把点代进去以后</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>老师特意交代：「一会儿怎么整了六个符号，老师你能不能给我说说哪个符号比较常用？<strong>不好意思，哪个符号都有用</strong>——你看到的所有的书用的都不一样，他要想起来就用什么，所以你都得会。」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=501">08:21</a>还有一句提醒要刻在脑子里：<mark>「求导」指的是一元函数的求导，「偏导」才是多元函数的</mark>。「大家从现在开始，你说求导的时候一定要想想你到底是求导还是求偏导。」</p>
+
+<h2 id="s4">求法：另一个变量就是常数</h2>
+
+<p>课本上有一句轻描淡写的话，但它就是全部方法：「<strong>求对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的偏导时，将 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 视为常数，然后对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导就行；求对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的偏导时，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 视为常数，直接对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导就行。</strong>」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=501">08:21</a>「光求偏导这个事太简单了。」</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q">设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先判断「谁是常数」，再看剩下的是什么初等函数</span>
+    <p><strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是常数，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi></math></span> 整块就是一个常数系数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 才是真正的变量。按幂函数求导：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi><mo>=</mo><mn>2</mn><mi>x</mi><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi></math></div>
+    <p><strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是常数，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 是一个常数系数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi></math></span> 才是变量。按正弦求导，别忘了链式法则里那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi><mo>=</mo><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>y</mi></math></div>
+    <p><strong>两道题的形状完全一样，只是把「常数」和「变量」的角色对调了。</strong>这就是偏导计算的全部手感。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>，求它在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 处的两个偏导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先求偏导函数，再把点代进去</span>
+    <p>先求两个偏导函数，一路只用「另一个变量是常数」这条规矩：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>3</mn><mi>y</mi><mo>+</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mn>0</mn><mo>+</mo><mn>3</mn><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi></math></div>
+    <p>逐项核对一下：对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi><mi>y</mi></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>y</mi></math></span> 是系数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，所以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>y</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 是常数，求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导时同理，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi><mi>y</mi></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi></math></span> 是系数得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>y</mi></math></span>。</p>
+    <p>再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 代进去：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo><mo>=</mo><mn>2</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>+</mo><mn>3</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>=</mo><mn>8</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo><mo>=</mo><mn>3</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>+</mo><mn>2</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>=</mo><mn>7</mn></math></div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=825">13:45</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mi>y</mi></mrow></msup></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span>），求两个偏导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：同一个式子，换个变量看就换了「身份」</span>
+    <p>这道题的价值在于它<strong>逼你切换视角</strong>：</p>
+    <ul class="tight">
+      <li>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是常数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>y</mi></mrow></msup></math></span> 就是一个<strong>幂函数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mtext>常数</mtext></mrow></msup></math></span>，用幂函数法则：</li>
+    </ul>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mi>y</mi><mspace width="1em"></mspace><msup><mi>x</mi><mrow><mspace width="1em"></mspace><mi>y</mi><mo>−</mo><mn>1</mn></mrow></msup></math></div>
+    <ul class="tight">
+      <li>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是常数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>y</mi></mrow></msup></math></span> 就是一个<strong>指数函数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup></math></span>（底数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mi>x</mi></math></span>），用指数函数法则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>a</mi><mrow><mi>y</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>a</mi></math></span>：</li>
+    </ul>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><msup><mi>x</mi><mrow><mi>y</mi></mrow></msup><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <div class="note">
+      <span class="lbl">同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>y</mi></mrow></msup></math></span>，两种身份</span>
+      <p>老师借着这道题说了这一节最需要「转脑子」的地方：「我们同学原来讲一元函数，老觉得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数；现在这个二元函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是两个平等的、独立的、都是自变量。所以大家脑子在这个地方先得转一转。」<strong>转过来之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mi>y</mi></mrow></msup></math></span> 就不再是「一个函数」，而是「两个不同的初等函数」——取决于你把谁当常数。</strong></p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s5">几何意义：拿刀切一刀，看截面曲线的切线</h2>
+
+<p>一元函数导数的几何意义是「曲线在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处切线的斜率」，这个大家都熟。偏导数把同一件事搬到了曲面上，只是多了一步：<strong>先用刀把曲面切成一条曲线</strong>。</p>
+
+<div class="why">
+  <span class="lbl">切这一刀到底切掉了什么</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=958">15:58</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 时，条件里写着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 不变。老师把它翻译成几何语言：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 是这个点的纵坐标，你<strong>拿着刀，过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 这个点、垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴，去切一刀</strong>。切下去，它和上面这个曲面切出来的是一条曲线。」</p>
+  <p>关键在于：切完之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 已经被钉成常数了，所以曲面上剩下的就只是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 变化」的一条曲线——<strong>它是一条平面曲线，完全落在那张切出来的平面里</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=1071">17:51</a>「这时候二元函数其实就变成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的一元函数。一元函数导数的定义咱说过了，就是过这点切线的斜率。」</p>
+  <p>所以：<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 就是这条截线在该点处切线对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴的斜率</mark>。对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的偏导完全对称：「令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 保持不动，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 不是在这吗？所以我们再拿着刀，过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 点、朝 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴垂直地切下去，也切出一条曲线，同样也是过这点切线的斜率。」</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="用 y 等于 y₀ 的平面切曲面，截出曲线并在其上作切线">
+    <line x1="170" y1="285" x2="620" y2="285" class="m-line" stroke-width="1.4"></line>
+    <polygon points="630,285 620,281 620,289" class="m-fill"></polygon>
+    <line x1="170" y1="285" x2="66" y2="225" class="m-line" stroke-width="1.4"></line>
+    <polygon points="58,221 70,221 66,233" class="m-fill"></polygon>
+    <line x1="170" y1="285" x2="170" y2="62" class="m-line" stroke-width="1.4"></line>
+    <polygon points="170,50 165,62 175,62" class="m-fill"></polygon>
+    <path d="M 200,262 Q 370,202 530,246" fill="none" class="m-thin" stroke-width="1.3"></path>
+    <path d="M 252,238 Q 422,178 582,220" fill="none" class="m-thin" stroke-width="1.3"></path>
+    <path d="M 278,226 Q 448,166 608,208" fill="none" class="m-thin" stroke-width="1.3"></path>
+    <path d="M 226,250 Q 396,190 556,232" fill="none" class="m-acc" stroke-width="2.2"></path>
+    <line x1="224" y1="238" x2="464" y2="203" class="m-warn" stroke-width="1.8"></line>
+    <circle cx="344" cy="221" r="4.6" class="m-fill-a"></circle>
+    <text x="150" y="62" class="m-sub" font-size="12">z</text>
+    <text x="612" y="278" class="m-sub" font-size="12">x</text>
+    <text x="44" y="216" class="m-sub" font-size="12">y</text>
+    <text x="176" y="278" class="m-sub" font-size="11.5">O</text>
+    <text x="330" y="150" class="m-txt" font-size="12">交线：平面 y = y₀ 切出来的曲线</text>
+    <text x="466" y="188" class="m-fill-w" font-size="12">切线斜率 = ∂z/∂x</text>
+    <text x="318" y="204" class="m-fill-a" font-size="12">P₀</text>
+    <text x="522" y="118" class="m-sub" font-size="11.5">曲面 z = f(x, y)</text>
+    <line x1="468" y1="176" x2="464" y2="200" class="m-thin" stroke-width="1"></line>
+  </svg>
+  <figcaption><b>「切一刀」是理解偏导几何意义的钥匙。</b>细弧线是曲面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 上不同 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 处的剖面线，粗蓝线是<strong>被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 这个平面切出来的那条交线</strong>。因为整条交线上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 恒等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span>，它就退化成一元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 的图像。在交点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处作它的切线，切线的斜率就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>。<em>注意这条切线同时切于曲面</em>——它是曲面在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 方向的切线。求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span> 就是把刀换个方向：过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 垂直 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴切一刀。</figcaption>
+</figure>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 260" role="img" aria-label="把截线摊平成一元函数，切线斜率就是偏导数">
+    <line x1="50" y1="215" x2="620" y2="215" class="m-line" stroke-width="1.4"></line>
+    <polygon points="630,215 620,211 620,219" class="m-fill"></polygon>
+    <line x1="90" y1="240" x2="90" y2="52" class="m-line" stroke-width="1.4"></line>
+    <polygon points="90,40 85,52 95,52" class="m-fill"></polygon>
+    <path d="M 110,210 Q 300,40 500,150 L 578,176" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <line x1="90" y1="110" x2="440" y2="110" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="302" y1="110" x2="302" y2="215" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="172" y1="130.6" x2="432" y2="89.4" class="m-warn" stroke-width="1.8"></line>
+    <circle cx="302" cy="110" r="4.6" class="m-fill-a"></circle>
+    <text x="72" y="44" class="m-sub" font-size="12">z</text>
+    <text x="612" y="234" class="m-sub" font-size="12">x</text>
+    <text x="74" y="234" class="m-sub" font-size="11.5">O</text>
+    <text x="294" y="234" class="m-sub" font-size="11.5">x₀</text>
+    <text x="330" y="70" class="m-acc" font-size="12">z = f(x, y₀)</text>
+    <text x="440" y="196" class="m-fill-w" font-size="12">切线斜率 = ∂z/∂x</text>
+    <text x="308" y="100" class="m-sub" font-size="11.5">P₀</text>
+    <text x="120" y="98" class="m-sub" font-size="11.5">这条水平虚线是对照用的</text>
+  </svg>
+  <figcaption><b>把上图的截线单独拎出来，就是一张一元函数的图。</b>横轴是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，纵轴是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>，曲线是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 已经被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 这个常数替掉了。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span>，那条橙色直线是它的切线，<strong>它的斜率就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 处的值</strong>。水平虚线是用来对照角度的：切线相对水平方向抬升多少，就是斜率多大。这张图说明了一件重要的事——<em>偏导数的几何意义，其实完全就是一元导数几何意义</em>，只不过被放在了一个「切面」上看。</figcaption>
+</figure>
+
+<h2 id="s6">易错点：先代入再求导，能不能干</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=665">11:05</a>老师在这里插了一道「回忆题」，用一元函数来反衬，非常值得记下来。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">辨析</span><span class="ex-q">一元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 求在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 处的导数，能不能先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 代进去？</span></p>
+  <div class="sol">
+    <span class="lbl">先看错误示范</span>
+    <p>如果把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 代进去，就得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span>——一个常数。常数求导是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，于是「导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mn>0</mn></math></span>」。老师问：「这样做对还是不对？」答案是<strong>当然不对</strong>，正确答案是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span>（因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，代入得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span>）。</p>
+    <p><strong>为什么错？</strong>因为导数是<strong>一个极限过程</strong>：它关心的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 附近<em>怎么变</em>。你把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 钉成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，一切变化都被抹平了，剩下的只有「不动的常数」。所以一元函数的铁律是：<mark>先求导，再代入</mark>。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">辨析</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=743">12:23</a>那二元函数呢？求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 处的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>，能不能先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn></math></span> 代进去？</span></p>
+  <div class="sol">
+    <span class="lbl">这一次答案是「可以」，而且理由就在定义里</span>
+    <p>先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn></math></span> 代进去：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>6</mn><mi>x</mi><mo>+</mo><mn>4</mn></math></span>。现在这个式子只跟 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 有关，对它求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>6</mn></math></span>，再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 代入得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>8</mn></math></span>。</p>
+    <p>「我先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn></math></span> 代入，再对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导，再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 代进去，请问这样做对还是不对？」答案是<strong>对的</strong>。理由也由老师自己给出：「因为刚才我们在求偏导数定义的时候，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的偏导数是不是要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 取定，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 保持不变？<strong>所以这样做是对的。</strong>」</p>
+    <p>两种做法结果完全一样（都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>8</mn></math></span>），但<strong>先代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 往往能省掉一大截运算</strong>——因为一元函数的求导比「带着一堆常数项求偏导」要清爽得多。</p>
+    <div class="trap">
+      <span class="lbl">这一组对比的关键，别记反了</span>
+      <p><span class="bad">一元函数：先代入再求导 —— 错。</span>理由是代入把自变量钉死，导数的「变化」没了。</p>
+      <p><span class="good">二元函数求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>：先代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 再求导 —— 对。</span>理由是定义里本来就要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 固定，<strong>代入的正是定义要求你固定的那个变量</strong>。</p>
+      <p>但要注意别推过头：<strong>你不能在求偏导的时候先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 代进去</strong>——那和一元的情况一样，会把要研究的那个变量钉死。一句话：<mark>代入「要当常数的那个变量」可以，代入「要求导的那个变量」不行</mark>。</p>
+      <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=743">12:23</a>老师还提了一句实战价值：「这种方法我们在解题的时候比较少用，但是考研的题目里这种<em>先代入再求导</em>用得比较多，因为考研题目相对难——你如果先求导再代入，可能这个式子很麻烦。」</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s7">一个反直觉的结论：偏导都存在，函数却可能不连续</h2>
+
+<p>要理解这个结论，得先回到一元函数。一元函数有一条铁律：<strong>可导必连续</strong>。老师当场把证明写了一遍，并且强调「这部分的证明是需要掌握的」。</p>
+
+<ol class="steps">
+  <li><span class="sh">从可导的定义出发。</span>可导就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 存在，而这个极限就是导数。</li>
+  <li><span class="sh">分母趋于零，整体极限存在 ⇒ 分子必趋于零。</span>因为一个趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的分母配上「极限存在」，若分子不趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，比值必然发散。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mn>0</mn></math></span>。</li>
+  <li><span class="sh">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 展开，用「扣项法」凑出连续性。</span>注意到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 这件事和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 本身「<strong>一毛钱的关系都没有</strong>」——它只和自变量有关。所以可以把它当作常数处理：</li>
+</ol>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mo>[</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>+</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>]</mo><mo>=</mo><mn>0</mn><mo>+</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></div>
+
+<p>最后这行就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处连续」的定义。证毕。这一步的巧妙之处在于：<strong>可导给出的是「增量趋于零」，而连续需要的是「函数值趋于函数值」，两者之间差一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>——而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 的过程中是个定值，可以直接搬出去。</strong></p>
+
+<div class="why">
+  <span class="lbl">为什么二元里同样的推导会「差一口气」</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=1409">23:29</a>同学很自然地会想：仿照一元的证明，把偏导存在代进去不也能推出连续吗？推是能推，但推出来的东西不一样。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 存在的定义，可以得到：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mspace width="1em"></mspace><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></div>
+  <p>再用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span> 存在，得到：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></div>
+  <p>看这两个式子的形状：第一个把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 死死钉在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span>、只让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 变；第二个把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 钉在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>、只让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 变。<strong>它们都属于「沿着平行于坐标轴的方向逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span>」</strong>——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=1519">25:19</a>说白了只有四条路：从左边来、从右边来、从上边来、从下边来。</p>
+  <p>而连续的定义要求的是「<strong>从四面八方、以任何方式</strong>逼近，极限值都等于定义值」。四条路上的表现好，<mark>推不出所有路上都好</mark>。老师对课本那句拗口的解释作了点评：「各偏导数存在，只能保证这个点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 沿着<em>平行于坐标轴的方向</em>趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 时极限值等于定义值——他说这句话还不如我画这个图。就是沿着这四个白色箭头的方向逼近的时候，极限值的确等于定义值，但是不能保证四面八方。」</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="偏导数存在只保证四个坐标轴方向，连续要求所有方向所有方式">
+    <line x1="320" y1="14" x2="320" y2="236" class="m-thin" stroke-width="1" stroke-dasharray="5 4"></line>
+    <line x1="70" y1="120" x2="136" y2="120" class="m-warn" stroke-width="1.6"></line>
+    <polygon points="148,120 134,116 134,124" class="m-fill-w"></polygon>
+    <line x1="250" y1="120" x2="184" y2="120" class="m-warn" stroke-width="1.6"></line>
+    <polygon points="172,120 186,116 186,124" class="m-fill-w"></polygon>
+    <line x1="160" y1="30" x2="160" y2="96" class="m-warn" stroke-width="1.6"></line>
+    <polygon points="160,108 156,94 164,94" class="m-fill-w"></polygon>
+    <line x1="160" y1="212" x2="160" y2="146" class="m-warn" stroke-width="1.6"></line>
+    <polygon points="160,134 156,148 164,148" class="m-fill-w"></polygon>
+    <circle cx="160" cy="120" r="4.4" class="m-fill-a"></circle>
+    <g class="m-thin" stroke-width="1.2" stroke-dasharray="4 3">
+      <line x1="558" y1="120" x2="496" y2="120"></line>
+      <line x1="546" y1="76" x2="492" y2="107"></line>
+      <line x1="514" y1="44" x2="483" y2="98"></line>
+      <line x1="480" y1="32" x2="480" y2="94"></line>
+      <line x1="446" y1="44" x2="477" y2="98"></line>
+      <line x1="414" y1="76" x2="468" y2="107"></line>
+      <line x1="402" y1="120" x2="464" y2="120"></line>
+      <line x1="414" y1="164" x2="468" y2="133"></line>
+      <line x1="446" y1="196" x2="477" y2="142"></line>
+      <line x1="480" y1="208" x2="480" y2="146"></line>
+      <line x1="514" y1="196" x2="483" y2="142"></line>
+      <line x1="546" y1="164" x2="492" y2="133"></line>
+    </g>
+    <circle cx="480" cy="120" r="4.4" class="m-fill-a"></circle>
+    <text x="30" y="18" class="m-txt" font-size="12">偏导数存在：只保证这 4 个方向</text>
+    <text x="392" y="18" class="m-txt" font-size="12">连续：要求所有方向、所有方式</text>
+    <text x="30" y="240" class="m-sub" font-size="11.5">沿 ±x、±y 逼近时极限 = 定义值</text>
+    <text x="392" y="240" class="m-sub" font-size="11.5">四面八方的直线、曲线都要算</text>
+  </svg>
+  <figcaption><b>这张图就是「偏导存在推不出连续」的全部理由。</b>左边，两个偏导数存在，只说明沿着<strong>四条平行于坐标轴的方向</strong>逼近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 时极限值等于定义值（橙色箭头）。右边，连续要求的是<strong>四面八方、以任何方式</strong>（直线、折线、抛物线都算，虚线示意）逼近时极限值都等于定义值。左边只是右边的一个极小子集——<em>子集上成立，推不出全集上成立</em>。所以「偏导都存在」是一条很弱的条件。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=1763">29:23</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>。证明它在原点处两个偏导数都存在，但在原点不连续。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：偏导必须用定义老老实实算，连续性则用路径法否掉</span>
+    <p>这是个分段函数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span> 就是原点，那一点单独规定为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；其余点用上面的表达式。所以「在原点处」的一切结论，都得回到定义去算。</p>
+    <p><strong>第一步：算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>。</strong>按定义，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 要固定在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mn>0</mn><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mn>0</mn><mo>−</mo><mn>0</mn></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></div>
+    <p>分子之所以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，是因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span>，乘积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 直接等于零。老师笑着说：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 直接是零，相乘分子是不是直接就是零？那这个地方就是个零减后边的零。」</p>
+    <p><strong>第二步：算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>。</strong>完全对称，这次固定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><mn>0</mn><mo>,</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mfrac><mrow><mn>0</mn><mo>−</mo><mn>0</mn></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></div>
+    <p><strong>两个偏导数都存在，而且都等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</strong></p>
+    <p><strong>第三步：看它连不连续。</strong>沿直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 代进去：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>k</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>k</mi><mrow><mn>2</mn></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>k</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>k</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>这个值<strong>随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 变化</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>1</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>2</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>2</mn><mn>5</mn></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi><mo>=</mo><mn>3</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn></mrow><mrow><mn>1</mn><mn>0</mn></mrow></mfrac></math></span>。不同的路径给出不同的值，所以极限根本不存在。</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mtext>极限不存在</mtext><mspace width="0.25em"></mspace><mo>⇒</mo><mspace width="0.25em"></mspace><mtext>不连续</mtext></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=76&amp;t=2014">33:34</a>老师补了一句很关键的逻辑：「极限都不存在，你还谈啥连续不连续？连续的定义要求<strong>极限存在并且等于定义值</strong>——你连个极限都不存在，还什么连续？」</p>
+    <div class="note">
+      <span class="lbl">这道题的身份</span>
+      <p>它是本节的「收官反例」：<strong>偏导数存在 ⇏ 连续</strong>。注意它是和一元函数对照着看的——一元里可导必连续，二元里偏导存在却推不出连续，差别就在「四条路」和「所有路」之间。</p>
+    </div>
+  </div>
+</div>
+
+<p>本节收尾时老师把重点又说了一遍：「具体求偏导数的计算不是很麻烦——对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 看作常数，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 看作常数，计算没有很大的障碍。但是呢，就是<strong>这个结论</strong>：二元函数如果偏导都存在，它在这点是<mark>未必连续</mark>的。」他也承认「这个概念大家不是很好理解」——所以上面那张十字图与四面八方图的对比，值得反复看几遍。</p>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>偏导数 = <strong>把另一个变量当常数，对剩下的变量做一元求导</strong>。</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>:</mo><mspace width="1em"></mspace><mi>y</mi><mtext>不动</mtext><mo>;</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>:</mo><mspace width="1em"></mspace><mi>x</mi><mtext>不动</mtext></math></div>
+
+  <h3>两条几何意义</h3>
+  <dl class="kv">
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span></dt>
+    <dd>用平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 切曲面，得截线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span>，它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处切线<strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴</strong>的斜率</dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span></dt>
+    <dd>用平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 切曲面，得截线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处切线<strong>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴</strong>的斜率</dd>
+  </dl>
+
+  <h3>先代后导：一元不行，二元对 x 求导可以</h3>
+  <ul class="tight">
+    <li>一元 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>：先代得常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> —— <mark>错</mark>，答案 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span>。</li>
+    <li>二元 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>3</mn><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>：先代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>6</mn><mi>x</mi><mo>+</mo><mn>4</mn></math></span>，求导再代 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>8</mn></math></span> —— <mark>对</mark>。</li>
+    <li>规矩：<strong>可以代入「要当常数的那个变量」，不能代入「要求导的那个变量」</strong>。</li>
+  </ul>
+
+  <h3>必考的对照</h3>
+  <ul class="tight">
+    <li>一元：可导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 连续（证明要会：分母趋零且极限存在 ⇒ 分子趋零）。</li>
+    <li>二元：<strong>偏导存在 ⇏ 连续</strong>。因为偏导只管四条平行于坐标轴的路。</li>
+    <li>反例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>=</mo><mfrac><mrow><mi>x</mi><mi>y</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 在原点两个偏导都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，但沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>k</mi><mi>x</mi></math></span> 极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>k</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>k</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 变 ⇒ 极限不存在 ⇒ 不连续。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数的定义（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>/</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的极限）</li>
+      <li><span class="cur">一元求导公式与链式法则</span></li>
+      <li><a href="../P075-平面点集 多元函数概念 极限 连续/index.html">平面点集 多元函数概念 极限 连续</a> 二元函数与二重极限（任意方式逼近）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P077-高阶偏导数/index.html">高阶偏导数</a> 高阶偏导数（再求一次，混合偏导相等要找条件）</li>
+      <li><a href="../P078-全微分/index.html">全微分</a> 全微分（可微 ⇒ 偏导存在，反之不然）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「求导」是一元的说法，「求偏导」才是多元的</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∂</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span> 是两个符号：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>z</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span></li>
+      <li>先代后导：一元是错的，二元代入「常数变量」是对的</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 76 讲</span><a href="../P075-平面点集 多元函数概念 极限 连续/index.html">← P075</a><a href="../index.html">全部目录</a><a href="../P077-高阶偏导数/index.html">P077 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">偏导数没有新东西：把另一个变量钉死</a>
+    <a href="#s2">定义：每次只放一个变量动</a>
+    <a class="sub" href="#s3">符号：一堆写法都要认，但意思是同一个</a>
+    <a href="#s4">求法：另一个变量就是常数</a>
+    <a href="#s5">几何意义：拿刀切一刀，看截面曲线的切线</a>
+    <a href="#s6">易错点：先代入再求导，能不能干</a>
+    <a href="#s7">一个反直觉的结论：偏导都存在，函数却可能不连续</a>
+  </aside>
+</div>
+</body>
+</html>

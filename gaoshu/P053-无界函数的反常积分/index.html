@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>无界函数的反常积分：找出瑕点，在瑕点处取极限 · 高等数学笔记</title>
+<meta name="description" content="上一讲拆掉了「区间有限」，这一讲拆掉「函数连续」。积分号长得和普通定积分一模一样，问题却藏在函数爆掉的那一点（叫瑕点）上。补救手法仍是取极限——在瑕点旁边退开一点点，逼过去。真正会要命的是瑕点落在区间内部：这时必须把积分拆成两段，否则你会得到一个有限的、看起来还挺像样的错误答案。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 5 章  定积分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 53 讲</div>
+    <h1 class="title"><span class="pnum">P053</span>无界函数的反常积分：找出瑕点，在瑕点处取极限</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>上一讲拆掉了「区间有限」，这一讲拆掉「函数连续」。积分号长得和普通定积分一模一样，问题却藏在<strong>函数爆掉的那一点</strong>（叫<strong>瑕点</strong>）上。补救手法仍是取极限——在瑕点旁边退开一点点，逼过去。真正会要命的是<mark>瑕点落在区间内部</mark>：这时<strong>必须把积分拆成两段</strong>，否则你会得到一个有限的、看起来还挺像样的<strong>错误答案</strong>。</p></div>
+    <div class="meta"><span>时长 54m06s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<h2 id="s1">一个「看着很正常」的积分</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=0">00:00</a>这一讲的内容名字特别多：<strong>无界函数的反常积分</strong>、<strong>无界函数的广义积分</strong>、<strong>瑕积分</strong>。最后一个名字最形象——它是从「瑕点」来的，也就是函数<strong>爆掉</strong>的那一点。注意是「瑕」（玉上的斑点）不是「瞎」，因为它对应的确实是函数上的一个缺陷点。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=56">00:56</a>上一讲的毛病一眼就能认出来：积分的上下限里写着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∞</mo></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>∞</mo></math></span>，那是无穷限。这一讲的毛病难看多了，先看两个例子。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">引例 1</span><span class="ex-q"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 有什么问题？</span></p>
+  <div class="sol">
+    <p>上下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 都是规矩的数，区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 也是规规矩矩的有限闭区间——<strong>第一个前提完全满足</strong>。问题出在第二个前提上：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处<strong>没有定义</strong>（分母为零），而且当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时它趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>。</p>
+    <p>所以这个函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 附近是<strong>无界</strong>的。牛顿–莱布尼兹公式要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，这一条不成立，于是<strong>普通公式不能直接用</strong>。它就是一个瑕积分。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">引例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=196">03:16</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 如果硬套公式，会得到什么？</span></p>
+  <div class="sol">
+    <span class="lbl">错在哪</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 的原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span>，于是（错的）做法是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msubsup><mrow><mo stretchy="true">[</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mo stretchy="true">]</mo></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></msubsup><mo>=</mo><mi mathvariant="normal">ln</mi><mn>1</mn><mo>−</mo><mi mathvariant="normal">ln</mi><mn>1</mn><mo>=</mo><mn>0</mn><mo>−</mo><mn>0</mn><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>(</mo><mtext>这是错的</mtext><mo>)</mo></math></div>
+    <p>答案是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 吗？不是。原因很清楚：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处没有定义，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 恰好<strong>夹在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 中间</strong>。整个区间上函数并不连续，牛顿–莱布尼兹公式的前提根本没满足。</p>
+    <p><strong>要点</strong>：算出来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 是「函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 两处的值恰好相等」造成的假象，它完全掩盖了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时函数爆掉这件事。</p>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=118">01:58</a>把这两个例子放在一起，就得到了这一讲的要害：<mark>瑕积分和普通定积分在书面上长得几乎一样，但前者可能给出一个漂亮的错答案。</mark>无穷限的反常积分不会骗你（看见 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∞</mo></math></span> 就警觉了），瑕积分会。</p>
+
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=0">00:00</a><span class="vv"><b>三个名字</b>：无界函数的反常积分 / 广义积分 / 瑕积分，都指同一件事。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=118">01:58</a><span class="vv"><b>它为什么难看出来</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 上下限都很正常，坏在函数本身。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=196">03:16</a><span class="vv"><b>经典错解</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 硬套公式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——错，因为零点夹在中间。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=238">03:58</a><span class="vv"><b>第一类</b>：左端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是瑕点，从 <b>右边</b>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 逼近。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=489">08:09</a><span class="vv"><b>第二类</b>：右端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 是瑕点，从 <b>左边</b>逼近；左右方向是本题最大的记忆负担。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=672">11:12</a><span class="vv"><b>第三类</b>：瑕点在区间内部，<b>隐蔽性最强</b>，必须拆成两段分别算。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=919">15:19</a><span class="vv"><b>算法</b>：仍是广义牛顿–莱布尼兹公式，只是瑕点处的「代入」其实是一次取极限。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=1229">20:29</a><span class="vv"><b>例题</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mi>A</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msqrt><mrow><msup><mi>A</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span> 等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，它的瑕点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=1401">23:21</a><span class="vv"><b>反例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 直接算得有限值，其实是发散的。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=2041">34:01</a><span class="vv"><b>两个必背结论</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>q</mi></mrow></msup></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span> 的敛散判据。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=2847">47:27</a><span class="vv"><b>综合题</b>：既是瑕积分又是无穷限积分，先令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>=</mo><mi>t</mi></math></span> 再三角替换。</span></li>
+  </ol>
+</div>
+
+<h2 id="s2">什么叫瑕点</h2>
+
+<div class="blk def">
+  <span class="lbl">定义 · 瑕点</span>
+  <p>设函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 的某个去心邻域内有定义，但在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 的<strong>任何邻域内都无界</strong>，则称 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的<strong>瑕点</strong>（奇点）。</p>
+  <p>换句话说：<strong>只要往 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 靠得足够近，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>f</mi><mo>|</mo></math></span> 要多大有多大</strong>。最常见的三种来源是：分母在某点为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 的自变量趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 处。</p>
+</div>
+
+<p>瑕点出现在哪里，处理方式就不同。这三种情形必须分清楚，因为它们的写法、甚至「要不要拆」都不一样。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 176" role="img" aria-label="瑕点在左端点、右端点、区间内部三种情形，以及各自取极限的方向">
+    <text x="62" y="34" class="m-txt" font-size="12.5">① 左端点 A 是瑕点</text>
+    <line x1="62" y1="86" x2="232" y2="86" class="m-line" stroke-width="1.6"></line>
+    <circle cx="62" cy="86" r="5" class="m-fill-w"></circle>
+    <circle cx="62" cy="86" r="11" fill="none" class="m-warn" stroke-width="1.4"></circle>
+    <text x="50" y="108" class="m-sub" font-size="11.5">A</text>
+    <text x="226" y="108" class="m-sub" font-size="11.5">B</text>
+    <line x1="170" y1="70" x2="86" y2="70" class="m-acc" stroke-width="1.4"></line>
+    <path d="M80 70 l10 -4 l0 8 z" class="m-fill-a"></path>
+    <text x="118" y="62" class="m-fill-a" font-size="11.5">t → A⁺（从右边）</text>
+    <text x="62" y="140" class="m-sub" font-size="11.5">取 lim ∫_t^b f dx，t 从右边压向 A</text>
+
+    <text x="248" y="34" class="m-txt" font-size="12.5">② 右端点 B 是瑕点</text>
+    <line x1="248" y1="86" x2="418" y2="86" class="m-line" stroke-width="1.6"></line>
+    <circle cx="418" cy="86" r="5" class="m-fill-w"></circle>
+    <circle cx="418" cy="86" r="11" fill="none" class="m-warn" stroke-width="1.4"></circle>
+    <text x="242" y="108" class="m-sub" font-size="11.5">A</text>
+    <text x="414" y="108" class="m-sub" font-size="11.5">B</text>
+    <line x1="310" y1="70" x2="394" y2="70" class="m-acc" stroke-width="1.4"></line>
+    <path d="M400 70 l-10 -4 l0 8 z" class="m-fill-a"></path>
+    <text x="300" y="62" class="m-fill-a" font-size="11.5">t → B⁻（从左边）</text>
+    <text x="248" y="140" class="m-sub" font-size="11.5">取 lim ∫_a^t f dx，t 从左边压向 B</text>
+
+    <text x="434" y="34" class="m-txt" font-size="12.5">③ 瑕点 c 在内部</text>
+    <line x1="434" y1="86" x2="612" y2="86" class="m-line" stroke-width="1.6"></line>
+    <circle cx="523" cy="86" r="5" class="m-fill-w"></circle>
+    <circle cx="523" cy="86" r="11" fill="none" class="m-warn" stroke-width="1.4"></circle>
+    <text x="428" y="108" class="m-sub" font-size="11.5">A</text>
+    <text x="606" y="108" class="m-sub" font-size="11.5">B</text>
+    <text x="516" y="108" class="m-sub" font-size="11.5">c</text>
+    <line x1="470" y1="70" x2="500" y2="70" class="m-acc" stroke-width="1.4"></line>
+    <path d="M506 70 l-10 -4 l0 8 z" class="m-fill-a"></path>
+    <line x1="576" y1="70" x2="546" y2="70" class="m-acc" stroke-width="1.4"></line>
+    <path d="M540 70 l10 -4 l0 8 z" class="m-fill-a"></path>
+    <text x="434" y="136" class="m-sub" font-size="11.5">必须拆成 ∫_A^c + ∫_c^B 两段，</text>
+    <text x="434" y="154" class="m-sub" font-size="11.5">各自取极限</text>
+  </svg>
+  <figcaption><b>三种位置，一种思路。</b>红点是瑕点，箭头是「逼近方向」。①②只有一段要取极限，③必须先在瑕点处把区间<strong>切开</strong>，变成两个各带一个坏端点的积分。<em>注意 ③ 的隐蔽性</em>：题面上看不到任何异常，只有自己去找「函数在哪里爆掉」才能发现它。老师反复强调，这一节考试失分绝大多数都来自 ③。</figcaption>
+</figure>
+
+<h2 id="s3">三种情形的定义</h2>
+
+<div class="blk def">
+  <span class="lbl">定义 · 瑕点在左端点（第一类）</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 是瑕点（即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 附近无界）。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>∈</mo><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span>，若极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>t</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 存在，则称瑕积分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> <strong>收敛</strong>，并规定该极限为它的值；否则称<strong>发散</strong>。</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>t</mi></mrow><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+</div>
+
+<div class="blk def">
+  <span class="lbl">定义 · 瑕点在右端点（第二类）</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span> 上连续，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 是瑕点。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>∈</mo><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span>，若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>b</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>t</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 存在，则称瑕积分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> <strong>收敛</strong>，其值等于该极限；否则称<strong>发散</strong>。</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>b</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>a</mi></mrow><mrow><mi>t</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+</div>
+
+<div class="blk def">
+  <span class="lbl">定义 · 瑕点在区间内部（第三类）</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi><mo>∈</mo><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span> 是唯一的瑕点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>c</mi><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>c</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上分别连续。规定</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>c</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>c</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+  <p>并且：<strong>右边两个瑕积分都收敛</strong>时，才说左边的积分收敛，其值等于两者之和；<mark>只要有一个发散，左边就判发散。</mark>（若区间内有多个瑕点，就在每个瑕点处都切开。）</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么内部的瑕点非拆不可</span>
+  <p>这不是「更严谨一点」的要求，而是<strong>不拆就会算错</strong>。回到引例 2：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，硬套公式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；按定义拆开，两段分别是</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>0</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mo>[</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><msubsup><mo>]</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mi>t</mi></mrow></msubsup><mo>=</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mo>[</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><msubsup><mo>]</mo><mrow><mi>t</mi></mrow><mrow><mn>1</mn></mrow></msubsup><mo>=</mo><mo form="prefix">+</mo><mo>∞</mo></math></div>
+  <p>两段都发散，所以整体<strong>发散</strong>。真正的答案不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，而是「不存在」。错解之所以得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，是因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mspace width="1em"></mspace><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><mspace width="1em"></mspace><msubsup><mo>]</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></msubsup></math></span> 这个写法<strong>跨过了瑕点</strong>——它相当于把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>∞</mo></math></span> 用一个减号凑成一个有限数，这在定义里是被明确禁止的。</p>
+  <p>再举一个更刺眼的例子：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>。原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，跨过瑕点直接代：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mrow><mo stretchy="true">[</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo stretchy="true">]</mo></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></msubsup><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></span>。得出了一个负数面积——这本身就荒唐，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&gt;</mo><mn>0</mn></math></span>，面积不可能为负。拆开一算，两段各自是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>，整体发散。</p>
+  <p>把两件事放在一起看就懂了：<mark>内部瑕点让「原函数」在区间上出现了一个断点，而牛顿–莱布尼兹公式假设原函数是连续的。</mark>硬套等于假装那个断点不存在，于是断点两边的无穷恰好抵消，错误就被藏进了一个有限的数里。这就是为什么老师说第三类「隐蔽性最强」。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 240" role="img" aria-label="1除以x平方在-1到1上的图像，零点处瑕点两侧面积都趋于无穷，整体发散">
+    <line x1="70" y1="210" x2="622" y2="210" class="m-line" stroke-width="1.4"></line>
+    <path d="M628 210 l-10 -4 l0 8 z" class="m-fill"></path>
+    <line x1="330" y1="226" x2="330" y2="30" class="m-thin" stroke-width="1.1" stroke-dasharray="4 4"></line>
+
+    <path d="M 240.2 29.8 L 234.8 49.7 L 229.4 66.6 L 224 80.9 L 218.5 93.1 L 213.1 103.7 L 207.7 113 L 202.3 121 L 196.8 128.1 L 191.4 134.4 L 186 140 L 180.5 145 L 175.1 149.5 L 169.7 153.5 L 164.3 157.1 L 158.8 160.4 L 153.4 163.4 L 148 166.2 L 142.6 168.7 L 137.1 171 L 131.7 173.1 L 126.3 175 L 120.9 176.8 L 115.4 178.5 L 110 180 L 110 210 L 240.2 210 Z" class="m-bg-a"></path>
+    <path d="M 419.8 29.8 L 425.2 49.7 L 430.6 66.6 L 436 80.9 L 441.5 93.1 L 446.9 103.7 L 452.3 113 L 457.7 121 L 463.2 128.1 L 468.6 134.4 L 474 140 L 479.5 145 L 484.9 149.5 L 490.3 153.5 L 495.7 157.1 L 501.2 160.4 L 506.6 163.4 L 512 166.2 L 517.4 168.7 L 522.9 171 L 528.3 173.1 L 533.7 175 L 539.1 176.8 L 544.6 178.5 L 550 180 L 550 210 L 419.8 210 Z" class="m-bg-a"></path>
+
+    <path d="M 240.2 29.8 L 234.8 49.7 L 229.4 66.6 L 224 80.9 L 218.5 93.1 L 213.1 103.7 L 207.7 113 L 202.3 121 L 196.8 128.1 L 191.4 134.4 L 186 140 L 180.5 145 L 175.1 149.5 L 169.7 153.5 L 164.3 157.1 L 158.8 160.4 L 153.4 163.4 L 148 166.2 L 142.6 168.7 L 137.1 171 L 131.7 173.1 L 126.3 175 L 120.9 176.8 L 115.4 178.5 L 110 180" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <path d="M 419.8 29.8 L 425.2 49.7 L 430.6 66.6 L 436 80.9 L 441.5 93.1 L 446.9 103.7 L 452.3 113 L 457.7 121 L 463.2 128.1 L 468.6 134.4 L 474 140 L 479.5 145 L 484.9 149.5 L 490.3 153.5 L 495.7 157.1 L 501.2 160.4 L 506.6 163.4 L 512 166.2 L 517.4 168.7 L 522.9 171 L 528.3 173.1 L 533.7 175 L 539.1 176.8 L 544.6 178.5 L 550 180" fill="none" class="m-acc" stroke-width="1.9"></path>
+
+    <circle cx="330" cy="210" r="5.2" class="m-fill-w"></circle>
+    <text x="326" y="230" class="m-sub" font-size="11.5">0（瑕点）</text>
+    <text x="278" y="46" class="m-sub" font-size="11.5">→ +∞</text>
+    <text x="346" y="46" class="m-sub" font-size="11.5">→ +∞</text>
+    <text x="150" y="130" class="m-fill-a" font-size="12">面积 1 段 = +∞</text>
+    <text x="430" y="130" class="m-fill-a" font-size="12">面积 2 段 = +∞</text>
+    <text x="88" y="228" class="m-sub" font-size="11.5">−1</text>
+    <text x="540" y="228" class="m-sub" font-size="11.5">1</text>
+    <text x="336" y="26" class="m-sub" font-size="11.5">曲线在 0 附近冲出画面</text>
+  </svg>
+  <figcaption><b>为什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 必发散。</b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 是偶函数，两侧对称，各自贴着一根「无限高的柱子」。两块蓝色面积<strong>都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span></strong>，加起来还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>。而跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 直接代入原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，却会因为两侧符号相反而得到一个有限数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span>——<em>这个数字就是「假装瑕点不存在」的代价</em>。</figcaption>
+</figure>
+
+<h2 id="s4">怎么算：还是广义牛顿–莱布尼兹公式</h2>
+
+<p>和上一讲一样，取极限的过程不必每次都写出来。把原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 求出来，在瑕点处「朝里带」——<strong>那个「带」的真实含义就是一次极限</strong>：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>瑕点位置</th><th>形式写法</th><th>「带」的真实含义</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>左端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mrow><mo stretchy="true">[</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo stretchy="true">]</mo></mrow><mi>A</mi><mrow><mi>B</mi></mrow></msubsup></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 处真代入；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 处是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>A</mi><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span></td>
+      </tr>
+      <tr>
+        <td>右端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mrow><mo stretchy="true">[</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo stretchy="true">]</mo></mrow><mi>A</mi><mrow><mi>B</mi></mrow></msubsup></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 处真代入；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 处是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>B</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span></td>
+      </tr>
+      <tr>
+        <td>内部 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span></td>
+        <td><strong>不能这样写</strong></td>
+        <td>必须先拆成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>A</mi><mrow><mi>c</mi></mrow></munderover><mo>+</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>c</mi><mrow><mi>B</mi></mrow></munderover></math></span>，再按上面两种分别处理</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">「一会儿右边一会左边」怎么记</span>
+  <p>很多人在这里绕晕：什么时候是从右边逼近、什么时候从左边？老师给的答案是——<strong>别死记，想一下就清楚</strong>：</p>
+  <dl class="kv">
+    <dt>左端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是瑕点</dt>
+    <dd>区间是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo>]</mo></math></span>，而我必须在<strong>区间里面</strong>取点。A 已经是左端了，往区间里走只有一个方向——<strong>向右</strong>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>A</mi><mrow><mo form="prefix">+</mo></mrow></msup></math></span>。</dd>
+    <dt>右端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 是瑕点</dt>
+    <dd>同理，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 是右端，往区间里走只能<strong>向左</strong>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>B</mi><mrow><mo form="prefix">−</mo></mrow></msup></math></span>。</dd>
+  </dl>
+  <p>一句话：<mark>逼近方向永远指向区间的内部。</mark>如果一时想不起来，画一条线段标出区间，比死背口诀可靠得多（老师说得很直白：脑子不好使，手还好使吧——动笔画一下就知道了）。</p>
+</div>
+
+<h2 id="s5">有时候「直接代入」居然没事</h2>
+
+<p>这一小段是老师专门总结的实用经验。同样是瑕积分，有的题直接代入就能出结果，有的必须老老实实取极限——区别在哪里？先看三个例子。</p>
+
+<ol class="steps">
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span></span>：原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mo form="prefix">−</mo><mo>∞</mo></math></span>，代不进去，极限不存在 → <strong>发散</strong>。</li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span></span>：原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msqrt><mrow><mi>x</mi></mrow></msqrt></math></span>。上限代入得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>→</mo><mn>0</mn></math></span>——<strong>极限存在</strong> → <strong>收敛</strong>，值等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>。<span class="note">这就是「直接带也没事」的典型：虽然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是瑕点，但极限算出来是个正常的数。</span></li>
+  <li><span class="sh"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac></math></span></span>：原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时分母趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，整体 → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span> → <strong>发散</strong>。</li>
+</ol>
+
+<div class="why">
+  <span class="lbl">什么情况下「直接代入」是安全的</span>
+  <p>把这三个例子排在一起，规律立刻浮出来：<strong>关键不在被积函数，而在原函数。</strong></p>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msqrt><mrow><mi>x</mi></mrow></msqrt></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，是<strong>有界</strong>的（可以连续延拓到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）；</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时<strong>无界</strong>，所以必须取极限，而极限是无穷大，判发散。</li>
+  </ul>
+  <p>所以经验是：<mark>原函数在瑕点附近有界，直接代入不会有问题；原函数在瑕点附近无界，就必须把极限展开来看。</mark></p>
+  <p>而且这个「有没有问题」往往自己会暴露：<strong>当你发现某个端点代入时分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、带不进去，那就说明该取极限了</strong>。老师把它总结成一句很实用的话——做到那一步自然会发现带不动，这时候就想起瑕积分的定义，回头补一个极限。</p>
+  <p>这也是为什么老师强调：瑕积分在<strong>两端点</strong>是瑕点的情形，「不一定出错误」；而出错误几乎都发生在<strong>内部瑕点</strong>——因为内部瑕点在纸上完全不留痕迹，你不会「带不动」，你会带得飞快。</p>
+</div>
+
+<h2 id="s6">两个必背的结论</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q">证明：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>q</mi></mrow></msup></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mi>q</mi><mo>&lt;</mo><mn>1</mn></math></span> 时收敛，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>≥</mo><mn>1</mn></math></span> 时发散。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先认瑕点，再单独处理 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mn>1</mn></math></span></span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时分母趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 是瑕点，且是<strong>左端点瑕点</strong>。和上一讲的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mi>p</mi></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 一样，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mn>1</mn></math></span> 要单独拿出来。</p>
+
+    <span class="lbl">情形一：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mn>1</mn></math></span></span>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi><mo>−</mo><mi>a</mi></mrow></mfrac><mo>=</mo><msubsup><mrow><mo stretchy="true">[</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><mo>)</mo><mo stretchy="true">]</mo></mrow><mi>a</mi><mrow><mi>b</mi></mrow></msubsup><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mi>b</mi><mo>−</mo><mi>a</mi><mo>)</mo><mo>−</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mi mathvariant="normal">ln</mi><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><mo>)</mo></math></div>
+    <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mi>a</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><mo>)</mo><mo>→</mo><mo form="prefix">−</mo><mo>∞</mo></math></span>，前面又有减号，整体 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，极限不存在 → <strong>发散</strong>。（这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mi>a</mi></math></span>，绝对值可以不加。）</p>
+
+    <span class="lbl">情形二：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>≠</mo><mn>1</mn></math></span></span>
+    <p>配系数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></msup></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo>)</mo><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mo form="prefix">−</mo><mi>q</mi></mrow></msup></math></span>，所以要配 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>q</mi></mrow></msup></mrow></mfrac><mo>=</mo><msubsup><mrow><mo stretchy="true">[</mo><mfrac><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></msup></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac><mo stretchy="true">]</mo></mrow><mi>a</mi><mrow><mi>b</mi></mrow></msubsup></math></div>
+    <ul class="tight">
+      <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mi>q</mi><mo>&lt;</mo><mn>1</mn></math></span></strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>q</mi><mo>&gt;</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></msup><mo>→</mo><mn>0</mn></math></span>，极限存在，值为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mi>b</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></msup></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span> → <strong>收敛</strong>。</li>
+      <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>&gt;</mo><mn>1</mn></math></span></strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>q</mi><mo>&lt;</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></msup><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>q</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow></mfrac><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，（配上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac><mo>&lt;</mo><mn>0</mn></math></span> 后）成为无穷大 → <strong>发散</strong>。</li>
+    </ul>
+    <p>合起来就是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>q</mi></mrow></msup></mrow></mfrac><mtext>收敛</mtext><mo>⟺</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>&lt;</mo><mi>q</mi><mo>&lt;</mo><mn>1</mn><mo>;</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mtext>发散</mtext><mo>⟺</mo><mspace width="0.25em"></mspace><mi>q</mi><mo>≥</mo><mn>1</mn></math></div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q">讨论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span> 的敛散性。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：结构与例 1 相同，只是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><mo>)</mo></math></span> 换成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是瑕点（也是左端点）。同样先处理 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>=</mo><mn>1</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><msubsup><mrow><mo stretchy="true">[</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo stretchy="true">]</mo></mrow><mn>0</mn><mrow><mn>1</mn></mrow></msubsup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mo form="prefix">−</mo><mo>∞</mo></math></span>，<strong>发散</strong>。</p>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>≠</mo><mn>1</mn></math></span> 时，原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></msup></mrow><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></mfrac></math></span>，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 处看指数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>p</mi></math></span> 的符号：</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&gt;</mo><mn>1</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>p</mi><mo>&lt;</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>x</mi><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></msup></mrow><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo>)</mo><msup><mi>x</mi><mrow><mi>p</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow></mfrac><mo>→</mo><mo>∞</mo></math></span> → <strong>发散</strong>；</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mi>p</mi><mo>&lt;</mo><mn>1</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mi>p</mi><mo>&gt;</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></msup><mo>→</mo><mn>0</mn></math></span>，极限存在，值为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></mfrac></math></span> → <strong>收敛</strong>；</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>≤</mo><mn>0</mn></math></span>：函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mi>p</mi></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 上其实<strong>没有瑕点</strong>（有界），本来就是普通定积分，当然收敛。</li>
+    </ul>
+    <p>于是结论是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac><mtext>收敛</mtext><mo>⟺</mo><mspace width="0.25em"></mspace><mi>p</mi><mo>&lt;</mo><mn>1</mn><mo>;</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mtext>发散</mtext><mo>⟺</mo><mspace width="0.25em"></mspace><mi>p</mi><mo>≥</mo><mn>1</mn></math></div>
+    <div class="trap">
+      <span class="lbl">和上一讲的方向正好相反</span>
+      <p>上一讲的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span> 是 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&gt;</mo><mn>1</mn></math></span> 收敛</strong>；这一讲的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span> 是 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&lt;</mo><mn>1</mn></math></span> 收敛</strong>。两个不等式方向相反，<mark>这是两条结论里最容易记混的地方</mark>。</p>
+      <p><span class="bad">不要靠背方向。</span>正确的记忆方式是看「谁在捣乱」：</p>
+      <ul class="tight">
+        <li>区间是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>1</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span> 时，捣乱的是<strong>右端的尾巴</strong>。尾巴要够瘦才好，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi></math></span> 越大越瘦，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&gt;</mo><mn>1</mn></math></span> 收敛。</li>
+        <li>区间是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 时，捣乱的是<strong>左端的尖峰</strong>。尖峰要够薄才好，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi></math></span> 越大尖峰越高，所以反而要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&lt;</mo><mn>1</mn></math></span>。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 268" role="img" aria-label="在0到1上，1除以x的图像面积无穷，1除以根号x的图像面积等于2">
+    <line x1="60" y1="240" x2="308" y2="240" class="m-line" stroke-width="1.4"></line>
+    <line x1="60" y1="240" x2="60" y2="34" class="m-line" stroke-width="1.4"></line>
+    <path d="M60 28 l-4 10 l8 0 z" class="m-fill"></path>
+    <path d="M 96 48 L 104.5 91.4 L 113 118.7 L 121.5 137.6 L 130 151.4 L 138.5 161.9 L 147 170.2 L 155.5 176.9 L 164 182.4 L 172.5 187 L 181 191 L 189.5 194.4 L 198 197.3 L 206.5 199.9 L 215 202.2 L 223.5 204.3 L 232 206.1 L 240.5 207.8 L 249 209.3 L 257.5 210.6 L 266 211.9 L 274.5 213.1 L 283 214.1 L 291.5 215.1 L 300 216 L 300 240 L 96 240 Z" class="m-bg-a"></path>
+    <path d="M 96 48 L 104.5 91.4 L 113 118.7 L 121.5 137.6 L 130 151.4 L 138.5 161.9 L 147 170.2 L 155.5 176.9 L 164 182.4 L 172.5 187 L 181 191 L 189.5 194.4 L 198 197.3 L 206.5 199.9 L 215 202.2 L 223.5 204.3 L 232 206.1 L 240.5 207.8 L 249 209.3 L 257.5 210.6 L 266 211.9 L 274.5 213.1 L 283 214.1 L 291.5 215.1 L 300 216" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <line x1="96" y1="240" x2="96" y2="42" class="m-thin" stroke-width="1.1" stroke-dasharray="4 4"></line>
+    <circle cx="96" cy="240" r="4.6" class="m-fill-w"></circle>
+    <text x="70" y="258" class="m-sub" font-size="11.5">0</text>
+    <text x="294" y="258" class="m-sub" font-size="11.5">1</text>
+    <text x="86" y="36" class="m-sub" font-size="11.5">瑕点</text>
+    <text x="140" y="100" class="m-acc" font-size="12">y = 1 / x</text>
+    <text x="128" y="216" class="m-fill-a" font-size="12">面积 = +∞（发散）</text>
+    <text x="100" y="262" class="m-sub" font-size="11.5">p = 1</text>
+
+    <line x1="340" y1="240" x2="600" y2="240" class="m-line" stroke-width="1.4"></line>
+    <line x1="340" y1="240" x2="340" y2="34" class="m-line" stroke-width="1.4"></line>
+    <path d="M340 28 l-4 10 l8 0 z" class="m-fill"></path>
+    <path d="M 376 172.1 L 384.5 180.3 L 393 186.1 L 401.5 190.4 L 410 193.9 L 418.5 196.7 L 427 199.1 L 435.5 201.1 L 444 202.8 L 452.5 204.3 L 461 205.7 L 469.5 206.9 L 478 208 L 486.5 209 L 495 209.9 L 503.5 210.7 L 512 211.5 L 520.5 212.2 L 529 212.8 L 537.5 213.5 L 546 214 L 554.5 214.6 L 563 215.1 L 571.5 215.6 L 580 216 L 580 240 L 376 240 Z" class="m-bg-g"></path>
+    <path d="M 376 172.1 L 384.5 180.3 L 393 186.1 L 401.5 190.4 L 410 193.9 L 418.5 196.7 L 427 199.1 L 435.5 201.1 L 444 202.8 L 452.5 204.3 L 461 205.7 L 469.5 206.9 L 478 208 L 486.5 209 L 495 209.9 L 503.5 210.7 L 512 211.5 L 520.5 212.2 L 529 212.8 L 537.5 213.5 L 546 214 L 554.5 214.6 L 563 215.1 L 571.5 215.6 L 580 216" fill="none" class="m-good" stroke-width="1.9"></path>
+    <line x1="376" y1="240" x2="376" y2="166" class="m-thin" stroke-width="1.1" stroke-dasharray="4 4"></line>
+    <circle cx="376" cy="240" r="4.6" class="m-fill-w"></circle>
+    <text x="350" y="258" class="m-sub" font-size="11.5">0</text>
+    <text x="574" y="258" class="m-sub" font-size="11.5">1</text>
+    <text x="366" y="36" class="m-sub" font-size="11.5">瑕点</text>
+    <text x="420" y="130" class="m-good" font-size="12">y = 1 / √x</text>
+    <text x="400" y="216" class="m-fill-g" font-size="12">面积 = 2（收敛）</text>
+    <text x="380" y="262" class="m-sub" font-size="11.5">p = 0.5</text>
+  </svg>
+  <figcaption><b>同一个瑕点，两种命运。</b>左图是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>：贴着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴往上冲得太猛，与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴之间的面积是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>，所以发散。右图是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac></math></span>：虽然同样是瑕点，但冲得慢一些，面积恰好收敛到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>。<strong>「无界」不等于「发散」</strong>——这是本讲最容易被直觉骗到的一点。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=1229">20:29</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mi>A</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msqrt><mrow><msup><mi>A</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>&gt;</mo><mn>0</mn></math></span>）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先找瑕点，再推原函数</span>
+    <p>不明真相的人会把它当成普通定积分——上下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 都是正常的数。但先检查一下：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>A</mi><mrow><mo form="prefix">−</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>A</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span>，分母趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，被积函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>。所以 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是瑕点</strong>，而且是右端点瑕点；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处一切正常。</p>
+    <p>原函数不在基本积分表里（属于要现推的二级公式）。推法是提一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 出来凑成整体：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mi>A</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msqrt><mrow><msup><mi>A</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mi>A</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>A</mi><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mi>A</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mi>A</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mi>A</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mi>A</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow></mfrac></math></div>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>x</mi></mrow><mrow><mi>A</mi></mrow></mfrac></math></span> 看成一个整体，这正是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 的原型，于是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msubsup><mrow><mo stretchy="true">[</mo><mi mathvariant="normal">arcsin</mi><mfrac><mrow><mi>x</mi></mrow><mrow><mi>A</mi></mrow></mfrac><mo stretchy="true">]</mo></mrow><mn>0</mn><mrow><mi>A</mi></mrow></msubsup><mo>=</mo><mi mathvariant="normal">arcsin</mi><mn>1</mn><mo>−</mo><mi mathvariant="normal">arcsin</mi><mn>0</mn><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>−</mo><mn>0</mn><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p>严格的写法应该是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>A</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mi mathvariant="normal">arcsin</mi><mfrac><mrow><mi>x</mi></mrow><mrow><mi>A</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>——<strong>这是一次取极限，不是代入</strong>。好在极限存在且等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，所以瑕积分<strong>收敛</strong>，值为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。</p>
+    <p><strong>要点</strong>：这题虽然带瑕点，但原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mfrac><mrow><mi>x</mi></mrow><mrow><mi>A</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>A</mi><mrow><mo form="prefix">−</mo></mrow></msup></math></span> 时趋于有限值，属于「取极限也没事」的那一类，所以答案是一个正常的数。另外记住这类题的第一个动作永远是：<mark>先找瑕点，再动手算。</mark></p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=1401">23:21</a>判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 的敛散性（并对比错误做法）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先问一句「瑕点在哪」</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处没有定义，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 又是区间内部点——<strong>内部瑕点，必须先拆</strong>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>0</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>+</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 是偶函数，两段结构一样，算一段即可。以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>0</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 为例，原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>0</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><msubsup><mrow><mo stretchy="true">[</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo stretchy="true">]</mo></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>0</mn></mrow></msubsup><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>−</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">−</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是负的小量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 那一项是常数，所以整段 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，<strong>发散</strong>。</p>
+    <p>按定义，<strong>只要有一段发散，整体就发散</strong>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> <strong>发散</strong>（另一段不用再验）。</p>
+    <div class="trap">
+      <span class="lbl">错误做法长什么样</span>
+      <p><span class="bad">错解：</span>直接跨过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 代入原函数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mrow><mo stretchy="true">[</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><mo stretchy="true">]</mo></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></msubsup><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></span>，于是回答「收敛，值为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span>」。</p>
+      <p><strong>为什么荒唐：</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 上恒为正，面积绝不可能是负数，更不可能是一个有限的数。这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span> 是「跨过瑕点」硬凑出来的假答案。</p>
+      <p><span class="good">对的说法：</span>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是内部瑕点，拆开后两段都发散，所以整体发散。」</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=53&amp;t=2847">47:27</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>(</mo><mn>1</mn><mo>+</mo><mi>x</mi><msup><mo>)</mo><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先识别「坏在哪」，再换元</span>
+    <p>这个积分要留意两处：</p>
+    <ul class="tight">
+      <li>下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，所以 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是瑕点</strong>；</li>
+      <li>上限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>，所以它<strong>同时</strong>是无穷限的反常积分。</li>
+    </ul>
+    <p>两种毛病叠在一起，说明这一题不「选一种」，而是两件事都得管。做法是换元把它变干净：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mi>x</mi></mrow></msqrt><mo>=</mo><mi>t</mi></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>2</mn><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>，并且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span>。代入：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><mfrac><mrow><mn>2</mn><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mi>t</mi><mspace width="1em"></mspace><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></msup></mrow></mfrac><mo>=</mo><mn>2</mn><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></msup></mrow></mfrac></math></div>
+    <p>（分子分母里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 正好约掉，这是设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><msqrt><mrow><mi>x</mi></mrow></msqrt></math></span> 而不是设别的的原因。）看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup></math></span>，这是明确的三角替换信号：令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>u</mi></math></span>。当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>u</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></msup><mo>=</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>3</mn></mrow></msup><mi>u</mi></math></span>。</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>2</mn><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></munderover><mfrac><mrow><msup><mi mathvariant="normal">sec</mi><mrow><mn>2</mn></mrow></msup><mi>u</mi></mrow><mrow><msup><mi mathvariant="normal">sec</mi><mrow><mn>3</mn></mrow></msup><mi>u</mi></mrow></mfrac><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi><mo>=</mo><mn>2</mn><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></munderover><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>u</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi><mo>=</mo><mn>2</mn><msubsup><mrow><mo stretchy="true">[</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>u</mi><mo stretchy="true">]</mo></mrow><mn>0</mn><mrow><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></msubsup><mo>=</mo><mn>2</mn></math></div>
+    <div class="trap">
+      <span class="lbl">这一步有个藏起来的绝对值</span>
+      <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mfrac><mrow><mn>3</mn></mrow><mrow><mn>2</mn></mrow></mfrac></mrow></msup></math></span> 其实等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>3</mn></mrow></msup></mrow></msqrt><mo>=</mo><mrow><mo stretchy="true">|</mo><msup><mi mathvariant="normal">sec</mi><mrow><mn>3</mn></mrow></msup><mi>u</mi><mo stretchy="true">|</mo></mrow></math></span>。严格地说，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><msup><mi>A</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt><mo>=</mo><mo>|</mo><mi>A</mi><mo>|</mo></math></span>，<strong>不能直接写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">sec</mi><mrow><mn>3</mn></mrow></msup><mi>u</mi></math></span></strong>。</p>
+      <p>这里能去掉绝对值，是因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>∈</mo><mrow><mo stretchy="true">[</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>&gt;</mo><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sec</mi><mspace width="0.25em"></mspace><mi>u</mi><mo>&gt;</mo><mn>0</mn></math></span>。老师课上特意「故意忽悠」了一下再点破——<mark>能去绝对值是这一题的一个隐含前提，写题时要说明理由。</mark></p>
+    </div>
+    <p><strong>要点</strong>：换元之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>0</mn></math></span> 处不再有瑕点吗？仍然有——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>t</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>3</mn><mo>/</mo><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mn>0</mn></math></span> 附近有界，但这一题原本的瑕点已经被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 约掉了。最终结果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 是有限的，所以这个「又瑕又无穷限」的积分收敛。</p>
+  </div>
+</div>
+
+<h2 id="s7">两类反常积分对照表</h2>
+
+<p>这一章的两类反常积分，本质上是同一个人用同一种手法修了两个不同的毛病。把它们并排放，区别与共性一次看清。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>对比项</th><th>① 无穷限的反常积分（P052）</th><th>② 无界函数的反常积分（本讲）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>被破坏的前提</td>
+        <td>区间有限</td>
+        <td>函数连续</td>
+      </tr>
+      <tr>
+        <td>问题出在哪</td>
+        <td>端点跑到了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mo>∞</mo></math></span></td>
+        <td>区间内某点（瑕点）处函数无界</td>
+      </tr>
+      <tr>
+        <td>怎么补救</td>
+        <td>用有限的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 替换 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∞</mo></math></span>，再 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mo>∞</mo></math></span></td>
+        <td>从瑕点旁边退开一点到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，再 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo></math></span> 瑕点</td>
+      </tr>
+      <tr>
+        <td>定义式</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>t</mi></mrow></munderover><mi>f</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>t</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 为瑕点）</td>
+      </tr>
+      <tr>
+        <td>两头都坏</td>
+        <td>拆成两段，两段都收敛才算收敛</td>
+        <td>同样拆成两段，两段都收敛才算收敛</td>
+      </tr>
+      <tr>
+        <td>典型结论</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&gt;</mo><mn>1</mn></math></span> 收敛</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&lt;</mo><mn>1</mn></math></span> 收敛</td>
+      </tr>
+      <tr>
+        <td>容易漏的地方</td>
+        <td>写成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>」当作收敛</td>
+        <td><strong>看不出瑕点</strong>，尤其瑕点在内部时</td>
+      </tr>
+      <tr>
+        <td>共同点</td>
+        <td colspan="2">都靠<strong>取一次极限</strong>来修补；算的时候都能用<strong>广义牛顿–莱布尼兹公式</strong>的形式先求原函数再「朝里带」</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么两类问题会「长得像」</span>
+  <p>因为它们的修复动作是<strong>同一个动作</strong>：把出问题的那一小段从积分区间里<strong>挖掉</strong>，剩下的部分是一个规矩的普通定积分，最后再让挖掉的窟窿缩到零，取极限。</p>
+  <ul class="tight">
+    <li>无穷限：要挖掉的是<strong>无穷远的尾巴</strong>，所以用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 当临时上限；</li>
+    <li>瑕积分：要挖掉的是<strong>瑕点周围的一个小区间</strong>，所以用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 当临时端点。</li>
+  </ul>
+  <p>这也解释了两者的收敛判据为什么总是一对幂函数结论：它们关心的其实是同一件事——<mark>被挖掉的那一小块，面积到底有限还是无限。</mark></p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>瑕积分 = 被积函数在区间里<strong>爆掉</strong>。做法：<strong>找出瑕点 → 从旁边退开一点 → 取极限</strong>。算子还是牛顿–莱布尼兹，只是「代入」要理解成「取极限」。</p>
+
+  <h3>一条判断链</h3>
+  <div class="chain">
+    <span class="n"><b>找瑕点</b> 分母为零 / <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> / <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span></span><span class="ar">→</span>
+    <span class="n"><b>定位</b> 左端 / 右端 / 内部</span><span class="ar">→</span>
+    <span class="n"><b>内部就拆</b> 拆成两段</span><span class="ar">→</span>
+    <span class="n"><b>判</b> 有一个发散就整体发散</span>
+  </div>
+
+  <h3>三种情形</h3>
+  <dl class="kv">
+    <dt>左端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span></dt>
+    <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>a</mi><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>t</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi></math></span>，<strong>从右边</strong>逼近</dd>
+    <dt>右端点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span></dt>
+    <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>b</mi><mrow><mo form="prefix">−</mo></mrow></msup></mrow></munder><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>t</mi></mrow></munderover><mi>f</mi></math></span>，<strong>从左边</strong>逼近</dd>
+    <dt>内部 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span></dt>
+    <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>c</mi></mrow></munderover><mo>+</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>c</mi><mrow><mi>b</mi></mrow></munderover></math></span>，<strong>必须拆</strong>；两段都收敛才算收敛</dd>
+  </dl>
+
+  <h3>必背结论（注意方向与上一讲相反）</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mrow><mi>b</mi></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mi>a</mi><msup><mo>)</mo><mrow><mi>q</mi></mrow></msup></mrow></mfrac></math></span>：<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>&lt;</mo><mi>q</mi><mo>&lt;</mo><mn>1</mn></math></span> 收敛；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>≥</mo><mn>1</mn></math></span> 发散</mark></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span>：<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&lt;</mo><mn>1</mn></math></span> 收敛；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>≥</mo><mn>1</mn></math></span> 发散</mark></li>
+    <li>对照上一讲：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mi>p</mi></mrow></msup></mrow></mfrac></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&gt;</mo><mn>1</mn></math></span> 收敛。<strong>右端看尾巴、左端看尖峰，方向自然相反。</strong></li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ol class="tight">
+    <li><strong>内部瑕点不拆，几乎必错。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 硬算得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 硬算得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span>，两个都是假答案。</li>
+    <li><strong>「无界」不等于「发散」。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msqrt><mrow><mi>x</mi></mrow></msqrt></mrow></mfrac><mo>=</mo><mn>2</mn></math></span> 收敛——判断要看<strong>原函数在瑕点附近是否有界</strong>。</li>
+    <li><strong>左右方向指向区间内部。</strong>左端点从右逼近，右端点从左逼近；想不清就画线段。</li>
+  </ol>
+
+  <h3>动手前问自己三句</h3>
+  <ol class="tight">
+    <li>函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上处处有定义吗？没有定义的那点就是瑕点，它在哪个位置？</li>
+    <li>瑕点在内部吗？在，就先拆成两个积分，再各自动手。</li>
+    <li>这个端点我「带得动」吗？带不动（分母为零、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mn>0</mn></math></span>）就说明该取极限，而且是无穷大 → 发散。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P052-无穷限的反常积分/index.html">无穷限的反常积分</a> 无穷限的反常积分（同一套修补手法）</li>
+      <li><a href="../P048-牛顿-莱布尼兹定理/index.html">牛顿-莱布尼兹定理</a> 牛顿–莱布尼兹公式与它的两个前提</li>
+      <li><a href="../P049-定积分的换元法（上集）/index.html">定积分的换元法（上集）</a> 定积分的换元法（例 5 用到）</li>
+      <li><span class="cur">基本积分表、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 的原函数、三角替换</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P054-定积分应用（求面积）/index.html">定积分应用（求面积）</a> 定积分的应用（求面积）——反常积分的判敛会出现在小题里</li>
+      <li><a href="../P055-微元法/index.html">微元法</a> 微元法</li>
+      <li><a href="../P056-定积分应用（求面积-极坐标）/index.html">定积分应用（求面积-极坐标）</a> 极坐标下的面积</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><mo form="prefix">+</mo><mo>∞</mo></mrow></munderover><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mi>p</mi></mrow></msup></math></span> 要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&gt;</mo><mn>1</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mn>1</mn></mrow></munderover><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mi>p</mi></mrow></msup></math></span> 要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>&lt;</mo><mn>1</mn></math></span>，方向相反</li>
+      <li>「瑕点」不是「函数值很大」，而是「附近无界」</li>
+      <li>同时是瑕积分和无穷限积分时，两处都要管（例 5）</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 53 讲</span><a href="../P052-无穷限的反常积分/index.html">← P052</a><a href="../index.html">全部目录</a><a href="../P054-定积分应用（求面积）/index.html">P054 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一个「看着很正常」的积分</a>
+    <a href="#s2">什么叫瑕点</a>
+    <a href="#s3">三种情形的定义</a>
+    <a href="#s4">怎么算：还是广义牛顿–莱布尼兹公式</a>
+    <a href="#s5">有时候「直接代入」居然没事</a>
+    <a href="#s6">两个必背的结论</a>
+    <a href="#s7">两类反常积分对照表</a>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】常数项级数的概念和性质：把「无穷相加」拆成部分和数列 · 高等数学笔记</title>
+<meta name="description" content="这是黑板习题课：不在黑板上抄定义，而是一块一块地「上手做」。全课的骨架只有一句话——级数敛散 = 部分和数列 Sn 有没有有限极限。两块基准（等比、调和）、四类性质（线性、括号、有限项、必要条件）外加一串反例，就是后面所有判别法的地基。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 144 讲</div>
+    <h1 class="title"><span class="pnum">P144</span>【黑板】常数项级数的概念和性质：把「无穷相加」拆成部分和数列</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这是<strong>黑板习题课</strong>：不在黑板上抄定义，而是一块一块地「上手做」。全课的骨架只有一句话——<mark>级数敛散 = 部分和数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 有没有有限极限</mark>。两块基准（等比、调和）、四类性质（线性、括号、有限项、必要条件）外加一串反例，就是后面所有判别法的地基。</p></div>
+    <div class="meta"><span>时长 57m20s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=0">00:00</a><span class="vv"><b>数列「摆在那啥也没动」</b>，级数「把它们全加起来」。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=92">01:32</a><span class="vv">数列是个集合；有限数列无点点点，无限数列有点点点。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=244">04:04</a><span class="vv">第一个例子：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>3</mn><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>n</mi><mo>+</mo><mo>⋯</mo></math></span>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=347">05:47</a><span class="vv">收敛／发散的<b>直观版</b>：和是固定常数还是越加越大。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=394">06:34</a><span class="vv">反例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span>：奇偶项各走各的，极限不存在。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=452">07:32</a><span class="vv">本章两件正事：<b>敛散</b>与<b>求和</b>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=511">08:31</a><span class="vv">一般项、<b>部分和</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span>，以及收敛／发散的严格定义。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=631">10:31</a><span class="vv">例 1：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>n</mi></math></span> 的部分和公式 ⇒ 发散。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=700">11:40</a><span class="vv">例 2：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>+</mo><mo>⋯</mo></math></span> 收敛，和为 2。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=847">14:07</a><span class="vv">等比级数四种情形：只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></math></span> 收敛。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1176">19:36</a><span class="vv">例 3：裂项相消，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1373">22:53</a><span class="vv">性质串讲：线性、收敛±收敛、<b>收敛±发散必发散</b>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1925">32:05</a><span class="vv">有限项陷阱：改<b>前 100 项</b>不变，改<b>全体奇偶项</b>可能变。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2209">36:49</a><span class="vv">加括号（<b>子列</b>论证）；反过来不成立。</span></li>
+    <li><span class="no">15</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2859">47:39</a><span class="vv">必要条件 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>→</mo><mn>0</mn></math></span> 与一票否决用法。</span></li>
+    <li><span class="no">16</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=3195">53:15</a><span class="vv">调和级数发散：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>n</mi></mrow></msub><mo>−</mo><msub><mi>S</mi><mi>n</mi></msub><mo>&gt;</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">黑板上第一件事：数列是一列数，级数是把它们加起来</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=0">00:00</a>这节课一开始，老师没有写定义，而是先在黑板上摆了两样东西，让你分辨它们差在哪。第一样叫<strong>数列</strong>：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>u</mi><mn>1</mn></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>u</mi><mn>2</mn></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>u</mi><mn>3</mn></msub><mo>,</mo><mspace width="1em"></mspace><mo>…</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>u</mi><mi>n</mi></msub><mo>,</mo><mspace width="1em"></mspace><mo>…</mo></math></div>
+
+<p>老师的原话是「<strong>数列就是摆在那，啥也没动</strong>」——它只是一列数排好队，本身没做任何运算。写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub></math></span> 外面套个大括号，是因为数列本质上就是一个由一列数组成的<strong>集合</strong>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=92">01:32</a>接着老师把数列分成两类，这个区分很重要：<strong>有限数列</strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mn>1</mn></msub></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub></math></span> 一共 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项，后头<em>没有</em>点点点）和<strong>无限数列</strong>（后头<em>有个点点点</em>，有无穷多项）。高中两种都讲过，但级数只对后一种感兴趣。</p>
+
+<p>第二样东西叫<strong>无穷级数</strong>，简称<strong>级数</strong>：把无限数列的每一项<em>加</em>起来：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><msub><mi>u</mi><mn>2</mn></msub><mo>+</mo><msub><mi>u</mi><mn>3</mn></msub><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>u</mi><mi>n</mi></msub><mo>+</mo><mo>⋯</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=244">04:04</a>老师连着强调了三遍同一句话：<mark>级数<strong>就是</strong>一个和</mark>。你说「这是个级数」，你的意思就已经是「这是个无穷项相加的和」了。所以两者的区别只有一条——数列摆在那没动，级数把它们全加起来。黑板上举的第一个例子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>3</mn><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>n</mi><mo>+</mo><mo>⋯</mo></math></span>（每项都是常数，所以叫<strong>常数项级数</strong>），以及几个「一看就明白」的：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mo>⋯</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span>。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=452">07:32</a>整章只有两件正事，先说清楚再动手</span>
+  <p>老师在黑板上写下了这一章的两个任务：<strong>第一，判断这个级数收敛还是发散；第二，如果收敛，它的和是多少</strong>（往后再加一条「收敛半径／收敛域」，那是幂级数的事）。</p>
+  <p>为什么要先说这个？因为初学最容易把力气使错——一上来就想「把和算出来」。事实是：<mark>绝大多数级数你根本算不出和，甚至不需要算</mark>。下面调和级数那一栏花半节课证它<em>发散</em>，却从没提它的和是多少——因为它压根没有和。所以默认目标只有一个：<strong>判敛散</strong>。</p>
+</div>
+
+<h2 id="s2">从「加起来」到「看部分和数列」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=347">05:47</a>老师先给了一版<strong>直观版</strong>的说法，让概念先落地：</p>
+
+<ul class="tight">
+  <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mo>⋯</mo></math></span>：加起来就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，一个<strong>固定的常数</strong>——这种叫<strong>收敛</strong>。</li>
+  <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>3</mn><mo>+</mo><mo>⋯</mo></math></span>：越加越大，最终和是正无穷，<strong>极限不存在</strong>——这种叫<strong>发散</strong>。</li>
+</ul>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=394">06:34</a>第三个数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span>，这是黑板课的第一个「反直觉点」。有同学脱口而出：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn></math></span> 不就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 吗，加起来自然是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。老师当场把这句话拆开了：<mark>要分奇数项和偶数项看</mark>。取偶数项时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn></math></span> 成对出现，和是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；取奇数项时最后单出来一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，和是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。同一个级数沿两条路走得到两个不同的值，所以它的<strong>极限不存在</strong>——发散。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=511">08:31</a>直观说完了，才轮到严格定义。先把「前 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项的和」拎出来，给它起个名字：</p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 一般项与部分和</span>
+  <p>级数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msub><mi>u</mi><mi>n</mi></msub></math></span> 中的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub></math></span> 叫<strong>一般项（通项）</strong>。把前 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项加起来，记</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><msub><mi>u</mi><mn>2</mn></msub><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>u</mi><mi>n</mi></msub></math></div>
+  <p>称为<strong>部分和</strong>。注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 本身又是一个数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>S</mi><mn>1</mn></msub><mo>,</mo><msub><mi>S</mi><mn>2</mn></msub><mo>,</mo><msub><mi>S</mi><mn>3</mn></msub><mo>,</mo><mo>…</mo><mo>}</mo></math></span>，它和原来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>u</mi><mi>n</mi></msub><mo>}</mo></math></span> 是两个<em>不同的</em>数列。</p>
+</div>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=584">09:44</a>定义 · 收敛与发散（严格版）</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><mi>S</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span> 为有限常数），则称级数<strong>收敛</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span> 称为级数的<strong>和</strong>，记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mi>S</mi></math></span>；否则称级数<strong>发散</strong>。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么必须绕一圈，用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 来定义</span>
+  <p>「无穷多项相加」这件事本身是没法直接执行的：没有人能真的加无穷多次。但「前 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项相加」可以，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 取多大都行。于是我们把一个不可执行的动作，换成了一个可执行的数列问题：<strong>看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 这个数列当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 时有没有极限</strong>。</p>
+  <p>这个转换还有一个好处：它把级数这一章接回上一章的数列极限。老师<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2482">41:22</a>讲加括号时反复提醒的「收敛数列的子列也收敛」，就是从上一章搬过来的。所以真正新的东西很少——级数的大部分结论，都是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 当普通数列处理得到的。你觉得级数难，多半是因为忘了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 只是个数列。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 226" role="img" aria-label="数列、级数、部分和数列三者的关系：数列加号连接成级数，累加后取极限成为部分和数列">
+    <text x="34" y="22" class="m-txt" font-size="12">三个对象：数列 {u_n} → 级数 Σu_n → 部分和数列 {S_n}</text>
+
+    <rect x="30" y="46" width="180" height="130" rx="7" class="m-panel-s"></rect>
+    <text x="46" y="68" class="m-txt" font-size="11.5">① 数列 {u_n}</text>
+    <text x="46" y="90" class="m-sub" font-size="11">1, 1/2, 1/4, 1/8, …</text>
+    <text x="46" y="112" class="m-sub" font-size="11">「摆在那，啥也没动」</text>
+    <text x="46" y="140" class="m-sub" font-size="11">u_n 本身不是和</text>
+    <text x="46" y="162" class="m-sub" font-size="11">只是一个集合</text>
+
+    <rect x="248" y="46" width="150" height="130" rx="7" class="m-panel-a"></rect>
+    <text x="264" y="68" class="m-txt" font-size="11.5">② 级数 Σu_n</text>
+    <text x="264" y="90" class="m-sub" font-size="11">1 + 1/2 + 1/4 + …</text>
+    <text x="264" y="112" class="m-txt" font-size="11">用一个「+」</text>
+    <text x="264" y="132" class="m-txt" font-size="11">把数列串起来</text>
+    <text x="264" y="158" class="m-sub" font-size="11">它是一个「和」，</text>
+    <text x="264" y="174" class="m-sub" font-size="11">但算不出来</text>
+
+    <rect x="436" y="46" width="174" height="130" rx="7" class="m-panel-s"></rect>
+    <text x="452" y="68" class="m-txt" font-size="11.5">③ 部分和 {S_n}</text>
+    <text x="452" y="90" class="m-sub" font-size="11">1, 1.5, 1.75, 1.875, …</text>
+    <text x="452" y="112" class="m-sub" font-size="11">它又是一个数列</text>
+    <text x="452" y="132" class="m-txt" font-size="11">收敛 ⟺ S_n 有极限</text>
+    <text x="452" y="154" class="m-good" font-size="11.5">这里有 → 2</text>
+
+    <line x1="212" y1="111" x2="236" y2="111" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="246,111 234,106 234,116" class="m-fill-a"></polygon>
+    <text x="58" y="196" class="m-sub" font-size="11.5">把摆着的数</text>
+    <text x="58" y="212" class="m-sub" font-size="11.5">串成加法</text>
+
+    <line x1="400" y1="111" x2="424" y2="111" class="m-acc" stroke-width="1.5"></line>
+    <polygon points="434,111 422,106 422,116" class="m-fill-a"></polygon>
+    <text x="414" y="196" class="m-sub" font-size="11.5">逐项累加 + 取极限</text>
+    <text x="414" y="212" class="m-sub" font-size="11.5">（这才是能算的一步）</text>
+  </svg>
+  <figcaption><b>三步走：摆数 → 串成加法 → 取部分和的极限。</b>第①格是高中就熟的东西，第②格是不能直接执行的「无穷相加」，第③格才是能动手的对象——因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 只是一个普通数列，可以拿去求极限。以后每看到一个级数，脑子里的路都是同一条：<em>写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span>，看它有没有极限</em>。</figcaption>
+</figure>
+
+<h2 id="s3">黑板上先做三道：从部分和公式直接读答案</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=631">10:31</a>判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>3</mn><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>n</mi><mo>+</mo><mo>⋯</mo></math></span> 的敛散性。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：写出部分和公式，取极限</span>
+    <p>这题的部分和是等差数列求和，高中就做过：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>n</mi><mo>=</mo><mfrac><mrow><mi>n</mi><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span>，不是有限常数，所以<strong>发散</strong>。老师对比了两种讲法：严格的写法是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>n</mi><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 的极限不存在，故发散」，直观的写法是「越加越大、最终是正无穷，所以发散」——两种都能拿分，因为它们说的是同一件事：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 无有限极限。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=700">11:40</a>判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>8</mn></mfrac><mo>+</mo><mo>⋯</mo></math></span> 的敛散性。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：认出来它是等比数列求和</span>
+    <p>这是公比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>、首项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mn>1</mn></msub><mo>=</mo><mn>1</mn></math></span> 的等比级数。用高中公式：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>a</mi><mn>1</mn></msub><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>q</mi><mi>n</mi></msup><mo>)</mo></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn><mo>−</mo><msup><mrow><mo stretchy="true">(</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="true">)</mo></mrow><mi>n</mi></msup></mrow><mrow><mn>1</mn><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow></mfrac></math></div>
+    <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mrow><mo stretchy="true">(</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="true">)</mo></mrow><mi>n</mi></msup><mo>→</mo><mn>0</mn></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>→</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow></mfrac><mo>=</mo><mn>2</mn></math></span>。极限存在，故级数<strong>收敛</strong>，和为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>。</p>
+    <div class="trap">
+      <span class="lbl">这里最容易漏的一步</span>
+      <p><span class="bad">直接写「等比级数所以收敛」。</span>不对——等比级数<strong>不是</strong>一定收敛的，收敛与否取决于公比。这道题之所以收敛，是因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>&lt;</mo><mn>1</mn></math></span>，让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>q</mi><mi>n</mi></msup></math></span> 那一项被压成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。公比换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 就是另一回事了（见下面的表）。所以在黑板上做这类题，一定先点出「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 是多少、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 谁大」，再动笔。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s4">基准级数一：等比（几何）级数</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=847">14:07</a>老师把等比级数单拎出来讲，理由是「后面一直要用」：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>0</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mi>a</mi><msup><mi>q</mi><mi>n</mi></msup><mo>=</mo><mi>a</mi><mo>+</mo><mi>a</mi><mi>q</mi><mo>+</mo><mi>a</mi><msup><mi>q</mi><mn>2</mn></msup><mo>+</mo><mo>⋯</mo><mo>+</mo><mi>a</mi><msup><mi>q</mi><mi>n</mi></msup><mo>+</mo><mo>⋯</mo></math></div>
+
+<p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>≠</mo><mn>1</mn></math></span> 时，部分和公式是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>a</mi><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>q</mi><mi>n</mi></msup><mo>)</mo></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span>。老师分四种情形一条一条推完，结论如下表——<strong>这张表必须刻进骨头</strong>：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>公比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span></th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>q</mi><mi>n</mi></msup></math></span> 的走向</th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span> 的极限</th><th>结论</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>q</mi><mi>n</mi></msup><mo>→</mo><mn>0</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>a</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span></td>
+        <td><strong>收敛</strong>，和为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>a</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span></td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&gt;</mo><mn>1</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>q</mi><mi>n</mi></msup><mo>→</mo><mo>∞</mo></math></span></td>
+        <td>不存在</td>
+        <td><strong>发散</strong></td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mn>1</mn></math></span></td>
+        <td>每项都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><mi>n</mi><mi>a</mi><mo>→</mo><mo>∞</mo></math></span></td>
+        <td><strong>发散</strong>（要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>≠</mo><mn>0</mn></math></span>）</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span></td>
+        <td>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 间跳</td>
+        <td>奇偶子列分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></td>
+        <td><strong>发散</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1089">18:09</a>合起来就是一句话，老师用加重的语气念了一遍：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mtext>等比级数</mtext><mspace width="1em"></mspace><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><mi>a</mi><msup><mi>q</mi><mi>n</mi></msup><mo>:</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn><mspace width="0.25em"></mspace><mtext> 时收敛，和为</mtext><mspace width="1em"></mspace><mfrac><mrow><mi>a</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac><mo>;</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mo>|</mo><mi>q</mi><mo>|</mo><mo>≥</mo><mn>1</mn><mspace width="0.25em"></mspace><mtext> 时发散</mtext></math></div>
+
+<div class="why">
+  <span class="lbl"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 为什么都要单独拎出来</span>
+  <p>这两条是初学者最爱栽的地方，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mo form="prefix">±</mo><mn>1</mn></math></span> 恰好把「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>≠</mo><mn>1</mn></math></span> 时才能用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>a</mi><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>q</mi><mi>n</mi></msup><mo>)</mo></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span>」这个前提<em>同时</em>踩掉了，必须回头从级数本身看。</p>
+  <ul class="tight">
+    <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mn>1</mn></math></span></strong>：级数变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>+</mo><mi>a</mi><mo>+</mo><mi>a</mi><mo>+</mo><mo>⋯</mo></math></span>，前 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><mi>n</mi><mi>a</mi></math></span>。只要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>≠</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mi>a</mi><mo>→</mo><mo>∞</mo></math></span>，发散。（老师补了一句：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>=</mo><mn>0</mn></math></span> 时每项都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，那种情况不用研究。）</li>
+    <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span></strong>：级数变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>−</mo><mi>a</mi><mo>+</mo><mi>a</mi><mo>−</mo><mi>a</mi><mo>+</mo><mo>⋯</mo></math></span>，正是前面那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span> 的一般版。偶数项时成对抵消，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>k</mi></mrow></msub><mo>=</mo><mn>0</mn></math></span>；奇数项时多出来一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>a</mi></math></span>。两个子列极限不一样，所以极限不存在，发散。</li>
+  </ul>
+  <p>所以「等比级数」这四个字的完整含义是：<mark>只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></math></span> 才收敛</mark>。这句话以后会反复当「标尺」用——比较判别法里那个「瘦子」，指的就是收敛的等比级数。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1176">19:36</a>判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac></math></span> 的敛散性，收敛的话求和。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：这是小学四年级学过的「拆项相消」</span>
+    <p>先把部分和摆出来，再把每一项拆开。关键的一步是：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+    <p>老师当场验算了这一条：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>−</mo><mfrac><mn>1</mn><mn>3</mn></mfrac><mo>=</mo><mfrac><mrow><mn>3</mn><mo>−</mo><mn>2</mn></mrow><mrow><mn>6</mn></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mn>6</mn></mfrac></math></span>，对的。于是部分和里中间那些项全部正负对消：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="true">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true">(</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>−</mo><mfrac><mn>1</mn><mn>3</mn></mfrac><mo stretchy="true">)</mo></mrow><mo>+</mo><mo>⋯</mo><mo>+</mo><mrow><mo stretchy="true">(</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><mo>−</mo><mfrac><mn>1</mn><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></div>
+    <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>→</mo><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>→</mo><mn>1</mn></math></span>。级数<strong>收敛</strong>，和为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。老师顺口说这东西「小学四年级的弟弟妹妹都会」——等差求和、等比求和加裂项，就是高中阶段<strong>唯一三种能直接求和的办法</strong>。</p>
+  </div>
+</div>
+
+<h2 id="s5">性质：黑板上补充的「增值条款」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1373">22:53</a>老师有一句口头禅在这节课里出现了两次：「<strong>书上这条定理没写成充要条件，那它一定不是充要条件</strong>」。只给单向结论的，你就得把反例准备好。</p>
+
+<div class="blk def">
+  <span class="lbl">性质 1 · 线性</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mi>S</mi></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><mi>k</mi><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mi>k</mi><mi>S</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>k</mi></math></span> 为常数）。也就是说，常数因子可以整体提到求和号外面来。</p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl">性质 2 · 收敛 ± 收敛 = 收敛</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub></math></span> 都收敛，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><msub><mi>u</mi><mi>n</mi></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub><mo>)</mo></math></span> 也收敛，且其和就是两个和相加减。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1514">25:14</a>性质 2 反过来 —— 不成立</span>
+  <p><span class="bad">「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><msub><mi>u</mi><mi>n</mi></msub><mo>±</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub><mo>)</mo></math></span> 收敛 ⇒ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub></math></span> 都收敛」是错的。</span>反例：取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>v</mi><mi>n</mi></msub><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><msub><mi>u</mi><mi>n</mi></msub><mo>+</mo><msub><mi>v</mi><mi>n</mi></msub><mo>)</mo><mo>=</mo><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mo>⋯</mo></math></span> 收敛，可 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub></math></span> <strong>都发散</strong>。原因正是那句口头禅：书上没写「充要」，就意味着反方向有坑。</p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1674">27:54</a>性质 3 · 收敛 ± 发散 = 发散（一定）</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub></math></span> 收敛、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub></math></span> 发散，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><msub><mi>u</mi><mi>n</mi></msub><mo>+</mo><msub><mi>v</mi><mi>n</mi></msub><mo>)</mo></math></span> 一定发散。</p>
+  <p><strong>证明用反证法</strong>：假设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mo>(</mo><msub><mi>u</mi><mi>n</mi></msub><mo>+</mo><msub><mi>v</mi><mi>n</mi></msub><mo>)</mo></math></span> 收敛。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub></math></span> 也收敛，由性质 2 两者相减 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mrow><mo stretchy="true">[</mo><mo>(</mo><msub><mi>u</mi><mi>n</mi></msub><mo>+</mo><msub><mi>v</mi><mi>n</mi></msub><mo>)</mo><mo>−</mo><msub><mi>u</mi><mi>n</mi></msub><mo stretchy="true">]</mo></mrow><mo>=</mo><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub></math></span> 应当收敛——这与「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>v</mi><mi>n</mi></msub></math></span> 发散」矛盾。所以原级数必发散。</p>
+  <p>老师特意只证了「加」，然后说「<strong>相减一模一样，我故意没写，让你自己体会</strong>」：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>v</mi><mi>n</mi></msub></math></span> 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>v</mi><mi>n</mi></msub></math></span> 只是每项换个符号，敛散性不变。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">性质 4 · 发散 ± 发散 = 不确定</span>
+  <p><span class="bad">两个发散的级数相加或相减，可能发散也可能收敛。</span>同两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span>：相减得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>0</mn><mo>+</mo><mo>⋯</mo></math></span>，<em>收敛</em>；相加得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>+</mo><mn>2</mn><mo>+</mo><mn>2</mn><mo>+</mo><mo>⋯</mo></math></span>，<em>发散</em>。再换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mo>⋯</mo></math></span>：相加收敛、相减发散。同一个「发散 ± 发散」，结论能翻来覆去。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1925">32:05</a>四条性质其实只记一句</span>
+  <p>把四条排成一排会发现它们沿着一条线走：<strong>「已知」越多，结论越硬</strong>。</p>
+  <ul class="tight">
+    <li>两个都收敛 → 一定收敛。</li>
+    <li>一个收敛一个发散 → 一定发散（性质 3）。</li>
+    <li>两个都发散 → 什么都说不了。</li>
+  </ul>
+  <p>道理在于「发散」是个含糊的状态：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span> 往正无穷冲，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span> 在两个值之间跳。而「收敛」状态明确，所以只要有一边收敛，另一边的「野性」就压不下去。</p>
+</div>
+
+<h2 id="s6">有限项陷阱：哪一句话动的是「有限项」</h2>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=1925">32:05</a>性质 5 · 去掉、增加、改变有限项，敛散性不变</span>
+  <p>级数里去掉、增加或改动<strong>有限项</strong>，不改变它的敛散性。</p>
+</div>
+
+<p>老师<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2005">33:25</a>连着抛了两句话让全班比照着判断，这是黑板课上最典型的一种出题方式：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>句子</th><th>动了几项？</th><th>敛散性变不变</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>把级数的<strong>前 100 项</strong>的奇偶项颠倒位置</td>
+        <td>100 项，<strong>有限</strong></td>
+        <td><strong>不变</strong></td>
+      </tr>
+      <tr>
+        <td>把级数的<strong>所有</strong>奇数项与偶数项交换位置</td>
+        <td>无穷多项</td>
+        <td><mark>可能变</mark>——这就是选择题的坑</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>老师<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2079">34:39</a>说得很直白：第一句话里明确写了「前 100 项」，那是有限项，敛散性不动；第二句话动的是所有项，敛散性<strong>没有保证</strong>。他还提醒，这种句子会直接出现在选择题选项里——「给一个级数，交换奇数项和偶数项的位置，它的敛散性不变」，很多同学会判断错。</p>
+
+<div class="trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2142">35:42</a>「敛散性不变」不等于「和不变」</span>
+  <p><span class="bad">把「增删有限项敛散性不变」顺手推广成「和也不变」，是错的。</span>若原级数收敛、和为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span>，去掉前 8 项之后和<em>可能</em>变（少了那 8 项的和）；但若增加的是 100 个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，和当然不变。所以准确的说法是：<mark>收敛时和<strong>可能</strong>变也可能不变，而敛散性一定不变</mark>——两件事要分开说。</p>
+  <p>老师补了一句很有分量的话：「<strong>这些关键点书上都没给你指出来，考试稍微变个花样你就看不出来了。</strong>」这句提醒正是黑板课存在的理由——正课讲「是什么」，黑板课讲「容易在哪里翻车」。</p>
+</div>
+
+<h2 id="s7">加小括号：能加，但不能反推</h2>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2209">36:49</a>性质 6 · 收敛的级数加括号后仍收敛，且和不变</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub></math></span> 收敛，则任意添加小括号后得到的新级数仍然收敛，且和不变。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2281">38:01</a>老师花了一整块黑板来证这一条，因为「加括号」听着太平常，平常到看不出有什么可证的。他的思路是<strong>把加括号后的部分和看成原来部分和的子列</strong>：原级数的部分和是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mn>1</mn></msub><mo>,</mo><msub><mi>S</mi><mn>2</mn></msub><mo>,</mo><msub><mi>S</mi><mn>3</mn></msub><mo>,</mo><mo>…</mo></math></span>；如果按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><msub><mi>u</mi><mn>2</mn></msub><mo>)</mo><mo>+</mo><msub><mi>u</mi><mn>3</mn></msub><mo>+</mo><mo>(</mo><msub><mi>u</mi><mn>4</mn></msub><mo>+</mo><msub><mi>u</mi><mn>5</mn></msub><mo>+</mo><msub><mi>u</mi><mn>6</mn></msub><mo>)</mo><mo>+</mo><mo>⋯</mo></math></span> 这样加括号，新级数的前几个部分和恰好落在原数列的某些位置上，比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mn>2</mn></msub><mo>,</mo><msub><mi>S</mi><mn>3</mn></msub><mo>,</mo><msub><mi>S</mi><mn>6</mn></msub><mo>,</mo><mo>…</mo></math></span>。<strong>新的部分和数列就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>S</mi><mi>n</mi></msub><mo>}</mo></math></span> 的一个子列。</strong></p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2482">41:22</a>而上一章讲过：「收敛数列的任一子列都收敛，且极限相同」。原级数收敛意味着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>S</mi><mi>n</mi></msub><mo>}</mo></math></span> 收敛，子列也收敛到同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span>——加括号后仍收敛，和也一样。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 248" role="img" aria-label="加括号后的部分和是原部分和数列的子列，子列与母列收敛到同一极限">
+    <text x="34" y="22" class="m-txt" font-size="12">加括号 = 在原部分和数列里挑出一个子列</text>
+
+    <line x1="56" y1="96" x2="606" y2="96" class="m-thin" stroke-width="1"></line>
+    <text x="34" y="100" class="m-sub" font-size="11">S</text>
+
+    <circle cx="90" cy="140" r="6" class="m-fill-a"></circle>
+    <circle cx="170" cy="118" r="6" class="m-fill-a"></circle>
+    <circle cx="250" cy="96" r="7" class="m-fill-g"></circle>
+    <circle cx="330" cy="112" r="6" class="m-fill-a"></circle>
+    <circle cx="410" cy="88" r="6" class="m-fill-a"></circle>
+    <circle cx="490" cy="100" r="7" class="m-fill-g"></circle>
+    <circle cx="570" cy="94" r="6" class="m-fill-a"></circle>
+
+    <polyline points="90,140 250,96 490,100" fill="none" class="m-good" stroke-width="2"></polyline>
+    <text x="86" y="162" class="m-sub" font-size="11">S₁</text>
+    <text x="166" y="140" class="m-sub" font-size="11">S₂</text>
+    <text x="244" y="82" class="m-good" font-size="11.5">S₄</text>
+    <text x="326" y="134" class="m-sub" font-size="11">S₅</text>
+    <text x="404" y="76" class="m-sub" font-size="11">S₇</text>
+    <text x="484" y="122" class="m-good" font-size="11.5">S₈</text>
+    <text x="560" y="116" class="m-sub" font-size="11">S₁₀</text>
+
+    <text x="250" y="190" class="m-good" font-size="11.5">加括号后的部分和：S₄ → S₈ → …</text>
+    <text x="250" y="210" class="m-txt" font-size="11.5">母列 {S_n} 收敛到 S ⇒ 子列也收敛到 S</text>
+    <text x="250" y="232" class="m-sub" font-size="11.5">所以「加括号仍收敛、且和不变」</text>
+  </svg>
+  <figcaption><b>加括号后剩下的点，是原数列里的「抽点」。</b>灰点是原部分和数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>S</mi><mi>n</mi></msub><mo>}</mo></math></span>，绿点是被小括号选中的位置（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mn>4</mn></msub><mo>,</mo><msub><mi>S</mi><mn>8</mn></msub><mo>,</mo><mo>…</mo></math></span>）。它们连起来就是新级数的部分和数列——<strong>它一定是原数列的子列</strong>。母列收敛到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span>（水平线），子列当然也收敛到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span>。</figcaption>
+</figure>
+
+<div class="blk trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2530">42:10</a>反过来绝对不成立</span>
+  <p><span class="bad">「加括号后收敛 ⇒ 原级数收敛」是错的。</span>反例还是那个老熟人：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span> 本身<strong>发散</strong>（奇偶子列分别趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）；可一旦加成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>)</mo><mo>+</mo><mo>⋯</mo></math></span>，每一项都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，加起来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<strong>收敛</strong>。</p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2611">43:31</a>为什么会这样？回到子列的类比——「子列收敛」推不出「母列收敛」。纯数列的例子：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mi>n</mi></msup></math></span> 本身<strong>发散</strong>，可子列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mrow><mn>2</mn><mi>k</mi></mrow></msub><mo>=</mo><mn>1</mn></math></span> 却收敛。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2670">44:30</a>所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn></math></span> 这种级数，如果你一直想着「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn></math></span> 抵消了」，其实<strong>已经在偷偷给它加括号了</strong>——<mark>无穷项相加时，加不加括号可能是致命差别</mark>。</p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2773">46:13</a>性质 7 · 加括号后发散 ⇒ 原级数必发散</span>
+  <p>这条方向是成立的，理由同样来自子列：<strong>若一个数列的某个子列发散，则原数列一定发散</strong>。所以加了括号的级数发散，原级数必发散。</p>
+</div>
+
+<h2 id="s8">必要条件：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>→</mo><mn>0</mn></math></span> 与它的「一票否决」用法</h2>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2859">47:39</a>性质 8 · 收敛的必要条件</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><msub><mi>u</mi><mi>n</mi></msub></math></span> 收敛，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mn>0</mn></math></span>。</p>
+  <p><strong>证明</strong>：由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>u</mi><mi>n</mi></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>u</mi><mn>1</mn></msub><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>u</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub></math></span> 相减，孤立出第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><msub><mi>S</mi><mi>n</mi></msub><mo>−</mo><msub><mi>S</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub></math></div>
+  <p>两边取极限，因为级数收敛，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>S</mi></math></span> 且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>S</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>S</mi><mo>−</mo><mi>S</mi><mo>=</mo><mn>0</mn></math></span>。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=2965">49:25</a>真正好用的是它的逆否命题</span>
+  <p>原命题是「收敛 ⇒ 通项趋于 0」，但做题时用得最多的是它的<strong>逆否形式</strong>：</p>
+  <p><mark>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub></math></span> 不趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（包括极限不存在），则级数一定发散。</mark></p>
+  <p>老师直接说「这个我不用给你证，因为这是逆否命题，逆否命题一定成立」。好处在于它是一张<strong>免费的一票否决票</strong>：不用放缩、不用找比较对象、不用算极限比值，只看通项本身就能判。</p>
+  <p>黑板上一口气走了三个例子：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mi>n</mi></math></span>（越加越大，发散）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span> 发散）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></math></span>（就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span>，通项在一和负一之间跳，<em>不趋于 0</em>，故发散）。第三个例子老师特别得意：以前判它要费口舌解释奇偶项，现在一行就完事。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=3137">52:17</a>反过来不行，而且反过来这条是整章的重点</span>
+  <p><span class="bad">「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>→</mo><mn>0</mn></math></span> ⇒ 级数收敛」是错的。</span>老师又用那句口头禅收尾：「如果反过来也对，那它就成了充要条件；书上没写成充要条件，说明反过来不对。」</p>
+  <p>反面教材就是下面这个——<strong>调和级数</strong>。它的通项老老实实趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，可级数照样发散。</p>
+</div>
+
+<h2 id="s9">基准级数二：调和级数（发散）</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=3195">53:15</a>黑板上写的调和级数是：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mrow><mo>∞</mo></mrow></munderover><mfrac><mn>1</mn><mi>n</mi></mfrac><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>3</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mo>+</mo><mo>⋯</mo></math></div>
+
+<p>老师说得很明确：「这个调和级数要记住，后面做题时是很重要的参考级数。」它的通项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>n</mi></mfrac><mo>→</mo><mn>0</mn></math></span>，但级数<strong>发散</strong>。证明用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>n</mi></mrow></msub><mo>−</mo><msub><mi>S</mi><mi>n</mi></msub></math></span>：</p>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=3272">54:32</a>证明 · 调和级数发散</span>
+  <p>把第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>+</mo><mn>1</mn></math></span> 项到第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>n</mi></math></span> 项加起来（一共 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项）：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>n</mi></mrow></msub><mo>−</mo><msub><mi>S</mi><mi>n</mi></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>+</mo><mn>2</mn></mrow></mfrac><mo>+</mo><mo>⋯</mo><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>n</mi></mrow></mfrac></math></div>
+  <p>这 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 项里，<strong>每一项的分母都 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≤</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>n</mi></math></span></strong>，所以每一项都 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≥</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>n</mi></mrow></mfrac></math></span>。把每一项都换成更小的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>n</mi></mrow></mfrac></math></span>，和就变小了：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>n</mi></mrow></msub><mo>−</mo><msub><mi>S</mi><mi>n</mi></msub><mo>≥</mo><mspace width="0.25em"></mspace><mi>n</mi><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>n</mi></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></div>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=3325">55:25</a>如果级数收敛、和为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>S</mi></math></span>，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>n</mi></mrow></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>S</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>S</mi></math></span>，两者之差应当趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。可上面的不等式说这个差<strong>永远不小于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span></strong>——它怎么可能趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>？矛盾。故调和级数<strong>发散</strong>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 268" role="img" aria-label="调和级数证明：从第n+1项到第2n项每一项都大于等于1/(2n)，总和越过1/2这条线">
+    <text x="34" y="22" class="m-txt" font-size="12">为什么 S₂ₙ − Sₙ ≥ 1/2：每一项都被 1/(2n) 托住</text>
+
+    <line x1="120" y1="250" x2="150" y2="250" class="m-line" stroke-width="1.4"></line>
+    <line x1="135" y1="250" x2="135" y2="40" class="m-line" stroke-width="1.4"></line>
+    <text x="106" y="54" class="m-sub" font-size="11">高度</text>
+
+    <line x1="120" y1="100" x2="600" y2="100" class="m-warn" stroke-width="1.5" stroke-dasharray="6 4"></line>
+    <text x="540" y="94" class="m-warn" font-size="11.5">1/2 这条线</text>
+
+    <rect x="240" y="212" width="100" height="38" rx="3" class="m-fill-a"></rect>
+    <rect x="240" y="169" width="100" height="43" rx="3" class="m-fill"></rect>
+    <rect x="240" y="119" width="100" height="50" rx="3" class="m-fill-a"></rect>
+    <rect x="240" y="59" width="100" height="60" rx="3" class="m-fill"></rect>
+
+    <text x="352" y="236" class="m-sub" font-size="11.5">1/8 ≈ 0.125</text>
+    <text x="352" y="196" class="m-sub" font-size="11.5">1/7 ≈ 0.143</text>
+    <text x="352" y="149" class="m-sub" font-size="11.5">1/6 ≈ 0.167</text>
+    <text x="352" y="94" class="m-sub" font-size="11.5">1/5 = 0.200</text>
+
+    <text x="240" y="264" class="m-txt" font-size="11.5">以 n = 4 为例：S₈ − S₄ = 1/5+1/6+1/7+1/8 ≈ 0.634</text>
+    <text x="178" y="70" class="m-good" font-size="11.5">累加起来</text>
+    <text x="178" y="86" class="m-good" font-size="11.5">越过了 1/2</text>
+
+    <line x1="150" y1="212" x2="234" y2="212" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <text x="46" y="216" class="m-sub" font-size="11">1/(2n)</text>
+    <text x="46" y="104" class="m-sub" font-size="11">1/2</text>
+  </svg>
+  <figcaption><b>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 取成 4 看得最清楚。</b>从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>5</mn></mfrac></math></span> 加到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>8</mn></mfrac></math></span> 共四项，每项都不小于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>8</mn></mfrac></math></span>（左侧虚线就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>n</mi></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mn>8</mn></mfrac></math></span>）。全按最小的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>8</mn></mfrac></math></span> 算也有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>；实际加起来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>6</mn><mn>3</mn><mn>4</mn></math></span>，<strong>已经越过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span> 线</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 越大越明显：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>n</mi></mrow></msub><mo>−</mo><msub><mi>S</mi><mi>n</mi></msub></math></span> 始终赖在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span> 以上，而收敛的话它必须趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——矛盾。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=3359">55:59</a>「趋于 0」只是门票，速度才是生死线</span>
+  <p>有同学不服：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>5</mn></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>6</mn></mfrac></math></span> 这么小，加起来不该是个固定常数吗？老师说：<strong>它是越加越大的</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>n</mi></mfrac></math></span> 确实趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，但<mark>趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的速度太慢</mark>，慢到无穷多项累加仍冲出上界。</p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=144&amp;t=3398">56:38</a>老师拿等比级数当对照组：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>+</mo><mfrac><mn>1</mn><mn>8</mn></mfrac><mo>+</mo><mo>⋯</mo></math></span> 也趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow></mfrac></math></span> 掉得飞快，累加起来只到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>n</mi></mfrac></math></span> 掉得极慢，累加起来没有天花板。所以判断一个级数，不能只看通项是否趋于 0，必须看<strong>它趋于 0 的速度够不够快</strong>——这是下一节所有判别法的统一来源。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>数列</b> 摆着的一列数</span><span class="ar">→</span>
+    <span class="n"><b>级数</b> 用一个 + 串起来</span><span class="ar">→</span>
+    <span class="n"><b>部分和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mi>n</mi></msub></math></span></b> 能算的那个</span><span class="ar">→</span>
+    <span class="n"><b>收敛</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">lim</mo><mspace width="0.25em"></mspace><msub><mi>S</mi><mi>n</mi></msub></math></span> 是有限常数</span>
+  </div>
+
+  <h3>两块基准（必须刻死）</h3>
+  <ul class="tight">
+    <li><strong>等比级数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><mi>a</mi><msup><mi>q</mi><mi>n</mi></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></math></span> 收敛、和为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>a</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow></mfrac></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>≥</mo><mn>1</mn></math></span> 全发散（含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mo form="prefix">±</mo><mn>1</mn></math></span>）。</li>
+    <li><strong>调和级数</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mn>1</mn><mi>n</mi></mfrac></math></span>：通项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>→</mo><mn>0</mn></math></span> 但<strong>发散</strong>，证法是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>S</mi><mrow><mn>2</mn><mi>n</mi></mrow></msub><mo>−</mo><msub><mi>S</mi><mi>n</mi></msub><mo>≥</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>。</li>
+    <li><strong>裂项型</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>：分母是相邻因式相乘就先想拆项相消。</li>
+  </ul>
+
+  <h3>性质清单（黑板上补充过的）</h3>
+  <ul class="tight">
+    <li>线性：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><mi>k</mi><msub><mi>u</mi><mi>n</mi></msub><mo>=</mo><mi>k</mi><mi>S</mi></math></span>；常数可以提到求和号外。</li>
+    <li>收敛 ± 收敛 = 收敛；但反推不成立（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 的例子）。</li>
+    <li>收敛 ± 发散 = <strong>一定发散</strong>（反证法）。</li>
+    <li>发散 ± 发散 = 不确定。</li>
+    <li>增删改<strong>有限项</strong>：敛散性不变；<strong>和可能变</strong>。</li>
+    <li>加括号：收敛的加了仍收敛且和不变；加括号收敛<strong>推不出</strong>原级数收敛；加括号<strong>发散</strong>则原级数必发散。</li>
+    <li>必要条件：收敛 ⇒ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>→</mo><mn>0</mn></math></span>；逆否：不趋于 0 ⇒ 一票否决判发散。</li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li>「极限是无穷大」不是极限存在，那是<strong>发散</strong>。</li>
+    <li>「前 100 项奇偶颠倒」是有限项、敛散性不变；「所有奇偶项交换」是无穷项、可能变。<mark>读题要找「有限」两个字</mark>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>n</mi></msub><mo>→</mo><mn>0</mn></math></span> 只是必要条件——调和级数就是反例。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 收敛数列的性质（子列、极限唯一）</li>
+      <li><span class="cur">高中等差数列、等比数列求和公式</span></li>
+      <li><span class="cur">拆项相消（裂项）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P145-【黑板】正项级数的敛散性/index.html">【黑板】正项级数的敛散性</a> 【黑板】正项级数的敛散性（比较、比值、根值、「谁猛谁不猛」）</li>
+      <li><a href="../P146-【黑板】交错级数/index.html">【黑板】交错级数</a> 【黑板】交错级数（莱布尼茨、绝对收敛与条件收敛）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>u</mi><mi>n</mi></msub><mo>}</mo></math></span> 趋于 0 ≠ 级数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo largeop="true" movablelimits="true">∑</mo><mspace width="0.25em"></mspace><msub><mi>u</mi><mi>n</mi></msub></math></span> 收敛</li>
+      <li>「加括号后收敛」推不出「原级数收敛」（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>+</mo><mo>⋯</mo></math></span>）</li>
+      <li>有限项：敛散性不变，但<strong>和</strong>可能变</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 144 讲</span><a href="../P143-【黑板】格林公式及应用/index.html">← P143</a><a href="../index.html">全部目录</a><a href="../P145-【黑板】正项级数的敛散性/index.html">P145 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">黑板上第一件事：数列是一列数，级数是把它们加起来</a>
+    <a href="#s2">从「加起来」到「看部分和数列」</a>
+    <a href="#s3">黑板上先做三道：从部分和公式直接读答案</a>
+    <a href="#s4">基准级数一：等比（几何）级数</a>
+    <a href="#s5">性质：黑板上补充的「增值条款」</a>
+    <a href="#s6">有限项陷阱：哪一句话动的是「有限项」</a>
+    <a href="#s7">加小括号：能加，但不能反推</a>
+    <a href="#s8">必要条件：un→0 与它的「一票否决」用法</a>
+    <a href="#s9">基准级数二：调和级数（发散）</a>
+  </aside>
+</div>
+</body>
+</html>

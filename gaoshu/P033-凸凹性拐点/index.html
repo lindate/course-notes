@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>凸凹性与拐点：用二阶导数看曲线往哪边弯 · 高等数学笔记</title>
+<meta name="description" content="曲线的「凹」与「凸」有两个口径，但说到底是一回事：几何上弦在曲线上方就是凹，下方就是凸；代数上 f&#x27;&#x27;(x)&amp;gt;0 是凹、f&#x27;&#x27;(x)&amp;lt;0 是凸。拐点是凸凹性发生改变的那个二维点 (x0,f(x0))——f&#x27;&#x27;(x0)=0 只是嫌疑，左右不变号就不是拐点（y=x4 就是反例）。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 3 章  微分中值定理与导数的应用</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 33 讲</div>
+    <h1 class="title"><span class="pnum">P033</span>凸凹性与拐点：用二阶导数看曲线往哪边弯</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>曲线的「凹」与「凸」有两个口径，但<strong>说到底是一回事</strong>：几何上弦在曲线上方就是凹，下方就是凸；代数上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span> 是凹、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>&lt;</mo><mn>0</mn></math></span> 是凸。拐点是<strong>凸凹性发生改变的那个二维点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span></strong>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 只是嫌疑，左右不变号就不是拐点（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>4</mn></msup></math></span> 就是反例）。</p></div>
+    <div class="meta"><span>时长 42m22s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=0">00:00</a><span class="vv">凸凹的<b>象形</b>：凹是凹进去一块，凸是凸出来一块。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=183">03:03</a><span class="vv">两种定义口径：中点函数值与弦中点比较（严格定义，做题不用）。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=399">06:39</a><span class="vv"><b>判定定理</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 凹，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> 凸；各书可能相反，认准本套定义。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=522">08:42</a><span class="vv">记忆法：二阶导正→凹、负→凸；正字平顶=凹，凸字鼓包=凸。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=561">09:21</a><span class="vv"><b>与单调性的关系</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> ⟺ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 增 ⟺ 切线斜率越来越大 = 凹。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=823">13:43</a><span class="vv"><b>例题</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的凸凹性（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><mo>&lt;</mo><mn>0</mn></math></span> 是凸）。</span></li>
+    <li class="sep"><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=972">16:12</a><span class="vv"><b>练习</b>：只给一小片曲线怎么判——把它补成一个完整的碗或拱。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1049">17:29</a><span class="vv"><b>例题</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span> 的凸凹区间（负无穷到零凸，零到正无穷凹）。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1250">20:50</a><span class="vv"><b>例题</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的凸凹区间（零不在定义域，区间不写零）。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1364">22:44</a><span class="vv"><b>拐点定义</b>：过该点凸凹性改变；必须是二维点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span>，且点在曲线上。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1598">26:38</a><span class="vv">求拐点步骤：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 不存在的点是嫌疑点，再看左右是否变号。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1804">30:04</a><span class="vv"><b>例题</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mn>3</mn><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mn>4</mn></math></span> 的拐点（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mn>0</mn><mo>.</mo><mn>5</mn></math></span>）。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2082">34:42</a><span class="vv"><b>例题（列表）</b>：以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>2</mn><mn>3</mn></mfrac></math></span> 分点的函数，两拐点。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2292">38:12</a><span class="vv"><b>反例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>4</mn></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 但左右都凹，<strong>没有拐点</strong>。</span></li>
+    <li><span class="no">15</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2405">40:05</a><span class="vv"><b>反例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 不存在，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是拐点。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">先认形状：凹进去与凸出来</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=0">00:00</a>「凸凹」这两个字本身就像形——凹是凹进去一块，凸是凸出来一块。老师强调这是<strong>相对</strong>的：同一个图形，你从下往上看是凸，从上往下看可能就成了凹。更麻烦的是，<strong>不同教材对这两个字的定义可能正好相反</strong>：有的书把碗口朝上叫凸，有的叫凹。所以本节认准我们这套定义即可：</p>
+
+<div class="blk def">
+  <span class="lbl">本套约定</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span> 时曲线是<strong>凹</strong>的（碗口朝上、像「凹」字底部那块平的）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>&lt;</mo><mn>0</mn></math></span> 时曲线是<strong>凸</strong>的（拱起来、像「凸」字顶上那块鼓的）。</p>
+</div>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=90">01:30</a>视频原话（大意）</span>
+  <p><q>凸凹这两个字，是我写汉字写得最难的。上大学时那位数学老师，不知道是山东哪儿的，念这个东西叫「娃凹性」——把凸念成了娃。还有一次去听别的老师讲课，他说「奇函数」，我学了一辈子也不知道什么叫奇函数，一看这不就是奇函数吗？原来他念的是奇偶的那个「奇」。</q></p>
+  <p>老师说这些，正为了说明一件事：<strong>名字和读音会骗人，形状不会</strong>。凸凹的名字各书可能正好相反，认准 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 的正负和那张「弦与曲线」的图，就够了。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=166">02:46</a>为什么「凸凹」是相对的，必须约定口径</span>
+  <p>同一张图，从下面看是凸，从上面看可能就是凹。老师举了一把两个把手的「井」字型的例子，又打了个比方：<q>有半杯水，你说它是半杯满的，人家偏爱说半杯是空的</q>——说法对立，描述的却是同一个事实。所以数学书必须<strong>硬性约定</strong>一个口径，否则「这段曲线是凹是凸」这种话就没有意义。不同的书约的可能相反，我们这套的定义只是其中一种，好在它和汉字的形状比较贴近。</p>
+</div>
+
+<h2 id="s2">两种定义口径，其实是一回事</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=183">03:03</a>课本先给了一个「严格定义」，靠弦和曲线中点的位置关系：</p>
+
+<div class="blk def">
+  <span class="lbl">严格定义（几何口径）</span>
+  <p>任取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>1</mn></msub><mo>&lt;</mo><msub><mi>x</mi><mn>2</mn></msub></math></span>，记中点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>x</mi><mn>2</mn></msub></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。若</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mrow><mo stretchy="true">(</mo><mfrac><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>x</mi><mn>2</mn></msub></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>&lt;</mo><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>)</mo><mo>+</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>)</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+  <p>则称为<strong>凹</strong>；不等号反向（左边大于右边）则称为<strong>凸</strong>。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=399">06:39</a>翻译成图上的话：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>)</mo><mo>)</mo></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>)</mo><mo>)</mo></math></span> 连成一条<strong>弦</strong>，弦的中点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mfrac><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>x</mi><mn>2</mn></msub></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>)</mo><mo>+</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>)</mo></mrow><mrow><mn>2</mn></mrow></mfrac><mo>)</mo></math></span>。如果曲线在弦的<strong>下方</strong>（即曲线中点比弦中点低），就是凹；曲线在弦的<strong>上方</strong>，就是凸。老师直言这个严格定义「做题完全不用」，但它把「凹」「凸」的几何含义钉死了。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=280">04:40</a>严格定义里的那个「中点」为什么正好是梯形中位线</span>
+  <p>老师带着大家把定义「拆成边」看过一遍：设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>1</mn></msub><mo>&lt;</mo><msub><mi>x</mi><mn>2</mn></msub></math></span>，曲线上的两点对应纵坐标 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>)</mo></math></span>。把这两点连成弦，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>)</mo><mo>+</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>)</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 正是<strong>弦中点的纵坐标</strong>——因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>2</mn></msub></math></span> 的中点在横轴上，弦在这处的纵坐标就是两端纵坐标的平均（梯形中位线）。而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mrow><mo stretchy="true">(</mo><mfrac><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>x</mi><mn>2</mn></msub></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span> 是<strong>曲线上</strong>同一横坐标处的纵坐标。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mtext>中点</mtext><mo>)</mo><mo>&lt;</mo><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>)</mo><mo>+</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>2</mn></msub><mo>)</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 这句话，就是「曲线中点比弦中点低」，也就是<strong>曲线在弦的下方</strong>。</p>
+</div>
+
+<div class="blk thm">
+  <span class="lbl">判定定理（代数口径，做题就靠它）</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span> 内有一阶、二阶导数，则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn><mspace width="1em"></mspace><mo>⇒</mo><mtext>凹</mtext><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>&lt;</mo><mn>0</mn><mspace width="1em"></mspace><mo>⇒</mo><mtext>凸</mtext></math></div>
+</div>
+
+<div class="why">
+  <span class="lbl">两种口径为什么等价</span>
+  <p>几何口径说「曲线在弦下方 = 凹」，代数口径说「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> = 凹」。<strong>前者是形状描述，后者是计算公式</strong>。可以证明：当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 时，函数是「加速上升 / 减速下降」的，曲线被「托」在弦的下方，于是几何口径的「凹」和代数口径的「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span>」指向同一件事。所以记判定定理就够了，但心里要清楚它背后是那张弦与曲线的图——这样名字反了你也不会慌。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=447">07:27</a>判定定理为什么要求「一阶、二阶导数都存在」</span>
+  <p>因为结论用的就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 的符号，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 是「把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 再求一次导」——它要存在，前提是先有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span>。所以条件必须一次性写上「有一阶、二阶导数」，缺一不可。课本对这个定理有很详细的证明，老师让大家<strong>不用看</strong>：平时用的时候直接用结论，把条件记牢就行。真正要留心的是条件够不着的情形——比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> <strong>不存在</strong>的点，判定定理就管不到那里，只能退回图像和定义，去看左右两侧的凸凹有没有变（后面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 那题正是如此）。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 230" role="img" aria-label="凹与凸的几何含义：弦在曲线上方为凹，弦在曲线下方为凸">
+    <text x="40" y="24" class="m-txt" font-size="12.5">凹 (f'' &gt; 0)：弦在曲线上方</text>
+    <line x1="60" y1="195" x2="300" y2="195" class="m-thin" stroke-width="1.1"></line>
+    <path d="M 90 128 Q 180 208 270 128" fill="none" class="m-acc" stroke-width="2"></path>
+    <line x1="90" y1="128" x2="270" y2="128" class="m-line" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <line x1="180" y1="128" x2="180" y2="168" class="m-warn" stroke-width="1.2" stroke-dasharray="3 3"></line>
+    <circle cx="180" cy="128" r="3.5" class="m-fill-w"></circle>
+    <circle cx="180" cy="168" r="3.5" class="m-fill-g"></circle>
+    <text x="112" y="120" class="m-txt" font-size="11">弦中点</text>
+    <text x="196" y="186" class="m-txt" font-size="11">曲线中点(更低)</text>
+
+    <text x="360" y="24" class="m-txt" font-size="12.5">凸 (f'' &lt; 0)：弦在曲线下方</text>
+    <line x1="380" y1="195" x2="620" y2="195" class="m-thin" stroke-width="1.1"></line>
+    <path d="M 410 150 Q 500 70 590 150" fill="none" class="m-acc" stroke-width="2"></path>
+    <line x1="410" y1="150" x2="590" y2="150" class="m-line" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <line x1="500" y1="150" x2="500" y2="110" class="m-warn" stroke-width="1.2" stroke-dasharray="3 3"></line>
+    <circle cx="500" cy="150" r="3.5" class="m-fill-w"></circle>
+    <circle cx="500" cy="110" r="3.5" class="m-fill-g"></circle>
+    <text x="428" y="170" class="m-txt" font-size="11">弦中点</text>
+    <text x="520" y="100" class="m-txt" font-size="11">曲线中点(更高)</text>
+  </svg>
+  <figcaption><b>凹与凸的几何判据。</b>左图曲线（绿点）比弦（虚线）的中点低，即整段曲线被弦压在下面，对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 的凹；右图曲线中点比弦中点高，曲线拱在弦上面，对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> 的凸。记住这张图，「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 正负的名字」就算和别的书反了，你也能从形状推回来。</figcaption>
+</figure>
+
+<h2 id="s3">记忆法：正字平顶 = 凹，凸字鼓包 = 凸</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=522">08:42</a>判定定理谁都背得下来，一做题就晕。老师给了一个画面感极强的办法：</p>
+
+<div class="blk plain">
+  <span class="lbl">四字记忆 · <a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=742">12:22</a>正→凹，负→凸</span>
+  <p>「<strong>正</strong>」字上面是<strong>平</strong>的（一横平平），对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 是<strong>凹</strong>（凹字底下那块也是平的）；「<strong>凸</strong>」字上面<strong>鼓出来一块</strong>，对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> 是<strong>凸</strong>。这样下次大脑一看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span>，立刻弹出一个「凸」字鼓包的形象，比死记硬背牢得多。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么这个记忆法靠谱（从一阶导看）</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 的导数。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 单调增——画个凹的碗，从左到右切线斜率由负变正、越变越大，确实是「增」的；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> 说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 单调减——拱形曲线切线斜率由正变负、越来越小。所以「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 正→凹」其实和「一阶导判断单调性」是同一套逻辑，只是把原函数换成了它的一阶导。</p>
+</div>
+
+<h2 id="s4">和单调性什么关系：一阶看增减，二阶看弯向</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=561">09:21</a>凸凹性的判定和单调性像得让人发晕：单调性看<strong>一阶导的正负</strong>，凸凹性看<strong>二阶导的正负</strong>。老师把这两件事的关系说得非常清楚——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 的导数，所以</p>
+
+<ul class="tight">
+  <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> ⟺ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 单调增 ⟺ 曲线的<strong>切线斜率越来越大</strong> ⟺ 凹；</li>
+  <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> ⟺ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 单调减 ⟺ 切线斜率越来越小 ⟺ 凸。</li>
+</ul>
+
+<p>关键在同一套逻辑被用了两遍：判断单调性时，观察的对象是<strong>原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span></strong>；判断凸凹性时，观察的对象换成了<strong>切线斜率 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span></strong>。所谓「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 就是凹」，说的不过是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 是增函数」而已。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=645">10:45</a>为什么「斜率在增大」就是凹</span>
+  <p>在凹的曲线（碗）上从左往右走，切线斜率从负的一路变到正的，的确在增大；在凸的曲线（拱）上走，斜率从正变到负，越来越小。反过来，如果图上只给你<strong>一小片</strong>曲线、也不告诉你它是哪一段，怎么认？老师给了个很实用的办法——<mark>把这一小片「补全」成一个完整的碗或拱</mark>：能补成碗口朝上的，就是凹；能补成拱起来的，就是凸。</p>
+</div>
+
+<p>还要留心一点：<strong>增减与弯向互不干涉</strong>。上升的曲线可以是凹的（越升越陡），也可以是凸的（越升越缓）；下降的曲线同理。下面四块「碎片」，就是全部四种组合。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">练习</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=972">16:12</a>只给一小片曲线，怎么判断它是凹的还是凸的？</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把它「补全」成一个完整的碗或拱</span>
+    <p>考试不会给你一整条曲线、旁边还标好凹凸；往往只给你<strong>一小片</strong>。老师给的办法是：<mark>顺着这一片的趋势，把它补成一个完整的形状</mark>——</p>
+    <ul class="tight">
+      <li>能补成<strong>碗口朝上</strong>的碗 → 凹（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span>）；</li>
+      <li>能补成<strong>向上拱起</strong>的拱 → 凸（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span>）。</li>
+    </ul>
+    <p>碎片本身往往只画了「上升的一段」或「下降的一段」，看不出碗还是拱，但把两端延长的趋势在脑子里补出来，形状立刻就定了。老师反复练的就是这个动作。</p>
+    <div class="trap">
+      <span class="lbl">别被「上升」骗了</span>
+      <p><span class="bad">看到曲线在上升就判成凹。</span>上升只说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span>，跟弯向无关。同样是上升的一小片，可能是越升越陡（凹），也可能是越升越缓（凸）。<strong>判凹凸只看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 的符号，或者看它补全后是碗还是拱。</strong></p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 320" role="img" aria-label="四种组合：上升且越来越陡为增凹，上升但越来越缓为增凸，下降但越来越缓为减凹，下降且越来越陡为减凸">
+    <text x="170" y="20" text-anchor="middle" class="m-txt" font-size="12.5">凹：f'' &gt; 0（切线斜率在增大）</text>
+    <text x="470" y="20" text-anchor="middle" class="m-txt" font-size="12.5">凸：f'' &lt; 0（切线斜率在减小）</text>
+
+    <rect x="24" y="34" width="292" height="108" class="m-acc m-bg-a" stroke-width="1.4"></rect>
+    <text x="38" y="52" class="m-sub" font-size="11.5">增（f' &gt; 0）</text>
+    <path d="M 46 132 C 132 128 212 96 302 46" fill="none" class="m-acc" stroke-width="2.6"></path>
+
+    <rect x="324" y="34" width="292" height="108" class="m-vio m-bg-a" stroke-width="1.4"></rect>
+    <text x="338" y="52" class="m-sub" font-size="11.5">增（f' &gt; 0）</text>
+    <path d="M 346 132 C 386 82 472 48 602 46" fill="none" class="m-vio" stroke-width="2.6"></path>
+
+    <text x="170" y="158" text-anchor="middle" class="m-txt" font-size="11.5">上升，且越来越陡</text>
+    <text x="470" y="158" text-anchor="middle" class="m-txt" font-size="11.5">上升，但越来越缓</text>
+
+    <rect x="24" y="172" width="292" height="108" class="m-acc m-bg-a" stroke-width="1.4"></rect>
+    <text x="38" y="190" class="m-sub" font-size="11.5">减（f' &lt; 0）</text>
+    <path d="M 46 190 C 86 240 172 264 302 266" fill="none" class="m-acc" stroke-width="2.6"></path>
+
+    <rect x="324" y="172" width="292" height="108" class="m-vio m-bg-a" stroke-width="1.4"></rect>
+    <text x="338" y="190" class="m-sub" font-size="11.5">减（f' &lt; 0）</text>
+    <path d="M 346 190 C 432 192 522 220 602 266" fill="none" class="m-vio" stroke-width="2.6"></path>
+
+    <text x="170" y="296" text-anchor="middle" class="m-txt" font-size="11.5">下降，但越来越缓</text>
+    <text x="470" y="296" text-anchor="middle" class="m-txt" font-size="11.5">下降，且越来越陡</text>
+
+    <text x="320" y="314" text-anchor="middle" class="m-sub" font-size="11.5">增 / 减由 f' 决定，凹 / 凸由 f'' 决定，两件事互不干涉</text>
+  </svg>
+  <figcaption><b>同样「上升」，弯的方向可以完全相反。</b>左列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span>（凹）的曲线，切线斜率在增大，所以越走越陡；右列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span>（凸）的曲线，切线斜率在减小，所以越走越缓。做题时看到的往往只是其中一小片，判断的办法就是<em>把它补全成一个碗或一个拱</em>：补成碗的是凹，补成拱的是凸。</figcaption>
+</figure>
+
+<h2 id="s5">例题：几个常见曲线的凸凹性</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=823">13:43</a>判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的凸凹性。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：求导两次看符号</span>
+    <p>定义域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span>。</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></div>
+    <p>无论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 取什么，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><mo>&lt;</mo><mn>0</mn></math></span> 恒成立。由判定定理，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 在整个定义域上是<strong>凸</strong>的。对照图像——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 那条增速越来越慢的曲线，正是拱起来的凸形。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1049">17:29</a>判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span> 的凸凹区间。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 变号处就是凸凹分界</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>3</mn><msup><mi>x</mi><mn>2</mn></msup><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>6</mn><mi>x</mi></math></span>。</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> → <strong>凸区间</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mn>0</mn><mo>]</mo></math></span>；</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> → <strong>凹区间</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span>。</li>
+    </ul>
+    <p>分界点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 在定义域内有定义，所以区间端点把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 写进去（和单调区间同理：有定义就含端点）。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处左右凸凹性相反，它就是一个拐点。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1250">20:50</a>判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的凸凹区间。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：零不在定义域，区间绝不能写零</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><msup><mi>x</mi><mn>3</mn></msup></mrow></mfrac></math></span>。</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>3</mn></msup><mo>&lt;</mo><mn>0</mn></math></span> → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> → <strong>凸区间</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mn>0</mn><mo>)</mo></math></span>；</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>3</mn></msup><mo>&gt;</mo><mn>0</mn></math></span> → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> → <strong>凹区间</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span>。</li>
+    </ul>
+    <p>这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> <strong>不在定义域</strong>内，所以两个区间都必须用「并」分开，<strong>绝对不能写成含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的闭区间</strong>。这是和例 2 最关键的差别：端点能不能写，只看它有没有定义。</p>
+  </div>
+</div>
+
+<h2 id="s6">拐点：凸凹性改变的那个「点」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1364">22:44</a>拐点是这么来的：当曲线经过某一点时，<strong>凸凹性发生了变化</strong>（左边凸、右边凹，或反过来），这个点就叫拐点。但有两个铁规矩：</p>
+
+<dl class="kv">
+  <dt>规矩一：拐点是二维点</dt>
+  <dd>必须写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span>，<strong>不能写成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 是拐点」</strong>。拐点是平面上的一个点，不是一个数。</dd>
+  <dt>规矩二：点必须在曲线上</dt>
+  <dd>要求曲线<strong>经过</strong>该点且在此凸凹性改变。这一点函数没定义，就谈不上拐点。</dd>
+</dl>
+
+<div class="blk trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1364">22:44</a>最经典的错误</span>
+  <p>上面例 3 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 左右凸凹性确实变了（左凸右凹），于是很多人脱口而出「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是拐点」。<span class="bad">错！</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处函数根本没定义，曲线不经过它，凭什么叫拐点？正确说法是：<strong>这里没有拐点</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 没有拐点。</p>
+</div>
+
+<h2 id="s7">怎么求拐点</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1598">26:38</a>书上的步骤很固定：</p>
+
+<ol class="steps">
+  <li><span class="sh">求二阶导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。</span>永远先确认定义域。</li>
+  <li><span class="sh">找嫌疑点：</span>令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 的点，以及 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> <strong>不存在</strong>的点。这两类只是「疑似拐点」，不一定是。</li>
+  <li><span class="sh">看左右符号：</span>考察每个嫌疑点两侧 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 的正负号是否改变。变了 → 是拐点；没变 → 不是拐点。</li>
+</ol>
+
+<div class="why">
+  <span class="lbl">为什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 只是嫌疑</span>
+  <p>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 为零，左右可能「都是正的」（或都是负的），凸凹性压根没变。零只是「可能变号」的位置，不是「一定变号」的保证。同理 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 不存在的点，只要左右凸凹性变了，照样是拐点——它和「函数本身没定义」完全是两码事。</p>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2586">43:06</a>「二阶导不存在」和「函数没定义」是两回事</span>
+  <p>这是本节最容易含混的一句，老师反复强调。三种情况必须分清：</p>
+  <ul class="tight">
+    <li><strong>函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 没定义</strong>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）：点不在曲线上，谈不上拐点——直接排除；</li>
+    <li><strong>函数有定义，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 不存在</strong>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）：点在曲线上，只是判定定理用不上，得<strong>退回定义看左右凸凹有没有变</strong>；</li>
+    <li><strong>函数有定义，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span></strong>（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>4</mn></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）：定理能用，但结论待定，<strong>看左右符号是否变</strong>。</li>
+  </ul>
+  <p>一句话：<mark>拐点的门槛是「点在曲线上」，不是「二阶导算得出来」</mark>。所以做题的第三步永远要问自己：这个嫌疑点，函数到底有没有定义？</p>
+</div>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=3158">52:38</a>三个函数放一起记，最省事</span>
+  <p>课本里的三个经典例子，恰好把三种结局演全了，建议成组记：</p>
+  <div class="tbl-wrap">
+    <table class="cmp">
+      <thead><tr><th>函数</th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span></th><th>左右是否变号</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span></td><td>左负右正，<strong>变</strong></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是拐点</td></tr>
+        <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>4</mn></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span></td><td>两侧都为正，<strong>不变</strong></td><td><strong>没有拐点</strong></td></tr>
+        <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo></math></span> <strong>不存在</strong></td><td>左正右负，<strong>变</strong></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是拐点</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>规律一眼可见：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 是零还是不存在，都只是「有没有资格当嫌疑」，真正拍板的永远是「左右变不变号」。</strong></p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=1804">30:04</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mn>3</mn><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mn>4</mn></math></span> 的拐点。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 再验左右</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>6</mn><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><mn>6</mn><mi>x</mi><mo>−</mo><mn>1</mn><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>1</mn><mn>2</mn><mi>x</mi><mo>+</mo><mn>6</mn></math></span>。令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span>。</p>
+    <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span>（凸）；当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span>（凹）。左右变号，故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></math></span> 确实是拐点。代入求函数值：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>(</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>)</mo><mo>=</mo><mn>2</mn><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>8</mn></mfrac><mo stretchy="true">)</mo></mrow><mo>+</mo><mn>3</mn><mrow><mo stretchy="true">(</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo stretchy="true">)</mo></mrow><mo>−</mo><mn>1</mn><mn>2</mn><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="true">)</mo></mrow><mo>+</mo><mn>1</mn><mn>4</mn><mo>=</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>+</mo><mfrac><mn>3</mn><mn>4</mn></mfrac><mo>+</mo><mn>6</mn><mo>+</mo><mn>1</mn><mn>4</mn><mo>=</mo><mn>2</mn><mn>0</mn><mo>.</mo><mn>5</mn></math></div>
+    <p>所以拐点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mn>0</mn><mo>.</mo><mn>5</mn><mo>)</mo></math></span>。注意写的是<strong>二维点</strong>。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2082">34:42</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>3</mn><msup><mi>x</mi><mn>4</mn></msup><mo>−</mo><mn>4</mn><msup><mi>x</mi><mn>3</mn></msup></math></span> 的拐点（以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>2</mn><mn>3</mn></mfrac></math></span> 分点列表判断）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：列表看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 符号，比写一大段文字清楚</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>1</mn><mn>2</mn><msup><mi>x</mi><mn>3</mn></msup><mo>−</mo><mn>1</mn><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>3</mn><mn>6</mn><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>2</mn><mn>4</mn><mi>x</mi><mo>=</mo><mn>1</mn><mn>2</mn><mi>x</mi><mo>(</mo><mn>3</mn><mi>x</mi><mo>−</mo><mn>2</mn><mo>)</mo></math></span>。令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mn>2</mn><mn>3</mn></mfrac></math></span>。用这两个点把定义域切开：</p>
+    <div class="tbl-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>区间</th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mo>∞</mo><mo>,</mo><mn>0</mn><mo>)</mo></math></span></th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mn>2</mn><mn>3</mn></mfrac><mo>)</mo></math></span></th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mfrac><mn>2</mn><mn>3</mn></mfrac><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span></th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>2</mn><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td></tr>
+          <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi><mo>−</mo><mn>2</mn></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span></td></tr>
+          <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span>（凹）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo></math></span>（凸）</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo></math></span>（凹）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>：左凹右凸，变号 → 拐点，代入得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>。在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mn>2</mn><mn>3</mn></mfrac></math></span>：左凸右凹，变号 → 拐点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mfrac><mn>2</mn><mn>3</mn></mfrac><mo>)</mo><mo>=</mo><mn>3</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn><mn>6</mn></mrow><mrow><mn>8</mn><mn>1</mn></mrow></mfrac><mo>−</mo><mn>4</mn><mo>⋅</mo><mfrac><mrow><mn>8</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn><mn>6</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mfrac><mn>2</mn><mn>3</mn></mfrac><mo>,</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn><mn>6</mn></mrow><mrow><mn>2</mn><mn>7</mn></mrow></mfrac><mo>)</mo></math></span>。</p>
+  </div>
+</div>
+
+<h2 id="s8">两个反例：把「疑似」和「真拐」分清</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">反例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2292">38:12</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>4</mn></msup></math></span> 有没有拐点？</span></p>
+  <div class="sol">
+    <span class="lbl">思路：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 不代表变号</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>4</mn><msup><mi>x</mi><mn>3</mn></msup><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>1</mn><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup><mo>≥</mo><mn>0</mn></math></span> 恒成立。在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span>，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 都<strong>严格大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>，左右都是凹的，凸凹性根本没变。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>4</mn></msup></math></span> <strong>没有拐点</strong>。</p>
+    <div class="note">
+      <span class="lbl">老师的提醒</span>
+      <p>不是所有曲线都必须有拐点。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>4</mn></msup></math></span> 的图像比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span> 更「窄」地一直凹下去，全程一个弯向都不改变。这个反例专门用来破除「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 就一定是拐点」的错觉。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">反例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2405">40:05</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是拐点吗？</span></p>
+  <div class="sol">
+    <span class="lbl">思路：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 不存在也能是拐点</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>9</mn></mrow></mfrac><msup><mi>x</mi><mrow><mo form="prefix">−</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>3</mn></mrow></mfrac></mrow></msup><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>9</mn><msup><mi>x</mi><mrow><mn>5</mn><mo>/</mo><mn>3</mn></mrow></msup></mrow></mfrac></math></span>。在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> <strong>不存在</strong>（分母为零），但：</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&lt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>5</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>&lt;</mo><mn>0</mn></math></span> → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> → 凹；</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>5</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>&gt;</mo><mn>0</mn></math></span> → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> → 凸。</li>
+    </ul>
+    <p>左右凸凹性变了，且点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 在曲线上、有定义，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是<strong>拐点</strong>。这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 不存在反而成了拐点——正好印证「不存在的点也是嫌疑点」。</p>
+    <div class="why">
+      <span class="lbl">别把「函数没定义」和「二阶导没定义」搞混</span>
+      <p>有人一看到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 不存在，就说「这点都不存在了还管它干嘛」。<strong>两码事！</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mn>0</mn></mrow><mrow><mn>3</mn></mrow></mroot><mo>=</mo><mn>0</mn></math></span> 明明有定义，只是二阶导数算不出来。原函数在，且左右凸凹变了，它就是拐点。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 230" role="img" aria-label="左图 y 等于 x 的三次方在原点左侧是凸、右侧是凹，左右弯向改变所以原点是拐点；右图 y 等于 x 的四次方两侧都是凹，弯向不变所以没有拐点">
+    <text x="160" y="20" text-anchor="middle" class="m-txt" font-size="12.5">y = x³：弯向改变 → 是拐点</text>
+    <line x1="30" y1="120" x2="300" y2="120" class="m-thin" stroke-width="1.1"></line>
+    <line x1="165" y1="46" x2="165" y2="200" class="m-thin" stroke-width="1.1"></line>
+    <path d="M 62 174 C 110 140 140 124 165 120 C 190 116 220 100 268 66" fill="none" class="m-acc" stroke-width="2.2"></path>
+    <circle cx="165" cy="120" r="4" class="m-fill-w"></circle>
+    <text x="104" y="92" text-anchor="middle" class="m-sub" font-size="11.5">凸 (f''&lt;0)</text>
+    <text x="228" y="156" text-anchor="middle" class="m-sub" font-size="11.5">凹 (f''&gt;0)</text>
+    <text x="178" y="140" class="m-txt" font-size="11">(0,0)</text>
+
+    <text x="478" y="20" text-anchor="middle" class="m-txt" font-size="12.5">y = x⁴：弯向不变 → 无拐点</text>
+    <line x1="348" y1="120" x2="618" y2="120" class="m-thin" stroke-width="1.1"></line>
+    <line x1="483" y1="46" x2="483" y2="200" class="m-thin" stroke-width="1.1"></line>
+    <path d="M 362 58 C 410 106 452 118 483 120 C 514 118 556 106 604 58" fill="none" class="m-acc" stroke-width="2.2"></path>
+    <circle cx="483" cy="120" r="4" class="m-fill-g"></circle>
+    <text x="420" y="156" text-anchor="middle" class="m-sub" font-size="11.5">凹 (f''&gt;0)</text>
+    <text x="546" y="156" text-anchor="middle" class="m-sub" font-size="11.5">凹 (f''&gt;0)</text>
+    <text x="496" y="140" class="m-txt" font-size="11">(0,0)</text>
+    <text x="320" y="220" text-anchor="middle" class="m-sub" font-size="11.5">两者都有 f''(0)=0，区别只在「左右是否变号」</text>
+  </svg>
+  <figcaption><b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>3</mn></msup></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>4</mn></msup></math></span> 都成立，但只有前者是拐点。</b>左图 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>3</mn></msup></math></span> 在原点由凸转凹，弯向掉了个头，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是拐点；右图 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>4</mn></msup></math></span> 两侧都是凹（像 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span> 一样全程凹，只是更「窄」），经过原点时弯向压根没变，所以<em>没有拐点</em>。这张图就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 只是嫌疑」的最直观证据。</figcaption>
+</figure>
+
+<h2 id="s9">把拐点和极值点彻底分开</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=33&amp;t=2405">40:05</a>两节连着学，最容易混的就是这两个词。它们都出现在「导数等于零或不存在」的位置上，但盯的根本不是同一件事：<strong>极值点关心函数值的局部高低（看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 变号），拐点关心曲线弯向的改变（看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 变号）。</strong></p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>对比项</th><th>极值点</th><th>拐点</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>一句话定义</td><td>邻域内函数值最大 / 最小的位置</td><td>曲线经过它时凸凹性改变的位置</td></tr>
+      <tr><td>靠哪个导数判</td><td><strong>一阶导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span></strong> 左右是否变号</td><td><strong>二阶导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span></strong> 左右是否变号</td></tr>
+      <tr><td>怎么写才对</td><td>是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 值：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 是极值点」</td><td>是二维点：「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span> 是拐点」</td></tr>
+      <tr><td>候选点来源</td><td>驻点（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span>）与不可导点</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 的点与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 不存在的点</td></tr>
+      <tr><td>可导处的切线</td><td>一定<strong>水平</strong>（斜率 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）</td><td>一般<strong>斜着</strong>（斜率可以不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note">
+  <span class="lbl">用同一批函数记差别</span>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 是<strong>极小值点</strong>（谷底），切线水平。它<strong>不是</strong>拐点——全程都凹，弯向压根没变。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是<strong>拐点</strong>（左凸右凹），但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> <strong>不是</strong>极值点——曲线从下坡直接穿过原点继续上坡。这里切线也恰好水平（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>），属于巧合。</li>
+    <li>例 4 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>2</mn><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mn>3</mn><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mn>4</mn></math></span>：拐点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>,</mo><mn>2</mn><mn>0</mn><mo>.</mo><mn>5</mn><mo stretchy="true">)</mo></mrow></math></span> 处切线斜率是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mn>7</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，<strong>斜得厉害</strong>。可见「拐点」和「水平切线」之间没有任何必然联系。</li>
+  </ul>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么两个「嫌疑点」的清单长得像</span>
+  <p>找极值点，要找 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 为零或不存在的地方；找拐点，要找 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 为零或不存在的地方。形式一样，是因为背后的推理一样：<strong>能用「变号」下结论的位置，只能是导数为零或导数不存在的位置</strong>（变号的地方导数不可能取一个非零的普通值）。区别只在「谁在变号」——是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 变号（函数掉头，出极值），还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 变号（弯向掉头，出拐点）。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>两种口径（等价）</h3>
+  <p>几何：弦在曲线<strong>上方</strong> = 凹，<strong>下方</strong> = 凸。代数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&gt;</mo><mn>0</mn></math></span> 凹，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>&lt;</mo><mn>0</mn></math></span> 凸。</p>
+
+  <h3>记忆口诀</h3>
+  <p><mark>正→凹，负→凸</mark>；正字平顶=凹，凸字鼓包=凸。</p>
+
+  <h3>拐点</h3>
+  <ul class="tight">
+    <li>定义：过该点<strong>凸凹性改变</strong></li>
+    <li>必须是<strong>二维点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span></strong>，不能写「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span>」</li>
+    <li>点必须<strong>在曲线上</strong>（有定义且经过）</li>
+    <li>求法：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 不存在 → 看左右是否变号</li>
+  </ul>
+
+  <h3>两个反例</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>4</mn></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 但左右都凹 → <strong>无拐点</strong></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mroot><mrow><mi>x</mi></mrow><mrow><mn>3</mn></mrow></mroot></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 不存在但左右变号 → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是拐点</li>
+    <li>对照组 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 且左右变号 → <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 是拐点</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 只是嫌疑，不变号就不是拐点</li>
+    <li>区间端点写不写零，只看该点<strong>有没有定义</strong></li>
+  </ul>
+
+  <h3>别和极值点混</h3>
+  <ul class="tight">
+    <li>极值点看 <mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 变号</mark>（局部高低）；拐点看 <mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 变号</mark>（弯向改变）</li>
+    <li>极值点是 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 值</strong>；拐点是<strong>二维点</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo></math></span></li>
+    <li>可导的极值点切线<strong>必水平</strong>；拐点切线<strong>可以斜着</strong>（例 4 斜率 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mn>7</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>）</li>
+  </ul>
+
+  <h3>四种组合</h3>
+  <p>增 · 凹 = 越升越陡；增 · 凸 = 越升越缓；减 · 凹 = 越降越缓；减 · 凸 = 越降越陡。增减看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span>，弯向看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span>，互不干涉。</p>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P027-微分/index.html">微分</a> 微分、<a href="../P032-函数单调性/index.html">函数单调性</a> 函数单调性（一阶导判单调）</li>
+      <li><span class="cur">二阶导数的含义：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo></math></span> 的单调性</span></li>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数定义（处理不可导点）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P034-极值/index.html">极值</a> 极值（拐点与极值点的区别）</li>
+      <li><a href="../P031-泰勒公式/index.html">泰勒公式</a> 泰勒公式（用二阶导近似曲线弯曲）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>不同教材「凸/凹」名字可能相反，认准 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo></math></span> 正负即可</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span> <strong>不保证</strong>是拐点（看左右变号）</li>
+      <li>拐点写二维点；「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 是拐点」是错写法</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 33 讲</span><a href="../P032-函数单调性/index.html">← P032</a><a href="../index.html">全部目录</a><a href="../P034-极值/index.html">P034 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">先认形状：凹进去与凸出来</a>
+    <a href="#s2">两种定义口径，其实是一回事</a>
+    <a href="#s3">记忆法：正字平顶 = 凹，凸字鼓包 = 凸</a>
+    <a href="#s4">和单调性什么关系：一阶看增减，二阶看弯向</a>
+    <a href="#s5">例题：几个常见曲线的凸凹性</a>
+    <a href="#s6">拐点：凸凹性改变的那个「点」</a>
+    <a href="#s7">怎么求拐点</a>
+    <a href="#s8">两个反例：把「疑似」和「真拐」分清</a>
+    <a href="#s9">把拐点和极值点彻底分开</a>
+  </aside>
+</div>
+</body>
+</html>

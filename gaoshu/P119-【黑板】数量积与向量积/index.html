@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】数量积与向量积 · 高等数学笔记</title>
+<meta name="description" content="这一页装着本章的两把乘法，也是整个向量代数里最容易混的一处。老师开场就把这件事故意说重了：「大家还是把手机给我收起来哈，前面讲的东西很琐碎……重要的咱就仔细听。」两把乘法的分工可以用一句话锁死：数量积（点乘）算出来是一个数，管「垂直」；向量积（叉乘）算出来是一个向量，管「平行」和「面积」。本页的主干">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 119 讲</div>
+    <h1 class="title"><span class="pnum">P119</span>【黑板】数量积与向量积</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这一页装着<b>本章的两把乘法</b>，也是整个向量代数里最容易混的一处。老师开场就把这件事故意说重了：「大家还是把手机给我收起来哈，前面讲的东西很琐碎……重要的咱就仔细听。」两把乘法的分工可以用一句话锁死：<mark>数量积（点乘）算出来是一个<strong>数</strong>，管「垂直」；向量积（叉乘）算出来是一个<strong>向量</strong>，管「平行」和「面积」</mark>。本页的主干是一张七行对照表 + 四道讲透的例题，外加一条最要命的规则：叉乘展开时<mark>中间那一项必须取负</mark>。新授课见 <a href="../P071-方向角 方向余弦 数量积 向量积/index.html">方向角 方向余弦 数量积 向量积</a>。</p></div>
+    <div class="meta"><span>时长 50m24s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=0">00:00</a><span class="vv"><b>开场定调</b>：前面那些概念比较琐碎，从这两个乘法开始是<b>要考的东西</b>，仔细听。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=32">00:32</a><span class="vv"><b>数量积的算法与符号</b>：中间那个点叫点乘，<mark>点不能省</mark>；它其实就是线代里的「内积」。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=160">02:40</a><span class="vv">第二种定义从<b>做功</b>来：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>；顺手得到两向量的<b>夹角公式</b>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=630">10:30</a><span class="vv"><b>垂直的充要条件</b>：点乘等于零。以及三条小结论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mn>0</mn></math></span>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=866">14:26</a><span class="vv"><b>例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∠</mo><mspace width="0.25em"></mspace><mi>A</mi><mi>M</mi><mi>B</mi></math></span>（答案是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>）。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=1041">17:21</a><span class="vv"><b>向量积</b>：结果是一个<b>向量</b>；大小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，方向由右手系确定。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=1393">23:13</a><span class="vv"><b>行列式写法</b>：第一行<b>永远是</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span>；第二行第一个向量、第三行第二个向量，<mark>顺序不能换</mark>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=1653">27:33</a><span class="vv">按第一行展开的口诀：<b>正、负、正</b>——只有中间那一项要加负号，这是最高频的失分点。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=2164">36:04</a><span class="vv"><b>四条性质</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span>、平行 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⟺</mo></math></span> 叉乘为零向量、<b>反交换律</b>、分配律。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=2705">45:05</a><span class="vv"><b>面积</b>：平行四边形 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo></math></span>，三角形再除以二——课本没讲，老师当场补的。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、先把两把乘法摆在一起</h2>
+
+<p>老师在这一节开头放了一句很少见的重话：</p>
+
+<div class="said">
+  <span class="lbl">课堂原话（大意）</span>
+  <p><q>下面数量积跟向量积就比较重要了。哎，大家还是把手机给我收起来哈。前面讲的东西很琐碎，有同学都走神了、有同学都睡着了，我还没好意思叫你——不太重要的你睡会就睡会吧，重要的咱就仔细听啊，仔细听。</q></p>
+</div>
+
+<p>为什么会「混」？因为两个乘法长得太像了：都写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mspace width="1em"></mspace><mo>⋅</mo><mspace width="1em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 的形式，都用两个向量的坐标，都在讲「夹角」。但它们的性格完全相反。所以本页的第一件事不是讲公式，而是<strong>把两者的差别做成一张表</strong>——考试前只看这一张表就够了。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>对比项</th><th>数量积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>（点乘）</th><th>向量积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>（叉乘）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>定义</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span></td>
+        <td>大小是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>；方向由右手系定</td>
+      </tr>
+      <tr>
+        <td><strong>结果是什么</strong></td>
+        <td>一个<strong>数</strong>（标量），可正、可负、可为零</td>
+        <td>一个<strong>向量</strong>——<mark>名字就把答案说了</mark></td>
+      </tr>
+      <tr>
+        <td><strong>坐标公式</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mi>x</mi></msub><msub><mi>b</mi><mi>x</mi></msub><mo>+</mo><msub><mi>a</mi><mi>y</mi></msub><msub><mi>b</mi><mi>y</mi></msub><mo>+</mo><msub><mi>a</mi><mi>z</mi></msub><msub><mi>b</mi><mi>z</mi></msub></math></span>（对应相乘再相加）</td>
+        <td>三阶行列式，第一行是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span></td>
+      </tr>
+      <tr>
+        <td><strong>几何意义</strong></td>
+        <td>「一个向量在另一个上的投影」乘上另一个的长度；物理上是做功</td>
+        <td>模 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo></math></span> 以两边为邻边的<strong>平行四边形面积</strong></td>
+      </tr>
+      <tr>
+        <td><strong>判什么</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>⟺</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mn>0</mn></math></span>（管<strong>垂直</strong>）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>⟺</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span>（管<strong>平行</strong>）</td>
+      </tr>
+      <tr>
+        <td><strong>交换律</strong></td>
+        <td>满足：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span></td>
+        <td><strong>不满足</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo form="prefix">−</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span></td>
+      </tr>
+      <tr>
+        <td><strong>与自己运算</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><msup><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo stretchy="true">|</mo></mrow><mrow><mn>2</mn></mrow></msup></math></span>（<strong>求模的第二条路</strong>）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span>（零向量，不是数字 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>这张表有三处值得先停一下：</p>
+
+<ul class="tight">
+  <li><strong>「判什么」这一行最容易记反。</strong>口诀是「<mark>点乘管垂直，叉乘管平行</mark>」。为什么是这个搭配？因为垂直用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>（夹角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>），平行用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>（夹角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>）——<strong>看哪个三角函数在这个位置取到零</strong>，就不会记反。</li>
+  <li><strong>只有数量积能用来求模。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><msup><mo>|</mo><mrow><mn>2</mn></mrow></msup></math></span> 是唯一能在不知道夹角的情况下「消掉方向」的式子；叉乘那条给的是零向量，什么信息都没有。</li>
+  <li><strong>「结果是什么」这一行是全部混乱的根源。</strong>老师说他在课上反复强调这一点：<q>两个向量的数量积是一个数，两个向量的向量积是一个向量。我为什么刚才一直给你强调？因为向量啊，是由两个东西决定的——一个是方向，一个是大小。</q></li>
+</ul>
+
+<h2 id="s2">二、数量积：从一个数开始</h2>
+
+<p>计算完全没有难度，就是「对应坐标相乘再相加」：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><msub><mi>a</mi><mi>x</mi></msub><msub><mi>b</mi><mi>x</mi></msub><mo>+</mo><msub><mi>a</mi><mi>y</mi></msub><msub><mi>b</mi><mi>y</mi></msub><mo>+</mo><msub><mi>a</mi><mi>z</mi></msub><msub><mi>b</mi><mi>z</mi></msub></math></div>
+
+<p>老师当场用一对具体向量演示：<q>比方说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 呢是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mi>B</mi></math></span> 做数量积——首先它的符号呢是中间有一个点儿，所以也叫点乘……<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>×</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，它直接就等于这样一个数，它数量积就这么好算。</q>算出来是</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>+</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>+</mo><mn>2</mn><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>2</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></div>
+
+<p>这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 很值得留意：<strong>它是负的</strong>。说明这两个向量的夹角是钝角（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>&lt;</mo><mn>0</mn></math></span>）。这让本页的第一条「反直觉」浮出水面——<mark>数量积可以取负值，而且负数是有意义的</mark>。老师讲完这个例子就顺势交代了两点：<q>第二个数量积最终是个啥？是个数，这不就完了吗？</q>以及<q>它这个点不能省哈，人家就叫点乘。</q></p>
+
+<div class="why">
+  <span class="lbl">定义为什么会写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>：从做功来</span>
+  <p>老师讲这一段时很清楚这是「物理味」的：<q>假设我们沿着这个方向有一个力 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>F</mi></math></span>，那么沿着这个方向它的位移是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi></math></span>，它的夹角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span>。那也就是说推这个人他不是直接朝前推，他是朝那个方向——那这个我们大家都比较熟嘛，力分解，我们就把这个方向的力在这个方向上进行分解，这个方向呢就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>F</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>，那么这个力乘以它的位移就是他做的功。</q></p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>W</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>F</mi><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>s</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">cos</mi><mo>θ</mo></math></div>
+  <p>把这个式子抽象出来，就是数量积的定义：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mn>0</mn><mo>≤</mo><mo>θ</mo><mo>≤</mo><mo>π</mo></math></div>
+  <p>有了 <a href="../P118-【黑板】向量的模｜方向角｜方向余弦｜投影/index.html">【黑板】向量的模｜方向角｜方向余弦｜投影</a> 的投影语言，它还能换一种读法：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 等于「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></math></span> 乘上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 上的投影」。这正是老师说的<strong>第三种定义</strong>：<q>这一块其实就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 上的投影，所以就写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></math></span> 乘以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 上的投影。如果反过来，你把这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 的模保留、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span> 那一块就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 上的投影。</q></p>
+  <p><strong>两种读法说的是同一件事</strong>：先把一个向量投影过去，再乘长度。而投影可以为负（<a href="../P118-【黑板】向量的模｜方向角｜方向余弦｜投影/index.html">【黑板】向量的模｜方向角｜方向余弦｜投影</a> 讲过的那个反直觉点），所以数量积当然可以为负——<em>上一段的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 到这里就有了出处</em>。</p>
+</div>
+
+<p>关于第三种定义里的符号，老师吐槽得很厉害，顺便帮大家记住了它：<q>这个投影的符号，我认为是最最奇怪的一个符号，这什么玩意儿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>P</mi><mi>r</mi><mi>j</mi></mrow></mrow></math></span> 是吧？你知道他为什么写这个东西吗？因为投影嘛，投影仪是什么呀？project 吗？投影不是 project 吗？</q>他接着说：<q>这个符号太糟糕了……这是我最讨厌的一个符号，我最讨厌的另外一个符号就是两个向量的夹角。所以我从来不写那个符，你写个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 不就完了吗？</q></p>
+
+<p>真正高频使用的是第三种定义的一个副产品——<strong>夹角公式</strong>：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></mrow><mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo stretchy="true">|</mo></mrow><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow></mrow></mfrac></math></div>
+
+<p>老师说这条公式的用法是「两条路各走一半」：分子用坐标算，分母是两次求模，最后一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arccos</mi></math></span> 都不用记——因为考试里的答案基本都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 这种特殊角。</p>
+
+<div class="why">
+  <span class="lbl">坐标公式的来历：靠三个基本单位向量的「正交性」</span>
+  <p>把两个向量都按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span> 展开再乘开，一共出现九项；其中只有三项不是零：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mn>0</mn></math></div>
+  <p>老师说这一组结论要「不妨在下边记上」：<q>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span> 嘛，那不就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 轴的单位向量吗？相互垂直，点乘是不是等于零啊？</q>——自己跟自己的模都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，夹角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>；不同的两个互相垂直，所以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</p>
+  <p>九项里活下来的只有三项：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>a</mi><mi>x</mi></msub><msub><mi>b</mi><mi>x</mi></msub><mspace width="1em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>+</mo><msub><mi>a</mi><mi>y</mi></msub><msub><mi>b</mi><mi>y</mi></msub><mspace width="1em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>+</mo><msub><mi>a</mi><mi>z</mi></msub><msub><mi>b</mi><mi>z</mi></msub><mspace width="1em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><msub><mi>a</mi><mi>x</mi></msub><msub><mi>b</mi><mi>x</mi></msub><mo>+</mo><msub><mi>a</mi><mi>y</mi></msub><msub><mi>b</mi><mi>y</mi></msub><mo>+</mo><msub><mi>a</mi><mi>z</mi></msub><msub><mi>b</mi><mi>z</mi></msub></math></div>
+  <p><mark>所以坐标公式不是「规定」，而是「三根轴两两垂直」的直接后果。</mark>这也提醒我们：公式永远依赖背后的几何条件，换一套不正交的基，这套公式立刻失效。</p>
+  <p>垂直的充要条件也从这里出来：</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⊥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>⟺</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mn>0</mn></math></div>
+  <p>老师特意说了它「需要算」：<q>这个东西呀是需要大家算的。为什么呢？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mi>B</mi></math></span> 平行的时候其实大家不需要这么算，平行是能看出来的——你说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>)</mo></math></span>，它是不是它的两倍？那是不是平行啊？但「点乘等于零」这个玩意是不太容易看出来的，你得正儿八经地做一做点乘。</q><mark>这是本页最实用的一条判断经验：平行用眼睛扫，垂直动手算。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 284" role="img" aria-label="数量积的几何意义：底乘投影，夹角为钝角时投影为负、数量积也为负">
+    <line x1="70" y1="215" x2="462" y2="215" class="m-acc" stroke-width="2"></line>
+    <polygon points="470,215 458,210.5 458,219.5" class="m-fill-a"></polygon>
+    <text x="478" y="220" class="m-acc" font-size="12">a</text>
+
+    <line x1="70" y1="215" x2="272" y2="96" class="m-good" stroke-width="2"></line>
+    <polygon points="280,91 269.4,94.4 274.9,99.7" class="m-fill-g"></polygon>
+    <text x="288" y="86" class="m-good" font-size="12">b</text>
+
+    <line x1="280" y1="91" x2="280" y2="215" class="m-thin" stroke-width="1.1" stroke-dasharray="5 4"></line>
+    <path d="M 268,215 L 268,203 L 280,203" fill="none" class="m-thin" stroke-width="1.2"></path>
+
+    <line x1="70" y1="215" x2="70" y2="234" class="m-thin" stroke-width="1.1"></line>
+    <line x1="280" y1="215" x2="280" y2="234" class="m-thin" stroke-width="1.1"></line>
+    <line x1="70" y1="230" x2="280" y2="230" class="m-good" stroke-width="3"></line>
+    <text x="80" y="252" class="m-good" font-size="11.5">b 在 a 上的投影 = |b| cos θ</text>
+
+    <path d="M 150,215 Q 156.6,190.4 138,172.9" fill="none" class="m-warn" stroke-width="1.3"></path>
+    <text x="160" y="206" class="m-warn" font-size="12">θ</text>
+    <circle cx="70" cy="215" r="3.4" class="m-fill"></circle>
+    <text x="54" y="232" class="m-txt" font-size="12">O</text>
+
+    <rect x="340" y="16" width="288" height="112" rx="6" class="m-panel-s"></rect>
+    <text x="352" y="38" class="m-fill-a" font-size="11.5">数量积的结果是一个数</text>
+    <text x="352" y="60" class="m-math" font-size="11.5">① |a| |b| cos θ</text>
+    <text x="352" y="80" class="m-math" font-size="11.5">② a·b = ax bx + ay by + az bz</text>
+    <text x="352" y="100" class="m-math" font-size="11.5">③ |a| × (b 在 a 上的投影)</text>
+    <text x="352" y="120" class="m-sub" font-size="11.5">三种算法必得同一个数</text>
+
+    <rect x="340" y="140" width="288" height="66" rx="6" class="m-panel-a"></rect>
+    <text x="352" y="164" class="m-fill-a" font-size="11.5">θ 为钝角 → 投影为负 → 数量积为负</text>
+    <text x="352" y="188" class="m-sub" font-size="11.5">它不是「算错了」，而是带着方向信息</text>
+
+    <text x="24" y="272" class="m-txt" font-size="12">做题顺序：判断垂直或求夹角，一律先算数量积；平行则用眼睛扫倍数，不必动手</text>
+  </svg>
+  <figcaption><b>数量积的几何含义就是「底乘投影」。</b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 当底，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 上的投影当高（图中绿色那段，画在轴下方是为了看得清），两者相乘就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>。<em>这条竖直虚线是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 的终点垂直落到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 所在直线上的那条路，落点到起点的有向长度就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 是钝角时它会跑到原点左边、长度取负，这正是数量积可能为负的原因。</em>右边两块面板把「三种算法得同一个数」和「符号的意义」并排放在一起，方便对照。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=866">14:26</a>已知 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∠</mo><mspace width="0.25em"></mspace><mi>A</mi><mi>M</mi><mi>B</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：∠AMB 是「M 处的角」，所以要先造出两条从 M 出发的向量</span>
+    <p>老师先画了个图确认位置：<q>那么这个是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi></math></span>，这里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，这里是这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span>，要求这个角度。</q>然后关键的一步——<q>那我们就把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>M</mi><mi>A</mi></mrow><mo>⃗</mo></mover></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>M</mi><mi>B</mi></mrow><mo>⃗</mo></mover></math></span> 这两个向量给他求出来呗。</q>用「终点减起点」（<a href="../P118-【黑板】向量的模｜方向角｜方向余弦｜投影/index.html">【黑板】向量的模｜方向角｜方向余弦｜投影</a> 里讲透了这一步）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>M</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo stretchy="true">)</mo></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mover accent="true"><mrow><mi>M</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>接着「两条路各走一半」：分子算数量积，分母算两个模。</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>M</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo>⋅</mo><mover accent="true"><mrow><mi>M</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>+</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>+</mo><mn>0</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>=</mo><mn>1</mn></math></div>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><mi>M</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>2</mn></mrow></msqrt><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><mi>M</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>2</mn></mrow></msqrt></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt><mo>⋅</mo><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">一、把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>M</mi></mrow><mo>⃗</mo></mover></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>B</mi><mi>M</mi></mrow><mo>⃗</mo></mover></math></span> 拿来用。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∠</mo><mspace width="0.25em"></mspace><mi>A</mi><mi>M</mi><mi>B</mi></math></span> 的顶点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi></math></span>，所以两条边必须<strong>从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>M</mi></math></span> 出发</strong>。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>M</mi></mrow><mo>⃗</mo></mover></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>B</mi><mi>M</mi></mrow><mo>⃗</mo></mover></math></span> 算出来的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∠</mo><mspace width="0.25em"></mspace><mi>A</mi></math></span> 的补角——数值上余弦一样（两个都反号），角度数值也恰好一样，但推理是错的；一旦题目问的是「哪一个角是钝角」就当场翻车。</p>
+      <p><span class="bad">二、分母忘了开方。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><mi>M</mi><mi>A</mi></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><msqrt><mrow><mn>2</mn></mrow></msqrt></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>；写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 会算出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 以外的答案。</p>
+      <p><strong>自检办法：</strong>数量积算出来是正的（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>&gt;</mo><mn>0</mn></math></span> ⟹ 锐角），而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 确实是锐角，符号关系对得上。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s3">三、向量积：换成一个向量</h2>
+
+<p>第二个乘法叫<strong>向量积</strong>，也就是叉乘。老师先给出一句要写在标题旁边的话：<q>两个向量的向量积是个向量。</q>为什么会这样？因为<strong>向量需要两样东西才能确定——大小和方向</strong>，所以向量积的定义也就分两块：</p>
+
+<div class="blk def">
+  <span class="lbl">定义 · 向量积</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 是一个<strong>向量</strong>，由两件事决定：</p>
+  <ul class="tight">
+    <li><strong>大小</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>。</li>
+    <li><strong>方向</strong>：与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 都垂直，并且三者构成<strong>右手系</strong>——四指从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 弯向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>，大拇指指向的就是它。</li>
+  </ul>
+</div>
+
+<p>把两个定义并排看会发现一件事：数量积用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>，向量积用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>。<strong>这不是巧合</strong>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span> 量的是「方向一致的程度」，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span> 量的是「方向差得有多开」。夹角为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>，向量积变成零向量；夹角为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>θ</mo><mo>=</mo><mn>1</mn></math></span>，向量积达到最大。</p>
+
+<p>老师课上花了不少时间比划右手，最后自己给了退路：<q>老师啊，我觉得你这两个东西——一个是大小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>A</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>B</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，第二个是右手系，我弄得稀里糊涂的，最终我就只回答你一句话：你讲的什么东西我根本就没有听懂。</q>他接受这个现实，然后直接说明<strong>做题时根本不用比划右手</strong>：</p>
+
+<div class="said">
+  <span class="lbl">本页最实用的一句</span>
+  <p><q>我们在实际做题的时候，这种严格的图我们其实都是不画的。比较实用的是什么呢？你不妨在书上提前记一句话：因为我们后边有很多例题，其实是什么呢——<mark>求与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 这两个向量均垂直的向量，我们就是求它的向量积</mark>。为什么呢？你看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span> 这两个向量，这不朝上了吗？那么这个向量既垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 也垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi></math></span>，这个就是它的方向，就这么确定的。</q></p>
+</div>
+
+<p>换句话说：<strong>「方向由右手定」这件事在做题时的唯一用途，就是告诉你「向量积与原来两个向量都垂直」</strong>。至于它朝上还是朝下，题里一般不需要你回答。</p>
+
+<h3 id="s4">算法：一个三阶行列式</h3>
+
+<p>计算形式是一个行列式：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></mtd></mtr><mtr><mtd><msub><mi>a</mi><mi>x</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>a</mi><mi>y</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>a</mi><mi>z</mi></msub></mtd></mtr><mtr><mtd><msub><mi>b</mi><mi>x</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>b</mi><mi>y</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>b</mi><mi>z</mi></msub></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></div>
+
+<div class="blk trap">
+  <span class="lbl">三条铁律，顺序不能错</span>
+  <p><strong>第一，第一行永远是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span>。</strong>老师说得很重：<q>第一行永远是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span>，forever 永远。</q>第二行写第一个向量，第三行写第二个向量——<q>如果这俩向量交换了位置，这两行也得交换。</q></p>
+  <p><strong>第二，中间那一项要取负号。</strong>这一条是全节最高频的失分点：<q>注意哈，一定要强调的就是中间的这一项在算的时候要加负号，这是我们同学特别容易出错的。</q>为什么？因为按第一行展开时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span> 对应的是「第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 行第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 列」，符号因子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>+</mo><mn>2</mn></mrow></msup><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>。而第一个与第三个的符号因子分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msup><mo>=</mo><mo form="prefix">+</mo><mn>1</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>+</mo><mn>3</mn></mrow></msup><mo>=</mo><mo form="prefix">+</mo><mn>1</mn></math></span>。</p>
+  <p><strong>第三，算完要写成坐标形式。</strong>老师的理由很实在：写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span> 不直观，<q>还得写三个箭头，你是不是经常忘记写箭头啊</q>。</p>
+</div>
+
+<p>把展开过程写细一点就是：划掉第一行第一列、第二列、第三列，各剩一个二阶行列式，前两个数「直接写、加负号、直接写」：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><mspace width="1em"></mspace><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><msub><mi>a</mi><mi>y</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>a</mi><mi>z</mi></msub></mtd></mtr><mtr><mtd><msub><mi>b</mi><mi>y</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>b</mi><mi>z</mi></msub></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><msub><mi>a</mi><mi>x</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>a</mi><mi>z</mi></msub></mtd></mtr><mtr><mtd><msub><mi>b</mi><mi>x</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>b</mi><mi>z</mi></msub></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>,</mo><mspace width="1em"></mspace><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><msub><mi>a</mi><mi>x</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>a</mi><mi>y</mi></msub></mtd></mtr><mtr><mtd><msub><mi>b</mi><mi>x</mi></msub><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><msub><mi>b</mi><mi>y</mi></msub></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mspace width="1em"></mspace><mo stretchy="true">)</mo></mrow></math></div>
+
+<div class="why">
+  <span class="lbl">为什么只有中间那一项是负的——把「正负正」的节奏说清楚</span>
+  <p>老师说这是「用到了线性代数」，并且给出了完整依据：<q>按照你们线性代数讲的，它其实是按照第一行进行的展开，等于第一行的元素乘以它对应的代数余子式的乘积之和。</q>所谓代数余子式，是「余子式」再乘一个符号因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>i</mi><mo>+</mo><mi>j</mi></mrow></msup></math></span>。三个元素都在第一行，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span> 恒等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>：</p>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span> 的符号因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msup><mo>=</mo><mo form="prefix">+</mo><mn>1</mn></math></span>；</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span> 的符号因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>+</mo><mn>2</mn></mrow></msup><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>；</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span> 的符号因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>+</mo><mn>3</mn></mrow></msup><mo>=</mo><mo form="prefix">+</mo><mn>1</mn></math></span>。</li>
+  </ul>
+  <p>所以展开式的符号永远是「<mark>正、负、正</mark>」——<strong>记住这三个字的节奏，比每次去数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>i</mi><mo>+</mo><mi>j</mi></mrow></msup></math></span> 快得多</strong>。</p>
+  <p>更重要的是：<strong>一旦认出这是一个行列式，向量积的所有性质就都变成行列式的性质了。</strong>老师最后一段专门讲这个视角，说这样记<q>就很好理解</q>：比如反交换律（交换两行要变号）、平行时为零（两行成比例）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span>（两行相同）。<em>这个视角比背图省事得多。</em></p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=1458">24:18</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>，并说明它为什么一定同时垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先把行列式摆正，再按「正、负、正」逐项展开，最后用点乘验垂直</span>
+    <p>老师是拿这一组数当场把叉乘「从头讲一遍」的，他特意交代了这道题的地位：<q>那下面我们就通过一个例子，就是你只要通过这个例子，把这两个向量怎么样做叉乘给掌握了就行了。</q>两个向量里都带着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，算起来不脏，但三项的符号一个都不能漏——它是一道<strong>专门用来练符号</strong>的题。</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>0</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></div>
+    <ol class="steps">
+      <li><span class="sh">第一项（正）。</span>划掉第一行第一列，剩下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mn>0</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></span>，按「主对角线减副对角线」算得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mn>0</mn><mo>=</mo><mn>1</mn></math></span>，直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</li>
+      <li><span class="sh">第二项（负）。</span>划掉第一行第二列，剩下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></span>，算得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>−</mo><mn>3</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，<strong>再补上那个负号，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></strong>。</li>
+      <li><span class="sh">第三项（正）。</span>划掉第一行第三列，剩下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>0</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></span>，算得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>−</mo><mn>1</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>。</li>
+    </ol>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>结果是一个<strong>向量</strong>，正好印证了「两个向量的向量积是个向量」那句话。至于方向对不对，各做一次数量积就能验出来：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo stretchy="true">)</mo></mrow><mo>⋅</mo><mrow><mo stretchy="true">(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>2</mn><mo>+</mo><mn>1</mn><mo>−</mo><mn>3</mn><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo stretchy="true">)</mo></mrow><mo>⋅</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>1</mn><mo>+</mo><mn>0</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></div>
+    <div class="why">
+      <span class="lbl">第二项为什么「负负得正」——把两个负号的来历分开数</span>
+      <p>这是本题唯一会让分数悄悄溜走的地方，因为这里连着出现了<strong>两个负号</strong>，而它们来自完全不同的两个地方：</p>
+      <ul class="tight">
+        <li>第一个负号来自<strong>二阶行列式内部</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></span> 按「主对角线减副对角线」算得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>，这个负号是<strong>算出来的</strong>。</li>
+        <li>第二个负号来自<strong>代数余子式的符号因子</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>1</mn><mo>+</mo><mn>2</mn></mrow></msup><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，也就是「正、负、正」中间的那个负。</li>
+      </ul>
+      <p>两个负号相乘得正，所以这一项最终写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mn>1</mn></math></span>。老师反复提醒过这一处<q>特别容易出错</q>，出错的方式还很隐蔽：有的同学把二阶行列式算成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>−</mo><mn>2</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>=</mo><mn>1</mn></math></span>（减法顺序反了），于是补上负号后错成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>；有的同学两个负号都忘了，同样错成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>。<strong>两种错法得到同一个错误答案</strong>，这正是它危险的地方。</p>
+      <p><mark>稳妥的做法是：三项分开写在草稿上，每一项都写清楚「二阶行列式的值」和「要不要补负号」，最后统一合并。速度只慢几秒钟，正确率却完全不同。</mark></p>
+    </div>
+    <div class="trap">
+      <span class="lbl">这一题最容易踩的两个坑</span>
+      <p><span class="bad">一、把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 写在第二行、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 写在第三行。</span>题面问的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>，第二行就必须是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span>。顺序写反答案会变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>——三个数的绝对值全对、符号全反，这正是反交换律 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo form="prefix">−</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 在卷面上的样子。</p>
+      <p><span class="bad">二、算出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span> 就交卷，不做垂直验证。</span>这一步只要十几秒，却是整道题最好的保险：<mark>两个点乘里只要有一个不等于零，就说明那个行列式一定算错了</mark>，当场回头查比整卷复查便宜得多。而且「求与两个已知向量都垂直的向量」正是叉乘在考试里<strong>唯一</strong>的实战用法，把这一步顺手做掉，等于把这个用法也练了一遍。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 268" role="img" aria-label="向量积的几何意义：以两向量为邻边的平行四边形面积等于向量积的模，方向由右手法则确定">
+    <polygon points="60,200 420,200 510,90 150,90" class="m-area"></polygon>
+    <line x1="60" y1="200" x2="420" y2="200" class="m-acc" stroke-width="2"></line>
+    <polygon points="428,200 417,195.5 417,204.5" class="m-fill-a"></polygon>
+    <text x="436" y="206" class="m-acc" font-size="12">a</text>
+
+    <line x1="60" y1="200" x2="142" y2="96" class="m-good" stroke-width="2"></line>
+    <polygon points="150,90 147.6,102.7 138.6,97.3" class="m-fill-g"></polygon>
+    <text x="156" y="82" class="m-good" font-size="12">b</text>
+
+    <line x1="150" y1="90" x2="150" y2="200" class="m-thin" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <text x="158" y="150" class="m-sub" font-size="11.5">高 = |b| sin θ</text>
+
+    <path d="M 140,200 Q 145.8,159.3 113.8,134.2" fill="none" class="m-warn" stroke-width="1.3"></path>
+    <text x="152" y="190" class="m-warn" font-size="12">θ</text>
+    <circle cx="60" cy="200" r="3.4" class="m-fill"></circle>
+    <text x="44" y="216" class="m-txt" font-size="12">O</text>
+    <text x="240" y="146" class="m-txt" font-size="12">面积 = |a × b|</text>
+
+    <rect x="472" y="150" width="156" height="100" rx="6" class="m-panel-a"></rect>
+    <text x="484" y="172" class="m-fill-a" font-size="11.5">方向：右手法则</text>
+    <text x="484" y="192" class="m-sub" font-size="11.5">四指 a → b</text>
+    <text x="484" y="212" class="m-sub" font-size="11.5">拇指指向 a × b</text>
+    <text x="484" y="232" class="m-sub" font-size="11.5">大小 |a||b| sin θ</text>
+
+    <text x="24" y="258" class="m-txt" font-size="12">面积等于向量积的「模」，不是向量积本身——向量积是一个向量，向量没有面积</text>
+  </svg>
+  <figcaption><b>向量积的大小是「面积」，方向是「右手」。</b>以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 为相邻两边作平行四边形：底是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></math></span>，高是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>（图中那条竖直虚线），所以面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>——这正好是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo></math></span>。<em>请特别注意这个容易混的说法：面积等于向量积的<strong>模</strong>，而不是向量积本身。</em>做题时也很少真的去比划右手，按老师的话说——<q>我们只需要求出和这两个向量垂直的这个向量，你只要求出来就行</q>。</figcaption>
+</figure>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=1933">32:13</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先摆行列式，再按「正、负、正」三步展开</span>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></div>
+    <p>老师说实际做题时是这样操作的：<q>先把第一行第一列去掉，你就这么写——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mo form="prefix">−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow></math></span>，这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>×</mo><mspace width="0.25em"></mspace><mn>2</mn><mo>−</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>×</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span> 结果就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，这个一是直接写的。</q></p>
+    <ol class="steps">
+      <li><span class="sh">第一项（正）。</span>划掉第一行第一列：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mo form="prefix">−</mo><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>1</mn></math></span>，直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</li>
+      <li><span class="sh">第二项（负）。</span>划掉第一行第二列：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>4</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>5</mn></math></span>，<strong>取负得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>5</mn></math></span></strong>。老师对这一步的说明是：<q>中间的这个数要添一个负号，为什么添一个负号呢？咱上节课说了，是因为用它的元素乘以它对应的代数余子式，它对应的代数余子式那个地方是不是有个负号啊。</q></li>
+      <li><span class="sh">第三项（正）。</span>划掉第一行第三列：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>1</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mn>1</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>=</mo><mo form="prefix">−</mo><mn>3</mn></math></span>，直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>3</mn></math></span>。</li>
+    </ol>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>5</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>3</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <div class="trap">
+      <span class="lbl">两个高频错误</span>
+      <p><span class="bad">一、中间项忘了取负，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>5</mn><mo>,</mo><mo form="prefix">−</mo><mn>3</mn><mo>)</mo></math></span>。</span>老师的原话是：<q>这三步啊，偷偷地在草稿纸上划拉划拉，一定要注意的就是中间的这个数一定要取负号——这个是很要命的，我们同学算的时候经常会忘记。</q></p>
+      <p><span class="bad">二、二阶行列式的减法算反。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>a</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>d</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mi>a</mi><mi>d</mi><mo>−</mo><mi>b</mi><mi>c</mi></math></span>，是「主对角线减副对角线」。第三项里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>=</mo><mo form="prefix">−</mo><mn>3</mn></math></span> 之所以是负的，正是因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>=</mo><mo form="prefix">−</mo><mn>3</mn></math></span>。</p>
+      <p><strong>自检办法：</strong>算完随手验一下——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">)</mo></mrow><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 应该等于零。这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>5</mn><mo>,</mo><mo form="prefix">−</mo><mn>3</mn><mo>)</mo><mo>⋅</mo><mo>(</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>2</mn><mo>−</mo><mn>5</mn><mo>+</mo><mn>3</mn><mo>=</mo><mn>0</mn></math></span> ✓，说明方向没算错。</p>
+    </div>
+  </div>
+</div>
+
+<h3 id="s5">四条性质</h3>
+
+<p>老师把性质一条条念完，然后说这些性质<q>其实我们很少用叉乘，我们就用一个，就是你只要会算就行</q>。但每条性质背后其实都是行列式的性质，所以非常好记。</p>
+
+<div class="tbl-wrap">
+  <table class="k">
+    <thead>
+      <tr><th>向量积的性质</th><th>对应行列式的哪条性质</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span></td><td>行列式有<strong>两行相同</strong>，值为零</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>∥</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>⇒</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span></td><td>坐标成比例即<strong>两行成比例</strong>，值为零</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo form="prefix">−</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span></td><td>行列式<strong>交换两行，值变号</strong></td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>+</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>)</mo><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>c</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>c</mi><mo>+</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>c</mi></math></span></td><td>某一行是两个数之和，行列式可<strong>拆成两个行列式之和</strong>（其余各行不变）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>λ</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>)</mo><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mo>λ</mo><mo>(</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>)</mo></math></span></td><td>行列式某一行有<strong>公因子</strong>，可以提出去</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span>，以及为什么「平行」等于「叉乘为零」</span>
+  <p>老师说这一点「通过两种方式解释」，而且要让大家都理解：</p>
+  <p><strong>第一种解释（几何）：</strong>一个向量和自己的夹角是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>0</mn><mo>=</mo><mn>0</mn></math></span>，乘出来就是零向量。<q>模是零，当然是个零向量。</q></p>
+  <p><strong>第二种解释（代数）：</strong>写成行列式之后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 与它自己在第二行、第三行上完全一样——<strong>行列式两行相等，值为零</strong>，也就是零向量。</p>
+  <p>平行那一条同理：两个向量平行意味着坐标对应成比例，于是行列式的两行成比例，值同样为零。不过老师说这种题其实不需要动手：<q>两个向量平行，这个玩意儿我们说过用肉眼可以看出来的，其实是不需要做叉乘的。你理解我的意思吧？一个向量是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>、一个向量是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>，它是不是它的两倍？那不就平行吗？</q></p>
+  <p><strong>所以真正的用法是反过来的</strong>：叉乘为零向量是用来<strong>证平行</strong>的（在证明题里），而判断题里用眼睛扫倍数更快。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">反交换律：为什么换一次就多一个负号</span>
+  <p>老师给了两种解释，都很短。</p>
+  <p><strong>行列式解释（一步到位）：</strong>交换两个向量的位置，相当于行列式交换了第二行和第三行；<mark>行列式交换两行要变号</mark>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo form="prefix">−</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span>。</p>
+  <p><strong>右手解释（用来建立直觉）：</strong>老师说<q>第二种解释咱们用右手系给大家解释一下</q>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 要求四指<strong>先经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 再经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span></strong>，这时大拇指朝上；换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span>，四指得先经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 再经过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span>，手就翻过来了——<q>这个大拇指是不是向下啊？所以这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi></math></span> 是不是朝下？这两个向量是不是方向相反啊？</q>方向相反、大小一样，所以差一个负号。</p>
+  <p><mark>顺便对照一下数量积：它可以交换，因为它的结果里没有方向。</mark>老师说这句话等于把两块内容连起来了：<strong>能不能交换，取决于结果里有没有方向。</strong></p>
+</div>
+
+<h2 id="s6">四、面积：向量积最常用的应用</h2>
+
+<p>这一段老师开场就说课本「没讲」：<q>但是下边有个东西，我们这课本没讲——就是每次都是这样子，比较重要的应用他就不讲，好多东西都不是很全。那你要补一个什么东西呢？</q>补的就是面积公式。</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mrow><mtext>平行四边形</mtext></mrow></msub><mo>=</mo><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>S</mi><mrow><mo>△</mo></mrow></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow></math></div>
+
+<p>推导就在图上：平行四边形的底是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo></math></span>，高是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，<q>底乘高啊，底就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>A</mi><mo>|</mo></math></span>，高呢就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>B</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>。呵，这不就刚好 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>A</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>B</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，是不是它两个做叉乘的模呀？</q>三角形再除以二，原理完全一样。老师强调<q>这个你必须用这个公式来</q>，因为三维图形里的高<strong>根本画不出来也量不出来</strong>，硬求是求不动的。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=119&amp;t=2903">48:23</a>求以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>B</mi><mo>(</mo><mn>3</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>5</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi><mo>(</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>7</mn><mo>)</mo></math></span> 为顶点的三角形 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mi>B</mi><mi>C</mi></math></span> 的面积。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三角形面积 = 两边向量叉乘的模的一半，所以先造出两条边向量</span>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 当公共起点，作两条边（一律「终点减起点」）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="true">)</mo></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mover accent="true"><mrow><mi>A</mi><mi>C</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>求叉乘。老师说这一步的行列式<q>必须写</q>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>×</mo><mover accent="true"><mrow><mi>A</mi><mi>C</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>4</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mrow><mo stretchy="true">(</mo><mn>4</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>6</mn><mo>,</mo><mspace width="1em"></mspace><mn>2</mn><mo stretchy="true">)</mo></mrow></math></div>
+    <p>逐项核对：第一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>4</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>8</mn><mo>−</mo><mn>4</mn><mo>=</mo><mn>4</mn></math></span>；第二项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>4</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>8</mn><mo>−</mo><mn>2</mn><mo>=</mo><mn>6</mn></math></span>，<strong>取负得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>6</mn></math></span></strong>；第三项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr><mtr><mtd><mn>1</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>2</mn></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>4</mn><mo>−</mo><mn>2</mn><mo>=</mo><mn>2</mn></math></span>。</p>
+    <p>面积就是模的一半：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>S</mi><mrow><mo>△</mo></mrow></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mrow><mo stretchy="true">|</mo><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo>⃗</mo></mover><mo>×</mo><mover accent="true"><mrow><mi>A</mi><mi>C</mi></mrow><mo>⃗</mo></mover><mo stretchy="true">|</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><msqrt><mrow><mn>1</mn><mn>6</mn><mo>+</mo><mn>3</mn><mn>6</mn><mo>+</mo><mn>4</mn></mrow></msqrt><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><msqrt><mrow><mn>5</mn><mn>6</mn></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>1</mn><mn>4</mn></mrow></msqrt></math></div>
+    <p>老师说这一题<q>问这个三角形的面积，那就直接来呗</q>；同一道题改编一下就是「求平行四边形的面积」，把那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 去掉就行。</p>
+    <div class="note">
+      <span class="lbl">这一步为什么必须取一半</span>
+      <p>叉乘的模给的是<strong>平行四边形</strong>的面积，三角形只是它的一半。一个很实用的自查方法：算完之后想想这个数合不合理——<mark>如果三个顶点的坐标都是个位数，面积却算出来一百多，那多半是忘了除以二，或者叉乘算错了</mark>。</p>
+      <p>另外提醒一句：草稿上那些「划掉一行一列」的演算过程<q>不用写不用写进来</q>，卷面上只需要那个行列式和结果。</p>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <span class="lbl">本讲没有涉及混合积</span>
+  <p>这节课老师只讲了两个乘法与面积应用，<strong>没有展开混合积</strong>（三个向量连乘、几何意义是平行六面体的体积）。所以本页不补充这一块——需要时以你手上的教材为准。本页的四个公式（数量积、夹角、叉乘、面积）已经覆盖了这一讲的全部考点。</p>
+</div>
+
+<h2 id="s7">五、易错清单</h2>
+
+<div class="blk trap">
+  <span class="lbl">一 · 说错了「结果是什么」</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 是一个<strong>数</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span> 是一个<strong>向量</strong>。这两句话要背到条件反射——它决定了后面所有式子的写法：数可以放在分母上，向量不行；数的等式可以两边同乘，向量的等式要靠分量。名字本身就是提示：<mark>「数量积」乘出来是数量，「向量积」乘出来是向量。</mark></p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">二 · 叉乘时中间那一项忘了取负</span>
+  <p>展开的节奏是「正、负、正」。老师反复强调过这一处：<q>中间的这个加负号很容易忘。</q></p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">三 · 行列式里两个向量的顺序随意换</span>
+  <p>第二行写第一个向量、第三行写第二个向量，<strong>换了就差一个负号</strong>（反交换律）。而数量积没有这个问题——它的前后可以随便换。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">四 · 把「判垂直」和「判平行」记反</span>
+  <p>口诀：<strong>点乘管垂直，叉乘管平行</strong>。推导记忆：垂直对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>9</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>=</mo><mn>0</mn></math></span>，平行对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>=</mo><mn>0</mn></math></span>。另外把「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span>」里的零写成了数字 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 也要扣分——那是一个<strong>零向量</strong>。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">五 · 面积等于「向量积的模」，不是向量积</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo stretchy="true">|</mo></mrow></math></span> 才是一个数。另外三角形那道题别忘了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">六 · 夹角公式算出的余弦没做符号判断</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>&lt;</mo><mn>0</mn></math></span> 说明夹角是钝角，这是合法答案（两向量的夹角可以到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup></math></span>）。但如果题目问的是「两个<strong>平面</strong>的夹角」或「两条<strong>直线</strong>的夹角」，那就只能取锐角，分子上要加绝对值（<a href="../P120-【黑板】平面及其方程/index.html">【黑板】平面及其方程</a> 会讲）。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>数量积管<strong>垂直</strong>、结果是一个<strong>数</strong>；向量积管<strong>平行</strong>与<strong>面积</strong>、结果是一个<strong>向量</strong>。</p>
+
+  <h3>七行对照（考前只看这里）</h3>
+  <div class="tbl-wrap">
+    <table class="cmp">
+      <thead><tr><th>对比项</th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span></th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></math></span></th></tr></thead>
+      <tbody>
+        <tr><td>定义</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span></td><td>大小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">sin</mi><mo>θ</mo></math></span>，方向右手</td></tr>
+        <tr><td>结果</td><td>一个<strong>数</strong></td><td>一个<strong>向量</strong></td></tr>
+        <tr><td>坐标</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mi>x</mi></msub><msub><mi>b</mi><mi>x</mi></msub><mo>+</mo><msub><mi>a</mi><mi>y</mi></msub><msub><mi>b</mi><mi>y</mi></msub><mo>+</mo><msub><mi>a</mi><mi>z</mi></msub><msub><mi>b</mi><mi>z</mi></msub></math></span></td><td>三阶行列式（第一行 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span>）</td></tr>
+        <tr><td>几何</td><td>底乘投影 / 做功</td><td>模 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo></math></span> 平行四边形面积</td></tr>
+        <tr><td>判什么</td><td>垂直 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⟺</mo></math></span> 等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></td><td>平行 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⟺</mo></math></span> 等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span></td></tr>
+        <tr><td>交换律</td><td>满足</td><td><strong>不满足</strong>，差一个负号</td></tr>
+        <tr><td>自己乘自己</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><msup><mo>|</mo><mrow><mn>2</mn></mrow></msup></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>夹角公式：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mfrac><mrow><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi></mrow><mrow><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo></mrow></mfrac></math></span>。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mn>1</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi><mo>=</mo><mn>0</mn></math></span>。</li>
+    <li>叉乘展开口诀：<mark>正、负、正</mark>；第一行永远是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>i</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>j</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>k</mi></math></span>。</li>
+    <li>面积：平行四边形 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo></math></span>，三角形 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo></math></span>。</li>
+    <li>求与两个向量都垂直的向量 <strong>= 求向量积</strong>——这是叉乘唯一的实战用法。</li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ol class="tight">
+    <li>叉乘<strong>中间项必须取负</strong>（最高频失分点）。</li>
+    <li>叉乘里<strong>两个向量的顺序不能换</strong>，换了差一个负号。</li>
+    <li>面积是<strong>模</strong>，不是向量积本身；三角形别忘除以二。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P071-方向角 方向余弦 数量积 向量积/index.html">方向角 方向余弦 数量积 向量积</a> 方向角·方向余弦·数量积·向量积（本页的新授课版本）</li>
+      <li><a href="../P117-【黑板】向量的概念运算和空间直角坐标系/index.html">【黑板】向量的概念运算和空间直角坐标系</a> 【黑板】向量的概念、运算和空间直角坐标系</li>
+      <li><a href="../P118-【黑板】向量的模｜方向角｜方向余弦｜投影/index.html">【黑板】向量的模｜方向角｜方向余弦｜投影</a> 【黑板】向量的模·方向角·方向余弦·投影（数量积的第三种读法要用投影）</li>
+      <li><span class="cur">二阶、三阶行列式的展开与「交换两行变号」（线性代数）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P120-【黑板】平面及其方程/index.html">【黑板】平面及其方程</a> 【黑板】平面及其方程（法向量靠叉乘找，点法式靠点乘写）</li>
+      <li><a href="../P121-【黑板】直线及其方程/index.html">【黑板】直线及其方程</a> 【黑板】直线及其方程（方向向量 = 两个法向量的叉乘）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>数量积是<strong>数</strong>、向量积是<strong>向量</strong>——「谜底就在谜面上」</li>
+      <li>判<strong>垂直</strong>用点乘、判<strong>平行</strong>用叉乘，别记反</li>
+      <li>平行用眼睛扫倍数；垂直必须动手算点乘</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>×</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>=</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mn>0</mn></math></span> 里的零是<strong>零向量</strong>，不是数字 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></li>
+      <li>两向量夹角可以是钝角，但两平面、两直线的夹角只能是锐角（分子加绝对值）</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 119 讲</span><a href="../P118-【黑板】向量的模｜方向角｜方向余弦｜投影/index.html">← P118</a><a href="../index.html">全部目录</a><a href="../P120-【黑板】平面及其方程/index.html">P120 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、先把两把乘法摆在一起</a>
+    <a href="#s2">二、数量积：从一个数开始</a>
+    <a href="#s3">三、向量积：换成一个向量</a>
+    <a class="sub" href="#s4">算法：一个三阶行列式</a>
+    <a class="sub" href="#s5">四条性质</a>
+    <a href="#s6">四、面积：向量积最常用的应用</a>
+    <a href="#s7">五、易错清单</a>
+  </aside>
+</div>
+</body>
+</html>

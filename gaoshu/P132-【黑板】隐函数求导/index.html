@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】隐函数求导：公式法、直接法与同一个 F 的两副面孔 · 高等数学笔记</title>
+<meta name="description" content="由一个方程确定的隐函数，导数可以用一条公式直接算：dydx=−FxFy，三元情形是 ∂z∂x=−FxFz、∂z∂y=−FyFz。公式好记（一个负号 + 交叉对应），但这一节真正的难点是理解它怎么来的：直接法里 y 是 x 的函数，公式法里 F 是 x,y 的两个独立变量——同一个 F，两副面孔。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 132 讲</div>
+    <h1 class="title"><span class="pnum">P132</span>【黑板】隐函数求导：公式法、直接法与同一个 F 的两副面孔</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>由一个方程确定的隐函数，导数可以用一条公式直接算：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac></math></span></strong>，三元情形是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></span>。公式好记（<mark>一个负号 + 交叉对应</mark>），但这一节真正的难点是理解它怎么来的：<strong>直接法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，公式法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的两个独立变量</strong>——同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>，两副面孔。</p></div>
+    <div class="meta"><span>时长 38m30s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=0">00:00</a><span class="vv">一元隐函数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 提不出来，改用<b>直接求导法</b>。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=88">01:28</a><span class="vv">两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导，心里必须记住<b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数</b>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=202">03:22</a><span class="vv">隐函数存在定理：条件很多，但「这部分都是计算题」，细节不看。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=283">04:43</a><span class="vv"><b>公式</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac></math></span>；两个记忆点：负号、交叉对应。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=384">06:24</a><span class="vv">用同一道题验公式法，体会「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 两个独立变量」。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=508">08:28</a><span class="vv">公式的推导：两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导，画一棵两条路的树。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=634">10:34</a><span class="vv">二阶导数的公式「谁能记得住」——<b>千万不要记</b>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=667">11:07</a><span class="vv"><b>例</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span>：一阶用公式，二阶转回直接法。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=896">14:56</a><span class="vv"><b>二元隐函数</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></span>，交叉对应照旧。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=980">16:20</a><span class="vv">二元公式的推导：画图时<b>划线别画多了</b>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 之间不连线。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1110">18:30</a><span class="vv"><b>例</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>z</mi><mo>=</mo><mn>0</mn></math></span>：公式法与直接法各走一遍，结果一致。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1433">23:53</a><span class="vv"><b>方程组情形</b>：三个变量两个方程，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1611">26:51</a><span class="vv">两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导，整理成以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span> 为未知量的二元一次方程组。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=2033">33:53</a><span class="vv">四个变量两个方程：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的函数，再来一次克莱姆法则。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一元隐函数：老朋友与新公式</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=0">00:00</a>这一节按课本的顺序分三块：一元隐函数、二元隐函数、隐函数方程组。一元那块其实不陌生——上学期就讲过。老师随手举的例子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 之间确实存在函数关系，但「这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 你提不出来」，所以叫隐函数。</p>
+
+<p>对这种情况，老办法是<strong>直接求导法</strong>：两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导，心里时刻记住一句话——<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数</mark>。这个「心里的印象」是全部关键，<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=88">01:28</a>老师特意强调：「这一点大家一定要记住，因为这一点和我们一会要讲的这一节的方法，是不是相矛盾的？」</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q">设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 确定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，用两种方法求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">方法一：直接求导法（两边同时对 x 求导）</span>
+    <p>逐项看左边：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 是乘积，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，所以得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><mi>y</mi><mo>'</mo></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span> 是复合函数，外层求导还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，所以还要补一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>。右边 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup><mi>y</mi><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <p>把含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 的项留在左边，其余移到右边，再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 提出来：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>x</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup><mo>)</mo><mi>y</mi><mo>'</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi>y</mi></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi>y</mi></mrow><mrow><mi>x</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></mrow></mfrac></math></div>
+    <p>注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span> 那一项——它带复合结构，所以求导之后要「多乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>」。这是直接法里唯一容易漏的地方。</p>
+    <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=384">06:24</a>方法二：公式法</span>
+    <p>先把方程整理成<strong>右边等于零</strong>的形状，把左边整块记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>x</mi><mi>y</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup><mo>−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn></math></div>
+    <p>这里是最关键的心态转变：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=283">04:43</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 的偏导时，要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 看成 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 两个相互独立的变量</strong>的函数——求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 当常数，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 当常数：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>=</mo><mi>y</mi><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>F</mi><mi>y</mi></msub><mo>=</mo><mi>x</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></div>
+    <p>（求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是系数得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span> 是常数得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span>。）套公式</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>−</mo><mi>y</mi></mrow><mrow><mi>x</mi><mo>+</mo><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></mrow></mfrac></math></div>
+    <p>与直接法得到的答案<strong>分毫不差</strong>。</p>
+  </div>
+</div>
+
+<div class="blk thm">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=202">03:22</a>隐函数存在定理 · 一元情形</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 的某邻域内具有<strong>连续偏导数</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，则方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 在该点附近确定一个可导的隐函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，并且</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac></math></div>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span> 是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 看作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的二元函数、并且认为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> <strong>相互独立</strong>时求出的偏导。</p>
+</div>
+
+<p>定理前面的条件里，唯一值得留意的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>——因为它出现在分母上。老师的态度很干脆：这部分「都是计算题」，所以那些细节他不准备讲很多。使用时只有三个动作：<mark>把方程整理成右边为零；把左边整块记为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>；算偏导时把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 看成字母之间互不相关的多元函数。</mark></p>
+
+<div class="why">
+  <span class="lbl">公式是怎么来的：两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=508">08:28</a>老师先声明这不是严格的证明——「这个他的证明过程其实是挺复杂的，我们也不想严格地去证了」——但给了一个很好用的<strong>简单推导</strong>。</p>
+  <p><strong>第一步，认路。</strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的函数，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 又是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 有两条路：一条是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，一条是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>→</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>。按 <a href="../P129-【黑板】多元复合函数求导（1）/index.html">【黑板】多元复合函数求导（1）</a> 的链式法则，两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导得</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>+</mo><msub><mi>F</mi><mi>y</mi></msub><mo>⋅</mo><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></div>
+  <p>其中那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>x</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span>，也就是「直接到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 那条边」的系数。</p>
+  <p><strong>第二步，解出来。</strong>把第二项移到右边：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><msub><mi>F</mi><mi>x</mi></msub></math></span>，两边同除 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>（这就是要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span> 的原因），立刻得到公式。</p>
+  <p><strong>最要紧的是这一步的观感：</strong>推导要从「两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导」出发，说明公式法处理的对象本来是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数」；可一旦用上公式，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span> 又必须按「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 相互独立」来算。<mark>同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>，两种身份——这是本节所有困惑的总源头。</mark></p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 268" role="img" aria-label="一元与二元隐函数公式的交叉对应结构，以及负号的来源">
+    <text x="24" y="22" class="m-txt" font-size="12">一元 F(x,y)=0：分母跟着因变量 y 走</text>
+    <rect x="24" y="36" width="260" height="42" class="m-panel"></rect>
+    <text x="154" y="64" class="m-math" font-size="13" text-anchor="middle">dy/dx = − (F_x) / (F_y)</text>
+    <rect x="24" y="90" width="120" height="32" class="m-panel-hi"></rect>
+    <text x="84" y="111" class="m-math" font-size="12" text-anchor="middle">分子 = F_x</text>
+    <rect x="164" y="90" width="120" height="32" class="m-panel-a"></rect>
+    <text x="224" y="111" class="m-math" font-size="12" text-anchor="middle">分母 = F_y</text>
+    <text x="24" y="146" class="m-sub" font-size="11.5">求 F_x 时把 y 当常数；求 F_y 时把 x 当常数</text>
+    <text x="24" y="168" class="m-sub" font-size="11.5">左边对哪个字母求，分子就换成那个字母的偏导</text>
+
+    <line x1="306" y1="14" x2="306" y2="256" class="m-thin" stroke-width="1" stroke-dasharray="5 4"></line>
+
+    <text x="326" y="22" class="m-txt" font-size="12">二元 F(x,y,z)=0：分母永远是 F_z</text>
+    <rect x="326" y="36" width="288" height="42" class="m-panel"></rect>
+    <text x="470" y="64" class="m-math" font-size="12" text-anchor="middle">∂z/∂x = − (F_x)/(F_z)　∂z/∂y = − (F_y)/(F_z)</text>
+    <rect x="326" y="90" width="136" height="32" class="m-panel-hi"></rect>
+    <text x="394" y="111" class="m-math" font-size="12" text-anchor="middle">分子 = F_x 或 F_y</text>
+    <rect x="478" y="90" width="136" height="32" class="m-panel-a"></rect>
+    <text x="546" y="111" class="m-math" font-size="12" text-anchor="middle">分母恒为 F_z</text>
+    <text x="326" y="146" class="m-sub" font-size="11.5">z 是被解出来的因变量，所以分母上写 z 的那个偏导</text>
+    <text x="326" y="168" class="m-sub" font-size="11.5">记忆两点：一定带负号、分子分母交叉对应</text>
+
+    <rect x="24" y="192" width="590" height="58" class="m-panel-hi"></rect>
+    <text x="36" y="214" class="m-txt" font-size="12">那个负号不是规定，是「移项」移出来的：</text>
+    <text x="36" y="238" class="m-math" font-size="12">F_x + F_y·(dy/dx) = 0　⇒　F_y·(dy/dx) = −F_x　⇒　dy/dx = − F_x / F_y</text>
+  </svg>
+  <figcaption><b>这一页的公式只有两个记忆点，全在这张图上。</b>第一是<strong>负号</strong>：它来自把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span> 那一项移到等号右边（见底部那条链），不是需要死背的约定。第二是<strong>交叉对应</strong>：左边求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span>，分子就用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>；左边求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>，分母<em>永远是那个因变量字母</em>对应的偏导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span>——因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 才是被方程解出来的那一个。有同学问老师，为什么会是这样？老师的回答是：<q>我也不知道，我只是宋老师给你说的这么记，你能记住不就行了吗？</q></figcaption>
+</figure>
+
+<h2 id="s2">一阶用公式，二阶用直接法</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=667">11:07</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：一阶套公式最省事；二阶别再想公式，直接对一阶的结果再求一次导</span>
+    <p><strong>一阶。</strong>记 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>1</mn></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>=</mo><mn>2</mn><mi>x</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 当常数）、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mo>=</mo><mn>2</mn><mi>y</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 当常数）。套公式：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mi>x</mi></mrow><mrow><mn>2</mn><mi>y</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mi>y</mi></mrow></mfrac></math></div>
+    <p><strong>二阶。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=634">10:34</a>老师在这里停了一下，专门讲了一段心态：课本上确实给了一个求二阶的公式，但「这个书上的公式你看一看，这玩意谁能记得住啊？」他的建议是——<strong>二阶就别用公式了，把一阶的结果再对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求一次导</strong>。</p>
+    <p>注意此刻 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 又变回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数了，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mi>y</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span> 要按<em>商的求导法则</em>处理：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn><mo>⋅</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>−</mo><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo></mrow><mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>分子里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 有现成的表达式，代进去：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mi>x</mi><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mi>y</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow></mrow><mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>y</mi><mo>+</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mi>y</mi></mrow></mfrac></mrow><mrow><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>再回头用原方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span>：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msup><mi>d</mi><mrow><mn>2</mn></mrow></msup><mi>y</mi></mrow><mrow><mi>d</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>y</mi><mrow><mn>3</mn></mrow></msup></mrow></mfrac></math></div>
+    <div class="note">
+      <span class="lbl">这道题真正要记的是「方法切换」</span>
+      <p>第一步和第二步用的<strong>不是同一种思路</strong>：第一步是公式法（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的独立变量二元函数），第二步必须切回直接法（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数）。要是硬把公式法也用在第二步，就得处理 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span> 这种嵌套偏导，反而更绕。老师的结论是：「这个二阶导，千万不要记。」</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="同一道隐函数题用直接法与公式法各算一遍，结果相同">
+    <rect x="18" y="30" width="288" height="186" class="m-panel"></rect>
+    <text x="30" y="52" class="m-txt" font-size="12">直接求导法：把 y 当 x 的函数</text>
+    <text x="30" y="76" class="m-sub" font-size="11.5">两边同时对 x 求导，遇到 y 就补一个 y′</text>
+    <text x="30" y="102" class="m-math" font-size="12">x² + y² − 1 = 0</text>
+    <text x="30" y="126" class="m-math" font-size="12">2x + 2y·y′ = 0</text>
+    <text x="30" y="150" class="m-math" font-size="12">y′ = − 2x / (2y)</text>
+    <text x="30" y="174" class="m-math" font-size="12">y′ = − x / y</text>
+    <text x="30" y="200" class="m-sub" font-size="11.5">往下再求二阶最顺手</text>
+
+    <rect x="334" y="30" width="288" height="186" class="m-panel-hi"></rect>
+    <text x="346" y="52" class="m-txt" font-size="12">公式法：把 F 当 x、y 的二元函数</text>
+    <text x="346" y="76" class="m-sub" font-size="11.5">x 与 y 相互独立，另一个当常数</text>
+    <text x="346" y="102" class="m-math" font-size="12">F = x² + y² − 1</text>
+    <text x="346" y="126" class="m-math" font-size="12">F_x = 2x　　F_y = 2y</text>
+    <text x="346" y="150" class="m-math" font-size="12">y′ = − F_x / F_y</text>
+    <text x="346" y="174" class="m-math" font-size="12">y′ = − x / y</text>
+    <text x="346" y="200" class="m-sub" font-size="11.5">一阶一步到位，不用整理</text>
+
+    <text x="320" y="238" class="m-txt" font-size="12" text-anchor="middle">同一个 F，两副面孔；换方法就是把身份换回来</text>
+  </svg>
+  <figcaption><b>这一页最该记住的一张对照图。</b>左右两栏用的是<em>同一个记号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span></em>，但脑子里对它的理解完全不同：直接法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>」的复合，所以求导必须顺着链式法则多补一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>；公式法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 两个自由变量」的二元函数，所以求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span> 就是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 钉死。<strong>动笔之前先在脑子里选好是哪一副面孔</strong>，所有「遇到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 到底要不要补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>」的纠结都会立刻消失。</figcaption>
+</figure>
+
+<h2 id="s3">二元隐函数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span></h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=896">14:56</a>由方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 确定的隐函数，通常是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的函数」。这时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是自变量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是被确定的因变量，所以要写两个偏导。公式与一元完全平行：</p>
+
+<div class="blk thm">
+  <span class="lbl">隐函数存在定理 · 二元情形</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 的某邻域内有连续偏导数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>P</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub><mo>(</mo><mi>P</mi><mo>)</mo><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>，则方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 在该点附近确定唯一的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，且</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></div>
+</div>
+
+<p>记忆点和一元一样就两条：<strong>第一，一定有负号；第二，交叉对应</strong>——对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求的那个偏导，分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>；对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求的，分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>；而<strong>分母永远是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span></strong>，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是被解出来的那一个。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1060">17:40</a>还要再强调一次：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span> 是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 看成 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi></math></span> 三个相互独立的变量</strong>时求出的偏导，求谁的时候另外两个都当常数。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=980">16:20</a>二元公式的推导，以及老师那句「划线别画多了」</span>
+  <p>推导方式和一元一模一样，只是树多一个孩子。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi></math></span> 的函数，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 又是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的函数，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 有两条路：一条直接到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，一条绕经 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>。两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>+</mo><msub><mi>F</mi><mi>z</mi></msub><mo>⋅</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></div>
+  <p>移项、同除 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span>，就得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></span>。</p>
+  <p>老师画这张树时专门提醒了一句：<strong>「注意划线别画多了。」</strong>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 之间没有函数关系，所以在树上<em><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 之间不许连线</em>；只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 才同时连着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>。这与 <a href="../P129-【黑板】多元复合函数求导（1）/index.html">【黑板】多元复合函数求导（1）</a> 的规矩完全一致——和谁有关就连谁，无关的绝不连。多连一条线，公式里就会冒出一个本不存在的项。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1110">18:30</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 确定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先算分母 F_z（两个公式共用），再算两个分子</span>
+    <p><strong>先算分母。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span> 在两个公式里都要用，优先算、算完用两次：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>F</mi><mi>z</mi></msub><mo>=</mo><mfrac><mrow><mo>∂</mo></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>z</mi><mo>)</mo><mo>=</mo><mn>2</mn><mi>z</mi><mo>−</mo><mn>4</mn></math></div>
+    <p>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 无关得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>z</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mi>z</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn></math></span>。）</p>
+    <p><strong>再算两个分子。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>=</mo><mn>2</mn><mi>x</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>,</mo><mi>z</mi></math></span> 都当常数），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub><mo>=</mo><mn>2</mn><mi>y</mi></math></span>。于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mi>x</mi></mrow><mrow><mn>2</mn><mi>z</mi><mo>−</mo><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn><mo>−</mo><mi>z</mi></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>y</mi></mrow><mrow><mn>2</mn><mo>−</mo><mi>z</mi></mrow></mfrac></math></div>
+    <p><strong>换成直接法验一遍。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1173">19:33</a>两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导，此时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是常数，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的函数：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>2</mn><mi>z</mi><mspace width="1em"></mspace><msub><mi>z</mi><mi>x</mi></msub><mo>−</mo><mn>4</mn><msub><mi>z</mi><mi>x</mi></msub><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><mo>(</mo><mn>2</mn><mi>z</mi><mo>−</mo><mn>4</mn><mo>)</mo><msub><mi>z</mi><mi>x</mi></msub><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><msub><mi>z</mi><mi>x</mi></msub><mo>=</mo><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn><mo>−</mo><mi>z</mi></mrow></mfrac></math></div>
+    <p>完全一致。</p>
+    <p><strong>再对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 走一遍直接法。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1381">23:01</a>这次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是常数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>y</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>z</mi><mspace width="1em"></mspace><msub><mi>z</mi><mi>y</mi></msub></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mi>z</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><msub><mi>z</mi><mi>y</mi></msub></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>2</mn><mi>y</mi><mo>+</mo><mn>2</mn><mi>z</mi><mspace width="1em"></mspace><msub><mi>z</mi><mi>y</mi></msub><mo>−</mo><mn>4</mn><msub><mi>z</mi><mi>y</mi></msub><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><msub><mi>z</mi><mi>y</mi></msub><mo>=</mo><mfrac><mrow><mi>y</mi></mrow><mrow><mn>2</mn><mo>−</mo><mi>z</mi></mrow></mfrac></math></div>
+    <p>与公式法一致。老师对这两种方法的态度是「都可以」，选哪个只看熟练程度。</p>
+    <div class="trap">
+      <span class="lbl">直接法里唯一需要留心的地方</span>
+      <p>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是常数，但<strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数</strong>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 是复合的，求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>z</mi><mspace width="1em"></mspace><msub><mi>z</mi><mi>x</mi></msub></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mi>z</mi></math></span> 也是复合的，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><msub><mi>z</mi><mi>x</mi></msub></math></span>。这两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>x</mi></msub></math></span> 都要写出来，它们最后被提出来，才能解出方程。<span class="bad">漏掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mi>z</mi></math></span> 的那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>x</mi></msub></math></span>，分母就变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>z</mi></math></span>，答案整块错掉。</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th></th><th>直接求导法</th><th>公式法</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 的身份</strong></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mspace width="1em"></mspace><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是<strong>两个相互独立的变量</strong></td>
+      </tr>
+      <tr>
+        <td><strong>动作</strong></td>
+        <td>两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导，遇到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>（或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>）就补一个导数，再把它解出来</td>
+        <td>分别求出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span>（或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>z</mi></msub></math></span>），代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac></math></span></td>
+      </tr>
+      <tr>
+        <td><strong>优点</strong></td>
+        <td>思路自然，不需要额外记公式；求二阶时更顺手</td>
+        <td>求一阶时快，一步到位，不容易漏掉复合结构</td>
+      </tr>
+      <tr>
+        <td><strong>代价</strong></td>
+        <td>项数多，要在脑子里持续记住谁是函数</td>
+        <td>必须先把常数挪到左边；求二阶时反而更麻烦</td>
+      </tr>
+      <tr>
+        <td><strong>适用</strong></td>
+        <td>二阶及以上的导数</td>
+        <td>只要求一阶导数时</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="s4">方程组确定的隐函数：两边求偏导 + 克莱姆法则</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1433">23:53</a>这一节最后是方程组。老师先给了一句实话：课本上这部分理论「我觉得大家可以不看了」——满篇的公式，「这是个人就记不住啊，对吧？也没有必要记」。他干脆把范围缩到最小：「我一共给大家讲两个例子，你只要把这两个例子理解就行。」</p>
+
+<p>第一个例子是<strong>三个变量、两个方程</strong>。这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是自变量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 都随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 变化，但它们各自的表达式解不出来，所以只能写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1544">25:44</a>由于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 有关、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 也与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 有关，它们对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 都是<strong>求导</strong>，不是求偏导——这一点必须先在脑子里定下来。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q">设方程组 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>+</mo><mn>2</mn><mi>y</mi><mo>+</mo><mn>3</mn><mi>z</mi><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>2</mn></mtd></mtr></mtable></mrow></math></span> 确定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>z</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>z</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：两边同时对 x 求导，整理成关于 y′、z′ 的二元一次方程组，再用克莱姆法则</span>
+    <p><strong>第一步，两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导。</strong>第一式：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>y</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>y</mi><mo>'</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>z</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>z</mi><mo>'</mo></math></span>，右端常数得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。第二式：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup></math></span> 都是复合的，分别得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>y</mi><mspace width="1em"></mspace><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>z</mi><mspace width="1em"></mspace><mi>z</mi><mo>'</mo></math></span>，约掉公因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 之后写成：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mn>1</mn><mo>+</mo><mn>2</mn><mi>y</mi><mo>'</mo><mo>+</mo><mn>3</mn><mi>z</mi><mo>'</mo><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mi>x</mi><mo>+</mo><mi>y</mi><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>+</mo><mi>z</mi><mspace width="1em"></mspace><mi>z</mi><mo>'</mo><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div>
+    <p><strong>第二步，把未知量挪到一边。</strong>把含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span> 的项留在左边，常数项移到右边：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mn>2</mn><mi>y</mi><mo>'</mo><mo>+</mo><mn>3</mn><mi>z</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>y</mi><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>+</mo><mi>z</mi><mspace width="1em"></mspace><mi>z</mi><mo>'</mo><mo>=</mo><mo form="prefix">−</mo><mi>x</mi></mtd></mtr></mtable></mrow></math></div>
+    <p><strong>第三步，克莱姆法则。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1697">28:17</a>现在这是一个以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span> 为未知量的二元一次方程组，系数行列式是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>D</mi><mo>=</mo><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mn>2</mn><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mn>3</mn></mtd></mtr><mtr><mtd><mi>y</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>z</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mn>2</mn><mi>z</mi><mo>−</mo><mn>3</mn><mi>y</mi></math></div>
+    <p>把右端的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo>(</mo><mfrac linethickness="0"><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mo form="prefix">−</mo><mi>x</mi></mrow></mfrac><mo>)</mo></mrow></math></span> 分别替换第 1 列、第 2 列，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mo form="prefix">−</mo><mi>z</mi><mo>+</mo><mn>3</mn><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>D</mi><mn>2</mn></msub><mo>=</mo><mi>y</mi><mo>−</mo><mn>2</mn><mi>x</mi></math></span>，于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mn>3</mn><mi>x</mi><mo>−</mo><mi>z</mi></mrow><mrow><mn>2</mn><mi>z</mi><mo>−</mo><mn>3</mn><mi>y</mi></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>z</mi><mo>'</mo><mo>=</mo><mfrac><mrow><mi>y</mi><mo>−</mo><mn>2</mn><mi>x</mi></mrow><mrow><mn>2</mn><mi>z</mi><mo>−</mo><mn>3</mn><mi>y</mi></mrow></mfrac></math></div>
+    <p>条件是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>z</mi><mo>−</mo><mn>3</mn><mi>y</mi><mo>≠</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>——就是分母不为零那句老话。</p>
+    <div class="note">
+      <span class="lbl">这一步看不懂就把它翻译回线性代数</span>
+      <p>我们要求的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>'</mo></math></span> 这两个<strong>数</strong>。它们满足的是一个非齐次线性方程组，只不过「系数」是含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>,</mo><mi>z</mi></math></span> 的式子、「常数项」含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。这并不影响 <a href="../P131-【补充】克莱姆法则/index.html">【补充】克莱姆法则</a> 克莱姆法则的用法：把系数原样排成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span>，把右边那一整块当成常数项去替换对应的列即可。</p>
+    </div>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=1944">32:24</a>第二个例子是<strong>四个变量、两个方程</strong>，老师坦言「这一部分是挺难的」。他从头强调了一次最要紧的判断：「你先看一看他最终求的那个东西——他是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，这样的话你就知道了，是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>,</mo><mi>v</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 求偏导。」</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=2033">33:53</a>设方程组 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mi>u</mi><mo>−</mo><mi>y</mi><mi>v</mi><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mi>y</mi><mi>u</mi><mo>+</mo><mi>x</mi><mi>v</mi><mo>=</mo><mn>1</mn></mtd></mtr></mtable></mrow></math></span> 确定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mo>=</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>u</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>v</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先认清谁是自变量、谁是函数；两边对 x 求偏导后，再解一个二元一次方程组</span>
+    <p><strong>第一步，理清关系。</strong>这里有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>u</mi><mo>,</mo><mi>v</mi></math></span> 四个变量。其中 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是自变量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的隐函数</strong>——这是整道题的前提，忘了它后面全乱。</p>
+    <p><strong>第二步，两边同时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导。</strong>此时要记住三件事：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 当常数；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>,</mo><mi>y</mi></math></span> 的函数；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 也是。逐项处理，右端常数求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>u</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><msub><mi>u</mi><mi>x</mi></msub><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><msub><mi>v</mi><mi>x</mi></msub><mo>=</mo><mn>0</mn></mtd></mtr><mtr><mtd><mi>y</mi><mspace width="1em"></mspace><msub><mi>u</mi><mi>x</mi></msub><mo>+</mo><mi>v</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><msub><mi>v</mi><mi>x</mi></msub><mo>=</mo><mn>0</mn></mtd></mtr></mtable></mrow></math></div>
+    <p>（第一式里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>u</mi></math></span> 是乘积，求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><msub><mi>u</mi><mi>x</mi></msub></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>y</mi><mi>v</mi></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是常数、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi></math></span> 是函数，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>y</mi><mspace width="1em"></mspace><msub><mi>v</mi><mi>x</mi></msub></math></span>。第二式同理。）</p>
+    <p><strong>第三步，整理成标准线性方程组。</strong>把未知量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>u</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>v</mi><mi>x</mi></msub></math></span> 挪到一边，其余移到右边：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mspace width="1em"></mspace><msub><mi>u</mi><mi>x</mi></msub><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><msub><mi>v</mi><mi>x</mi></msub><mo>=</mo><mo form="prefix">−</mo><mi>u</mi></mtd></mtr><mtr><mtd><mi>y</mi><mspace width="1em"></mspace><msub><mi>u</mi><mi>x</mi></msub><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><msub><mi>v</mi><mi>x</mi></msub><mo>=</mo><mo form="prefix">−</mo><mi>v</mi></mtd></mtr></mtable></mrow></math></div>
+    <p><strong>第四步，克莱姆法则。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=2152">35:52</a>系数行列式是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>，把右端项分别替换第一列、第二列：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>u</mi><mi>x</mi></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mo form="prefix">−</mo><mi>u</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mi>y</mi></mtd></mtr><mtr><mtd><mo form="prefix">−</mo><mi>v</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mi>x</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>x</mi><mi>u</mi><mo>−</mo><mi>y</mi><mi>v</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>v</mi><mi>x</mi></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mrow><mo stretchy="true">|</mo><mtable><mtr><mtd><mi>x</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mi>u</mi></mtd></mtr><mtr><mtd><mi>y</mi><mspace width="0.25em"></mspace></mtd><mtd><mspace width="0.25em"></mspace><mo>−</mo><mi>v</mi></mtd></mtr></mtable><mo stretchy="true">|</mo></mrow><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>x</mi><mi>v</mi><mo>+</mo><mi>y</mi><mi>u</mi></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导的情形完全类似：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 当常数，方程组变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mspace width="1em"></mspace><msub><mi>u</mi><mi>y</mi></msub><mo>−</mo><mi>y</mi><mspace width="1em"></mspace><msub><mi>v</mi><mi>y</mi></msub><mo>=</mo><mi>v</mi></mtd></mtr><mtr><mtd><mi>y</mi><mspace width="1em"></mspace><msub><mi>u</mi><mi>y</mi></msub><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><msub><mi>v</mi><mi>y</mi></msub><mo>=</mo><mo form="prefix">−</mo><mi>u</mi></mtd></mtr></mtable></mrow></math></span>，同样用克莱姆法则解出来即可。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=132&amp;t=2284">38:04</a>老师的结束语很实在：「这个题你理解了吗？那这部分就行了。」</p>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 244" role="img" aria-label="方程组确定的隐函数求导的四个步骤">
+    <rect x="18" y="34" width="136" height="88" class="m-panel"></rect>
+    <text x="86" y="58" class="m-txt" font-size="12" text-anchor="middle">① 认关系</text>
+    <text x="86" y="80" class="m-sub" font-size="11.5" text-anchor="middle">谁是自变量</text>
+    <text x="86" y="98" class="m-sub" font-size="11.5" text-anchor="middle">谁是隐函数</text>
+    <text x="86" y="116" class="m-sub" font-size="11.5" text-anchor="middle">用 d 还是 ∂</text>
+
+    <line x1="154" y1="78" x2="186" y2="78" class="m-acc" stroke-width="1.6"></line>
+    <polygon points="192,78 182,73 182,83" class="m-fill-a"></polygon>
+
+    <rect x="194" y="34" width="136" height="88" class="m-panel"></rect>
+    <text x="262" y="58" class="m-txt" font-size="12" text-anchor="middle">② 两边求导</text>
+    <text x="262" y="80" class="m-sub" font-size="11.5" text-anchor="middle">每个方程都求</text>
+    <text x="262" y="98" class="m-sub" font-size="11.5" text-anchor="middle">乘积项别漏</text>
+    <text x="262" y="116" class="m-sub" font-size="11.5" text-anchor="middle">右端常数得 0</text>
+
+    <line x1="330" y1="78" x2="362" y2="78" class="m-acc" stroke-width="1.6"></line>
+    <polygon points="368,78 358,73 358,83" class="m-fill-a"></polygon>
+
+    <rect x="370" y="34" width="136" height="88" class="m-panel"></rect>
+    <text x="438" y="58" class="m-txt" font-size="12" text-anchor="middle">③ 整理成方程组</text>
+    <text x="438" y="80" class="m-sub" font-size="11.5" text-anchor="middle">未知量（偏导）</text>
+    <text x="438" y="98" class="m-sub" font-size="11.5" text-anchor="middle">挪到左边</text>
+    <text x="438" y="116" class="m-sub" font-size="11.5" text-anchor="middle">其余挪到右边</text>
+
+    <line x1="506" y1="78" x2="538" y2="78" class="m-acc" stroke-width="1.6"></line>
+    <polygon points="544,78 534,73 534,83" class="m-fill-a"></polygon>
+
+    <rect x="546" y="34" width="76" height="88" class="m-panel-hi"></rect>
+    <text x="584" y="58" class="m-txt" font-size="12" text-anchor="middle">④ 克莱姆</text>
+    <text x="584" y="80" class="m-math" font-size="11.5" text-anchor="middle">Dᵢ/D</text>
+    <text x="584" y="102" class="m-sub" font-size="11.5" text-anchor="middle">分母非零</text>
+
+    <rect x="18" y="142" width="604" height="88" class="m-panel-a"></rect>
+    <text x="30" y="164" class="m-txt" font-size="12">例：由两个方程确定 y=y(x)、z=z(x)，两边求导后一定落到这个形状：</text>
+    <text x="30" y="190" class="m-math" font-size="12">2y′ + 3z′ = −1　　　　y·y′ + z·z′ = −x</text>
+    <text x="30" y="216" class="m-sub" font-size="11.5">系数是含 y、z 的式子，常数项含 x——都不影响克莱姆法则的用法</text>
+  </svg>
+  <figcaption><b>方程组情形不用背定理，记住这张四步流程就够了。</b>课本在这一段列了一堆行列式（雅可比行列式之类），老师说得很直白：<q>这是个人就记不住，也没有必要记。</q>真正干活的是固定的四步——先弄清谁是自变量、谁是隐函数；再让每个方程两边同时对同一个自变量求导；然后把待求的偏导集中到等号左边；最后用克莱姆法则解一个线性方程组。<em>第二个例子（四个变量、两个方程）走的也是这四步，一步都没多。</em></figcaption>
+</figure>
+
+<div class="blk trap">
+  <span class="lbl">本节四个反复被踩的坑</span>
+  <p><span class="bad">一、右边有常数，没有先挪到左边。</span>公式法要求先写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span> 的形状。有意思的是：<strong>忘了挪，结果其实一样</strong>——因为常数对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求偏导都得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span> 不受影响。但规范写法是先把右边化归为零。</p>
+  <p><span class="bad">二、算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span> 时给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span> 补了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>。</span>这是「直接法后遗症」。公式法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 只是一个自变量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求导就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span>，不需要再补任何东西。<mark>直接法里「遇到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 要补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>」，公式法里「遇到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 就把它当普通自变量」</mark>——这两句话是同一个人在两副面孔下说的。</p>
+  <p><span class="bad">三、二阶还想套公式。</span>二阶就转回直接法：把一阶的结果当成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数」再求一次导，该用商法则就用商法则。</p>
+  <p><span class="bad">四、方程组情形去背定理结论。</span>那些公式长得实在记不住，「做题的话还就只能现推」。走熟四步流程比背公式可靠得多。</p>
+</div>
+
+<div class="said">
+  <span class="lbl">视频原话（大意）</span>
+  <p><q>我给大家讲两个例子，你只要把这两个例子理解就行……那部分理论咱就通通不说了。</q>以及讲一元公式的记忆法时那句：<q>我也不知道为什么，反正这么记好记。</q>这一节的气质就是这样：<strong>公式要能背下来、要用得快，但每一条公式背后的那棵树必须自己在纸上画出来过。</strong></p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>两个公式</h3>
+  <dl class="kv">
+    <dt>一元 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span></dt>
+    <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow></mfrac></math></span>（分母是<strong>因变量</strong>那个字母的偏导）</dd>
+    <dt>二元 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mn>0</mn></math></span></dt>
+    <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>x</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>F</mi><mi>y</mi></msub></mrow><mrow><msub><mi>F</mi><mi>z</mi></msub></mrow></mfrac></math></span></dd>
+  </dl>
+
+  <h3>记忆两点</h3>
+  <ul class="tight">
+    <li><strong>一定有负号</strong>（来自移项，不是规定）。</li>
+    <li><strong>交叉对应</strong>：求谁的偏导，分子就是谁；分母永远跟着因变量走。</li>
+  </ul>
+
+  <h3>用之前的三步准备</h3>
+  <ol class="tight">
+    <li>把方程整理成右边等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（常数忘挪结果不错，但可能扣分）。</li>
+    <li>把左边整块记为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>。</li>
+    <li>算偏导时<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 看成所有字母相互独立的多元函数</strong>。</li>
+  </ol>
+
+  <h3>两副面孔（最重要）</h3>
+  <div class="chain">
+    <span class="n"><b>直接法</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数，遇 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span></span><span class="ar">⇋</span>
+    <span class="n"><b>公式法</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是多元函数，另一字母当常数</span>
+  </div>
+  <p><mark>一阶用公式法，二阶用直接法。</mark>切换方法就是切换 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 的身份。</p>
+
+  <h3>方程组的四步</h3>
+  <ol class="tight">
+    <li>认关系：谁是自变量、谁是隐函数、用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span> 还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∂</mo></math></span>。</li>
+    <li>两边同时对同一个自变量求导。</li>
+    <li>整理成关于待求偏导的线性方程组。</li>
+    <li>克莱姆法则（<a href="../P131-【补充】克莱姆法则/index.html">【补充】克莱姆法则</a>）。</li>
+  </ol>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>公式法里算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>y</mi></msub></math></span> 时，<strong>不要</strong>给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>y</mi></mrow></msup></math></span> 补一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>（此刻 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是自变量）。</li>
+    <li>直接法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>4</mn><mi>z</mi></math></span> 也要带出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>x</mi></msub></math></span>，漏掉分母就错。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P129-【黑板】多元复合函数求导（1）/index.html">【黑板】多元复合函数求导（1）</a> 【黑板】多元复合函数求导（一）：两条路的树</li>
+      <li><a href="../P130-【黑板】多元复合函数求导（2）/index.html">【黑板】多元复合函数求导（2）</a> 【黑板】多元复合函数求导（二）：抽象函数与二阶</li>
+      <li><a href="../P131-【补充】克莱姆法则/index.html">【补充】克莱姆法则</a> 【补充】克莱姆法则（方程组情形必备）</li>
+      <li><span class="cur">一元隐函数求导、对数求导法（<a href="../P025-隐函数求导对数求导/index.html">隐函数求导对数求导</a>）</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P084-曲面的切平面和法线/index.html">曲面的切平面和法线</a> 曲面的切平面与法线（直接用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub></math></span> 写法向量）</li>
+      <li><a href="../P083-空间曲线的切线和法平面/index.html">空间曲线的切线和法平面</a> 空间曲线的切线与法平面</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>直接法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是函数；公式法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是独立变量</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math></span> 的负号来自移项，别写成正号</li>
+      <li>方程组的隐函数求导：结论不用背，会「两边求偏导 + 克莱姆法则」即可</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 132 讲</span><a href="../P131-【补充】克莱姆法则/index.html">← P131</a><a href="../index.html">全部目录</a><a href="../P133-【黑板】多元函数微分学的几何应用/index.html">P133 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一元隐函数：老朋友与新公式</a>
+    <a href="#s2">一阶用公式，二阶用直接法</a>
+    <a href="#s3">二元隐函数：F(x,y,z)=0</a>
+    <a href="#s4">方程组确定的隐函数：两边求偏导 + 克莱姆法则</a>
+  </aside>
+</div>
+</body>
+</html>

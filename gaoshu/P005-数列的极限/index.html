@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>数列的极限：把「越来越接近」变成一句能检查的话 · 高等数学笔记</title>
+<meta name="description" content="这节课只干一件事：给「n 越大，an 越接近 A」这句大白话装上刻度。办法是——你随便报一个多小的容许误差 ε，我都能指给你看某一项，从它之后所有的项全都待在 A 的 ε 范围里。就靠「存在 N」这一句，用有限管住了无限。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 1 章  函数与极限</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 5 讲</div>
+    <h1 class="title"><span class="pnum">P005</span>数列的极限：把「越来越接近」变成一句能检查的话</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这节课只干一件事：给「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 越大，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mi>n</mi></msub></math></span> 越接近 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>」这句大白话装上刻度。办法是——<strong>你随便报一个多小的容许误差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>，我都能指给你看某一项，从它之后所有的项全都待在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 范围里</strong>。就靠「存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>」这一句，用<strong>有限</strong>管住了<strong>无限</strong>。</p></div>
+    <div class="meta"><span>时长 52m10s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=37">00:37</a><span class="vv">数列是什么：<b>一列数，而且必须是无限多项</b>；通项公式与记号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>x</mi><mi>n</mi></msub><mo>}</mo></math></span>。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=185">03:05</a><span class="vv">极限值是<b>猜出来的</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 会趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，靠看就能看出，但「趋于」写不进证明。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=367">06:07</a><span class="vv">「无限接近」怎么描述——课上用<b>两个生活例子</b>把这件事说透。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=466">07:46</a><span class="vv">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 画成点列：任给一条小距离，<b>总有某一项之后全部落进去</b>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=690">11:30</a><span class="vv">第二个例子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>a</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>：从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 的<b>上下两侧</b>摆动着逼近。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=952">15:52</a><span class="vv"><b>定义逐字拆解</b>：存在常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> / 任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span> / 存在正整数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> / 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=1362">22:42</a><span class="vv"><b>例 1</b>　用定义证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>——最基础的模板。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=1864">31:04</a><span class="vv"><b>例 2</b>　证明课本上那道 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=2266">37:46</a><span class="vv"><b>例 3</b>　证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>——第一次用<b>放缩</b>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=2787">46:27</a><span class="vv"><b>例 4</b>　等比数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msup><mi>q</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>}</mo></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></math></span>）的极限为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>——要用<b>取对数</b>。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=2530">42:10</a><span class="vv">两个容易被忽略的细节：<b>大 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 不唯一</b>；<b>只能往大取，不能往小取</b>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">数列：一句话说完</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=37">00:37</a>数列就是<strong>按正整数编好号排成一列的数</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><msub><mi>x</mi><mn>2</mn></msub><mo>,</mo><msub><mi>x</mi><mn>3</mn></msub><mo>,</mo><mo>…</mo><mo>,</mo><msub><mi>x</mi><mi>n</mi></msub><mo>,</mo><mo>…</mo></math></span>。这里唯一容易踩空的地方是：它<mark>必须是无限多项</mark>——末尾那个「点点点」不是省略号随便写写，它代表「永远还有下一项」。</p>
+
+<p>课上举的几个例子，看一眼就明白什么叫通项公式：</p>
+
+<div class="tbl-wrap">
+  <table class="k">
+    <thead>
+      <tr><th>写出来的样子</th><th>通项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span></th><th>一句话说明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>n</mi><mo>,</mo><mo>…</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span></td><td>就是正整数本身</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>3</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>,</mo><mo>…</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>n</mi></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfrac></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 一取定，这一项就定了</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>8</mn><mo>,</mo><mo>…</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>2</mn><mrow><mi>n</mi></mrow></msup></math></span></td><td>翻倍增长</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo>…</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></td><td>常数列也算数列</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mo>…</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></math></span></td><td>常数列的「变号版」，它不收敛</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>式子外面加个大括号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>x</mi><mi>n</mi></msub><mo>}</mo></math></span> 就表示整个数列。还有一句话值得记住：<span class="t">数列其实是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 的函数</span>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 是自变量（只取正整数），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span> 是因变量。后面研究极限，本质就是在看「当自变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 越来越大时，函数值往哪走」。</p>
+
+<div class="note">
+  <span class="lbl">记号小坑</span>
+  <p>写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span> 就可以了，<strong>不用写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo form="prefix">+</mo><mo>∞</mo></math></span></strong>。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 本来就是正整数，只能往大走，所以「趋于无穷」在这里默认就是「趋于正无穷」。课上专门提过这一句——写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mo>∞</mo></math></span> 不算错，但没必要。</p>
+</div>
+
+<h2 id="s2">极限值是「猜」出来的</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=185">03:05</a>先看最简单的：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mo>…</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mn>0</mn><mo>.</mo><mn>5</mn><mo>,</mo><mspace width="1em"></mspace><mn>0</mn><mo>.</mo><mn>3</mn><mn>3</mn><mn>3</mn><mo>,</mo><mspace width="1em"></mspace><mn>0</mn><mo>.</mo><mn>2</mn><mn>5</mn><mo>,</mo><mspace width="1em"></mspace><mn>0</mn><mo>.</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mo>…</mo></math></div>
+
+<p>越往后越小，越往后越贴着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。所以我们「猜」它的极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=310">05:10</a>到这里要停一下想清楚一件事：<strong>「猜」不是敷衍。</strong>在正式做题时，极限值通常都是先看出来的——因为你能看出趋势，说明你懂了这个数列。定义真正的作用不是帮你<em>求</em>极限，而是帮你<em>证明</em>你猜的那个数是对的。所以后面所有例题的套路都是同一条：<span class="t">先猜 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，再用定义验证 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 确实是极限</span>。</p>
+
+<h2 id="s3">「无限接近」到底该怎么描述</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=367">06:07</a>这是全课最关键的一步。老师没用数学语言，用了两个生活例子，效果反而更好：</p>
+
+<div class="said">
+  <span class="lbl">视频原话（大意）</span>
+  <p><q>比如我媳妇站我旁边，挨得特别近，我说咱俩的距离趋于零。那她就问了：<strong>有多近？</strong>是 10 厘米吗？我说比 10 厘米还近。那是一厘米吗？我说比一厘米还近——不管你报一个多小的距离，我都比你报的那个更近。</q></p>
+  <p><q>再换个例子：我说我比你有钱。你说你有 1 万块，我说我有 1 万零 1 块。你说你有 10 万，我说我有 11 万。<strong>你随便报一个数，我的钱都比你多。</strong></q></p>
+</div>
+
+<p>这两句话里藏着同一个结构，也就是我猜出的极限为什么成立：</p>
+
+<div class="chain">
+  <span class="n">你<strong>任意</strong>报一个距离 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span></span>
+  <span class="ar">→</span>
+  <span class="n">我都能<strong>找到</strong>某一项</span>
+  <span class="ar">→</span>
+  <span class="n">从那一项往后<strong>全部</strong>落在里面</span>
+</div>
+
+<p>注意这里「任意」和「存在」的顺序不能换。是<strong>你先报</strong>、<strong>我后找</strong>——顺序一反，意思就完全变了（变成「我先找一个固定的位置，然后要求所有距离都满足」，那当然做不到）。这就是为什么定义里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 写在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 前面。</p>
+
+<h2 id="s4">画在图上，就没那么玄了</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=466">07:46</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 当成平面上的点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>,</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>)</mo></math></span> 画出来，一眼就能看出「越来越接近」是什么意思：</p>
+
+<figure class="fig">
+  <svg viewBox="20 20 640 211" role="img" aria-label="数列 1/n 的点列与一条水平误差带">
+    <rect x="62" y="146.7" width="558" height="55.3" class="m-bg-a"></rect>
+    <line x1="62" y1="146.7" x2="640" y2="146.7" class="m-acc" stroke-width="1" stroke-dasharray="5 4"></line>
+    <line x1="62" y1="30" x2="62" y2="216" class="m-thin" stroke-width="1.4"></line>
+    <line x1="62" y1="202" x2="640" y2="202" class="m-line" stroke-width="1.4"></line>
+    <polygon points="644,202 634,198 634,206" class="m-fill"></polygon>
+    <polygon points="62,26 58,36 66,36" class="m-fill"></polygon>
+    <line x1="179" y1="202" x2="179" y2="140" class="m-warn" stroke-width="1.2" stroke-dasharray="4 3"></line>
+    <g class="m-fill-a">
+      <circle cx="101.0" cy="44.0" r="3.4"></circle>
+      <circle cx="140.0" cy="123.0" r="3.4"></circle>
+      <circle cx="179.0" cy="149.3" r="3.4"></circle>
+      <circle cx="218.0" cy="162.5" r="3.4"></circle>
+      <circle cx="257.0" cy="170.4" r="3.4"></circle>
+      <circle cx="296.0" cy="175.7" r="3.4"></circle>
+      <circle cx="335.0" cy="179.4" r="3.4"></circle>
+      <circle cx="374.0" cy="182.2" r="3.4"></circle>
+      <circle cx="413.0" cy="184.4" r="3.4"></circle>
+      <circle cx="452.0" cy="186.2" r="3.4"></circle>
+      <circle cx="491.0" cy="187.6" r="3.4"></circle>
+      <circle cx="530.0" cy="188.8" r="3.4"></circle>
+      <circle cx="569.0" cy="189.8" r="3.4"></circle>
+      <circle cx="608.0" cy="190.7" r="3.4"></circle>
+    </g>
+    <circle cx="101" cy="44" r="6.4" fill="none" class="m-warn" stroke-width="1.2"></circle>
+    <circle cx="140" cy="123" r="6.4" fill="none" class="m-warn" stroke-width="1.2"></circle>
+    <text x="88" y="40" class="m-sub" font-size="11.5">x₁ = 1</text>
+    <text x="126" y="118" class="m-sub" font-size="11.5">x₂ = 0.5</text>
+    <text x="520" y="142" class="m-acc" font-size="12">y = ε</text>
+    <text x="184" y="132" class="m-fill-w" font-size="12">n = N</text>
+    <text x="150" y="172" class="m-warn" font-size="12">带外的项只有有限个</text>
+    <text x="330" y="222" class="m-sub" font-size="12">n</text>
+    <text x="36" y="46" class="m-sub" font-size="12">xₙ</text>
+  </svg>
+  <figcaption><b>误差带一画，定义就具体了。</b>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mn>0</mn><mo>.</mo><mn>3</mn><mn>5</mn></math></span>，在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mo>ε</mo></math></span> 下面画一条带子。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>1</mn></msub><mo>=</mo><mn>1</mn></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn><mo>.</mo><mn>5</mn></math></span> 站在带子外面，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>3</mn></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><mn>0</mn><mo>.</mo><mn>3</mn><mn>3</mn><mn>3</mn></math></span> 从这一项起就进去了，之后所有点（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>4</mn></msub><mo>,</mo><msub><mi>x</mi><mn>5</mn></msub><mo>,</mo><mo>…</mo></math></span>）全部在里面出不来。<b>带外的项是「有限个」，带内的项是「无穷多个」——这个不对称正是收敛的意思。</b>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 改小，这条线会往下降，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 就往右挪；但无论挪到多远，它总是存在的。</figcaption>
+</figure>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=1210">20:10</a>老师还换了个画法，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span> 直接当成数轴上的点画（一维）：</p>
+
+<figure class="fig">
+  <svg viewBox="19 59 640 88" role="img" aria-label="数轴上 1/n 的点落在 0 的邻域内">
+    <rect x="50.2" y="86" width="135.6" height="34" class="m-bg-a"></rect>
+    <line x1="50.2" y1="103" x2="185.8" y2="103" class="m-acc" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="34" y1="103" x2="640" y2="103" class="m-line" stroke-width="1.4"></line>
+    <polygon points="644,103 634,99 634,107" class="m-fill"></polygon>
+    <line x1="118" y1="88" x2="118" y2="118" class="m-line" stroke-width="1.6"></line>
+    <g class="m-fill-a">
+      <circle cx="570.0" cy="103" r="3.6"></circle>
+      <circle cx="344.0" cy="103" r="3.6"></circle>
+      <circle cx="268.7" cy="103" r="3.6"></circle>
+      <circle cx="231.0" cy="103" r="3.6"></circle>
+      <circle cx="208.4" cy="103" r="3.6"></circle>
+      <circle cx="193.3" cy="103" r="3.6"></circle>
+    </g>
+    <g class="m-fill-g">
+      <circle cx="182.6" cy="103" r="3.6"></circle>
+      <circle cx="174.5" cy="103" r="3.6"></circle>
+      <circle cx="168.2" cy="103" r="3.6"></circle>
+      <circle cx="163.2" cy="103" r="3.6"></circle>
+      <circle cx="159.1" cy="103" r="3.6"></circle>
+      <circle cx="155.7" cy="103" r="3.6"></circle>
+    </g>
+    <circle cx="208.4" cy="103" r="6.6" fill="none" class="m-warn" stroke-width="1.2"></circle>
+    <text x="112" y="134" class="m-txt" font-size="12">0</text>
+    <text x="34" y="80" class="m-acc" font-size="11.5">0 − ε</text>
+    <text x="150" y="80" class="m-acc" font-size="11.5">0 + ε</text>
+    <text x="192" y="136" class="m-warn" font-size="11.5">x₆ 还在外面</text>
+    <text x="300" y="136" class="m-good" font-size="11.5">x₇ 起全部落进邻域</text>
+    <text x="556" y="88" class="m-sub" font-size="11.5">x₁ = 1</text>
+  </svg>
+  <figcaption><b>这是定义真正的样子。</b>极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 邻域是开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>−</mo><mo>ε</mo><mo>,</mo><mspace width="1em"></mspace><mn>0</mn><mo>+</mo><mo>ε</mo><mo>)</mo></math></span>，宽 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>ε</mo></math></span>。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mn>0</mn><mo>.</mo><mn>1</mn><mn>5</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>6</mn></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>6</mn></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>.</mo><mn>1</mn><mn>6</mn><mn>7</mn></math></span> 还落在外面，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>7</mn></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>7</mn></mrow></mfrac><mo>≈</mo><mn>0</mn><mo>.</mo><mn>1</mn><mn>4</mn><mn>3</mn></math></span> 进去了，此后 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>8</mn></msub><mo>,</mo><msub><mi>x</mi><mn>9</mn></msub><mo>,</mo><mo>…</mo></math></span> 一路收紧，永远出不来。<b>注意这个邻域是「两侧对称」的</b>——虽然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 全是正数、实际只用到了右半边，但定义里必须写成对称区间，因为以后会遇到在极限值两侧来回摆的数列（下面那个例子就是）。</figcaption>
+</figure>
+
+<h2 id="s5">再看一个从两侧逼近的例子</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=690">11:30</a>课上第二个例子是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>a</mi><mi>n</mi></msub><mo>=</mo><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></div>
+
+<p>把它拆开看就很清楚了：前面的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 是不动的，后面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 只干一件事——<span class="t">制造一个正负号</span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 是奇数时它是正的，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 是偶数时它是负的，但大小 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 在往 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 跑。所以整个数列就在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 的左边一下、右边一下地摆动，而摆幅越来越小。</p>
+
+<figure class="fig">
+  <svg viewBox="20 25 640 234" role="img" aria-label="数列 1 加减 1/n 从上下两侧逼近 1">
+    <rect x="78" y="127" width="530" height="50" class="m-bg-a"></rect>
+    <line x1="78" y1="127" x2="620" y2="127" class="m-acc" stroke-width="1" stroke-dasharray="5 4"></line>
+    <line x1="78" y1="177" x2="620" y2="177" class="m-acc" stroke-width="1" stroke-dasharray="5 4"></line>
+    <line x1="78" y1="152" x2="620" y2="152" class="m-line" stroke-width="1.3" stroke-dasharray="2 3"></line>
+    <line x1="62" y1="40" x2="62" y2="252" class="m-thin" stroke-width="1.4"></line>
+    <line x1="62" y1="232" x2="640" y2="232" class="m-line" stroke-width="1.4"></line>
+    <polygon points="644,232 634,228 634,236" class="m-fill"></polygon>
+    <polygon points="62,36 58,46 66,46" class="m-fill"></polygon>
+    <path d="M118 52 L158 202 L198 118.7 L238 177 L278 132 L318 168.7 L358 137.7 L398 164.5 L438 140.9 L478 162 L518 142.9 L558 160.3"
+          fill="none" class="m-thin" stroke-width="1"></path>
+    <g class="m-fill-a">
+      <circle cx="118.0" cy="52.0" r="3.5"></circle>
+      <circle cx="158.0" cy="202.0" r="3.5"></circle>
+      <circle cx="198.0" cy="118.7" r="3.5"></circle>
+      <circle cx="238.0" cy="177.0" r="3.5"></circle>
+      <circle cx="278.0" cy="132.0" r="3.5"></circle>
+      <circle cx="318.0" cy="168.7" r="3.5"></circle>
+      <circle cx="358.0" cy="137.7" r="3.5"></circle>
+      <circle cx="398.0" cy="164.5" r="3.5"></circle>
+      <circle cx="438.0" cy="140.9" r="3.5"></circle>
+      <circle cx="478.0" cy="162.0" r="3.5"></circle>
+      <circle cx="518.0" cy="142.9" r="3.5"></circle>
+      <circle cx="558.0" cy="160.3" r="3.5"></circle>
+    </g>
+    <circle cx="118" cy="52" r="6.6" fill="none" class="m-warn" stroke-width="1.2"></circle>
+    <circle cx="158" cy="202" r="6.6" fill="none" class="m-warn" stroke-width="1.2"></circle>
+    <circle cx="198" cy="118.7" r="6.6" fill="none" class="m-warn" stroke-width="1.2"></circle>
+    <circle cx="238" cy="177" r="6.6" fill="none" class="m-warn" stroke-width="1.2"></circle>
+    <text x="92" y="44" class="m-sub" font-size="11.5">x₁ = 2</text>
+    <text x="168" y="212" class="m-sub" font-size="11.5">x₂ = 0.5</text>
+    <text x="244" y="190" class="m-sub" font-size="11.5">x₄ = 0.75</text>
+    <text x="498" y="120" class="m-acc" font-size="12">1 + ε</text>
+    <text x="498" y="192" class="m-acc" font-size="12">1 − ε</text>
+    <text x="70" y="158" class="m-sub" font-size="12">1</text>
+    <text x="300" y="250" class="m-sub" font-size="12">n</text>
+    <text x="36" y="56" class="m-sub" font-size="12">xₙ</text>
+    <text x="272" y="146" class="m-good" font-size="12">ε = 0.25 的带子；n ≥ 5 后全部落入</text>
+  </svg>
+  <figcaption><b>这张图解释了为什么邻域必须「两侧对称」。</b>数列一会儿跳到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 上方、一会儿掉到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 下方，如果只允许单侧，它立刻就被排除掉了。取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>5</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>1</mn></msub><mo>=</mo><mn>2</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn><mo>.</mo><mn>5</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>3</mn></msub><mo>≈</mo><mn>1</mn><mo>.</mo><mn>3</mn><mn>3</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>4</mn></msub><mo>=</mo><mn>0</mn><mo>.</mo><mn>7</mn><mn>5</mn></math></span> 都在带外（画了圈），从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>5</mn></msub><mo>=</mo><mn>1</mn><mo>.</mo><mn>2</mn></math></span> 起就再也跳不出去。<b>「带外有限个、带内无穷个」这句话在这里照样成立</b>——这就是所有收敛数列的共同长相。</figcaption>
+</figure>
+
+<h2 id="s6">数列极限的定义</h2>
+
+<div class="blk def">
+  <span class="lbl">定义 · 数列的极限</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>x</mi><mi>n</mi></msub><mo>}</mo></math></span> 是一个数列，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是一个常数。如果对<strong>任意给定</strong>的正数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span>，总<strong>存在</strong>正整数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>，使得当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时，都有</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>|</mo><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mo>ε</mo></math></div>
+  <p>则称 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是数列 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>{</mo><msub><mi>x</mi><mi>n</mi></msub><mo>}</mo></math></span> 的<strong>极限</strong>，也称数列<strong>收敛于</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，记作</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><msub><mi>x</mi><mi>n</mi></msub><mo>=</mo><mi>A</mi><mspace width="0.25em"></mspace><mspace width="1em"></mspace><mtext>或</mtext><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msub><mi>x</mi><mi>n</mi></msub><mo>→</mo><mspace width="0.25em"></mspace><mi>A</mi><mspace width="1em"></mspace><mo>(</mo><mi>n</mi><mo>→</mo><mo>∞</mo><mo>)</mo></math></div>
+  <p>如果这样的常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 不存在，就说数列<strong>发散</strong>。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=952">15:52</a>定义只有三行，但每个字都在干活。逐句拆开看：</p>
+
+<dl class="kv">
+  <dt>存在常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span></dt>
+  <dd>先要有<strong>一个候选值</strong>。「存在」的意思就是「能找到」——所以它不会凭空告诉你答案，答案要你自己先猜出来。</dd>
+  <dt>任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span></dt>
+  <dd>这是「误差标尺」，<strong>你随便报，多小都行</strong>。因为是距离，所以一定取正数。</dd>
+  <dt>存在正整数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span></dt>
+  <dd>这是定义里唯一需要你<strong>动手算</strong>的东西：你要指出「从第几项开始」。课本上写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 时可以不写它的具体式子——考试时也允许先空着，等草稿纸上推完了再填。</dd>
+  <dt>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时</dt>
+  <dd>注意是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>≥</mo><mspace width="0.25em"></mspace><mi>N</mi></math></span>。这一项<strong>往后</strong>的所有项都要满足，前面那有限几项不在考核范围内。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mo>ε</mo></math></span></dt>
+  <dd>这个绝对值就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的距离」。<strong>整条定义的落点就在这一个不等式上。</strong></dd>
+</dl>
+
+<div class="why">
+  <span class="lbl">为什么这一句话就能代替「无限接近」</span>
+  <p>「无限接近」的问题在于它无法检验：你说接近了，那到底算不算？定义给出的检验方式是反过来问——<strong>你挑毛病</strong>。你报一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>，只要能找到违反它的项（也就是落在外面且序号还很大的项），那 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 就不是极限。</p>
+  <p>于是「收敛于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>」等价于一句话：<mark>任何 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 带的带外，都只剩下有限个项</mark>。有限个项再多也是有限的，总有一个最大序号——把它取成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 就完事了。这就是「有限管住无限」的意思：无穷多项里，只有掉队的那几项被容忍，其余无穷多项必须一直待在带子里。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=1145">19:05</a>把绝对值不等式拆开，定义就变成了一个更好用的形式：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>−</mo><mo>ε</mo><mo>&lt;</mo><msub><mi>x</mi><mi>n</mi></msub><mo>&lt;</mo><mi>A</mi><mo>+</mo><mo>ε</mo></math></div>
+
+<p>这时它读起来就是：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mi>n</mi></msub></math></span> 落在开区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>A</mi><mo>−</mo><mo>ε</mo><mo>,</mo><mspace width="1em"></mspace><mi>A</mi><mo>+</mo><mo>ε</mo><mo>)</mo></math></span> 里面</strong>。这个区间叫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 邻域，宽度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>ε</mo></math></span>。做题时用双边形式往往比绝对值形式更好下手，因为两边可以分别去估计。</p>
+
+<h2 id="s7">怎么用定义证明一个极限</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=1395">23:15</a>这是本节课最实用的一段。老师反复强调了一件事，很多同学听完还是懵的：<strong>「倒着推、正着写」</strong>。</p>
+
+<ol class="steps">
+  <li><span class="sh">先猜出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是多少。</span>看趋势猜，这个不许含糊。</li>
+  <li><span class="sh">在草稿纸上倒着推。</span>目标是让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mo>ε</mo></math></span> 成立，把这个不等式<em>当成条件</em>去反解出「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 需要多大」。两边一通整理、放缩、化简，最后落到一个形如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mo>(</mo><mo>ε</mo><mtext> 的表达式</mtext><mo>)</mo></math></span> 的式子。</li>
+  <li><span class="sh">把结论填回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>。</span>上面那个表达式（必要时取整再加一，保证它确实是整数）就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>。这一步是<strong>最后一步写上去的</strong>。</li>
+  <li><span class="sh">卷面上正着写一遍。</span>「任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>=</mo><mo>…</mo></math></span>，则当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时有……」——从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 出发，一路推到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mo>ε</mo></math></span>。</li>
+</ol>
+
+<div class="why">
+  <span class="lbl">为什么要绕这一圈</span>
+  <p>因为定义里的逻辑顺序是：<strong>先给定 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>，再存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span></strong>。所以写出来必须是「任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> → 取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> → 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时成立」。但你在动手之前根本不知道 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 该取什么，只能先在草稿纸上从结论往回推。推出来了、心里有底了，再按定义要求的顺序抄一遍。</p>
+  <p>所以卷面上<strong>不要写「为了使……成立，需要……」</strong>这类倒推过程。阅卷人要看的是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 取好了，结论成立」，而不是你怎么找到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 的。老师课上打了个比方：先在答案的位置留个空，往后写，草稿纸上推完了再回来把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 填上去。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=1362">22:42</a>证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">草稿纸上怎么想</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mn>0</mn></math></span> 已经猜好了，所以只需要让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mo>ε</mo></math></span> 成立，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>−</mo><mn>0</mn><mo stretchy="true">|</mo></mrow><mo>&lt;</mo><mo>ε</mo></math></span>。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 都是正的，绝对值可以直接去掉：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>&lt;</mo><mo>ε</mo><mspace width="0.25em"></mspace><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>n</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></div>
+    <p>推到这里就结束了：<strong>只要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span> 大，不等式就成立</strong>。但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 必须是正整数，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span> 不一定是整数——所以取「取整再加一」：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn></math></span>，这样保证 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span> 一定成立。</p>
+    <span class="lbl">卷面上怎么写</span>
+    <p>任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn></math></span>，则当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>&lt;</mo><mo>ε</mo><mspace width="0.25em"></mspace><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mrow><mo stretchy="true">|</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>−</mo><mn>0</mn><mo stretchy="true">|</mo></mrow><mo>&lt;</mo><mo>ε</mo></math></div>
+    <p>于是按定义，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>。证毕。</p>
+    <div class="why">
+      <span class="lbl">为什么要「取整加一」而不是直接取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span></span>
+      <p>分两种情况，结论都能落到同一句话上：</p>
+      <ul class="tight">
+        <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span> 本身是整数</strong>（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>1</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo>=</mo><mn>1</mn><mn>0</mn><mn>0</mn><mn>0</mn></math></span>）：取整还是它自己，加一之后是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>0</mn><mn>0</mn><mn>1</mn></math></span>，显然大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>0</mn><mn>0</mn><mn>0</mn></math></span>。</li>
+        <li><strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span> 不是整数</strong>（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mn>2</mn><mo>.</mo><mn>3</mn></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo>=</mo><mn>1</mn><mn>2</mn><mo>.</mo><mn>3</mn></math></span>）：取整得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>2</mn></math></span>，加一得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>3</mn></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>3</mn><mo>&gt;</mo><mn>1</mn><mn>2</mn><mo>.</mo><mn>3</mn></math></span>。</li>
+      </ul>
+      <p>两种情况都保证 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span>，所以这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 写法是安全的。<b>这一步看着像「技术处理」，其实正是定义严谨性的地方</b>——定义要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 是正整数，不是一个实数。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=1864">31:04</a>证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">草稿纸上怎么想</span>
+    <p>这个数列就是前面画图那个。目标：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>−</mo><mn>1</mn><mo stretchy="true">|</mo></mrow><mo>&lt;</mo><mo>ε</mo></math></span>。先化简：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>−</mo><mn>1</mn><mo>=</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac></math></div>
+    <p>加上绝对值以后，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></math></span> 这个符号就没用了（绝对值吃掉它）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo stretchy="true">|</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></div>
+    <p>接下来和例 1 <strong>一模一样</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></span> 就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac></math></span>，所以</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn></math></div>
+    <span class="lbl">卷面上怎么写</span>
+    <p>任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn></math></span>，则当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></span>，于是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>−</mo><mn>1</mn><mo stretchy="true">|</mo></mrow><mo>=</mo><mrow><mo stretchy="true">|</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo stretchy="true">|</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></div>
+    <p>故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>。证毕。</p>
+    <div class="note">
+      <span class="lbl">做题时的感受</span>
+      <p>这道题卷面上写出来会觉得「好像什么都没干」——确实如此。所有需要动脑的部分（把式子化简成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac></math></span>、确认 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 取多大）都在草稿纸上。<strong>卷面只负责把逻辑顺序摆对</strong>，这也是定义类证明题普遍的样子。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=2266">37:46</a>证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">草稿纸上怎么想</span>
+    <p>先猜：分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup></math></span> 长得飞快，分子只是个正负号，所以极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。目标是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>−</mo><mn>0</mn><mo stretchy="true">|</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></div>
+    <p>这里如果直接解得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mo>ε</mo></mrow></msqrt></mrow></mfrac><mo>−</mo><mn>1</mn></math></span>，式子太丑。<strong>课上用了一步放缩把它变简单</strong>：因为分母变大了，倒数就变小，所以</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>于是只要让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></span> 就够了——这是<mark>更强的要求</mark>，它成立则原来的不等式必然成立。解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mo>ε</mo></mrow></msqrt></mrow></mfrac></math></span>，所以取</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mo>ε</mo></mrow></msqrt></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn></math></div>
+    <span class="lbl">卷面上怎么写</span>
+    <p>任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mo>ε</mo></mrow></msqrt></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn></math></span>，则当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mo>ε</mo></mrow></msqrt></mrow></mfrac></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></span>，从而</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo stretchy="true">|</mo></mrow><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mo>ε</mo></math></div>
+    <p>故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>=</mo><mn>0</mn></math></span>。证毕。</p>
+    <div class="why">
+      <span class="lbl">放缩的用法与代价</span>
+      <p>放缩的方向只有一条原则：<strong>放缩之后要更好算，而且放得「够狠」</strong>（也就是确实比原式大，这样把大的压住了，小的自然就压住了）。这里的代价是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 变大了——不去放缩时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mo>ε</mo></mrow></msqrt></mrow></mfrac><mo>−</mo><mn>1</mn></math></span> 取整，放缩后是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mo>ε</mo></mrow></msqrt></mrow></mfrac></math></span> 取整，稍微大一点。</p>
+      <p>但<strong>这完全没关系</strong>，因为下一节要讲的正是：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 本来就不唯一，只要存在一个就够了，取大一点不算错。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=2787">46:27</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></math></span>，证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><msup><mi>q</mi><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">草稿纸上怎么想</span>
+    <p>先猜：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>5</mn></math></span> 时是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 时是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mn>3</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow></mfrac></math></span>，都在缩向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。目标是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">|</mo><msup><mi>q</mi><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="true">|</mo></mrow><mo>&lt;</mo><mo>ε</mo><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mo>|</mo><mi>q</mi><msup><mo>|</mo><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>&lt;</mo><mo>ε</mo></math></div>
+    <p>指数形式的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 不好直接解出来，所以<strong>两边取对数</strong>（两边都是正数，取对数合法）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mi mathvariant="normal">ln</mi><mo>ε</mo></math></div>
+    <p>这一步要看清符号。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>0</mn></math></span>；又因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 可以取得很小，不妨设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&lt;</mo><mn>1</mn></math></span>，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>ε</mo><mo>&lt;</mo><mn>0</mn></math></span>。<strong>一个负数乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo></math></span> 小于一个负数</strong>，两边同除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo></math></span>（负数）时不等号要<em>反向</em>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>n</mi><mo>−</mo><mn>1</mn><mo>&gt;</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>ε</mo></mrow><mrow><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo></mrow></mfrac><mspace width="0.25em"></mspace><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>n</mi><mo>&gt;</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>ε</mo></mrow><mrow><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo></mrow></mfrac></math></div>
+    <p>所以取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 为右边那个表达式的取整加一即可。</p>
+    <span class="lbl">卷面上怎么写</span>
+    <p>任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span>，不妨设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&lt;</mo><mn>1</mn></math></span>，取</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>N</mi><mo>=</mo><mn>1</mn><mo>+</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>ε</mo></mrow><mrow><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo></mrow></mfrac><mo stretchy="true">]</mo></mrow></math></div>
+    <p>则当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>−</mo><mn>1</mn><mo>&gt;</mo><mfrac><mrow><mi mathvariant="normal">ln</mi><mo>ε</mo></mrow><mrow><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo></mrow></mfrac></math></span>，两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo></math></span>（负）反向后得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mi mathvariant="normal">ln</mi><mo>ε</mo></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><msup><mo>|</mo><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>&lt;</mo><mi mathvariant="normal">ln</mi><mo>ε</mo></math></span>。由于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 单调递增，故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>q</mi><msup><mo>|</mo><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>&lt;</mo><mo>ε</mo></math></span>，也即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">|</mo><msup><mi>q</mi><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>0</mn><mo stretchy="true">|</mo></mrow><mo>&lt;</mo><mo>ε</mo></math></span>。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>n</mi><mo>→</mo><mo>∞</mo></mrow></munder><msup><mi>q</mi><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span>。</p>
+    <div class="trap">
+      <span class="lbl">这一题的两个坑</span>
+      <p><span class="bad">坑 1：</span>不加「不妨设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>&lt;</mo><mn>1</mn></math></span>」就直接用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>ε</mo></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 是任给的正数，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mn>1</mn><mn>0</mn><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>ε</mo><mo>&gt;</mo><mn>0</mn></math></span>，符号讨论会全部乱掉。<strong>写「不妨设」是合法的</strong>——因为我们要对付的本来就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 很小」的困难情形，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 很大时带子里能装下所有项，反而更容易满足。</p>
+      <p><span class="bad">坑 2：</span>两边除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo></math></span> 时忘了变号。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>0</mn></math></span>，除一个负数<strong>不等号必须反向</strong>。这一步写错，最后得到的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 方向就是反的，整个证明不成立。</p>
+    </div>
+    <div class="note">
+      <span class="lbl">老师的话</span>
+      <p>这类用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>–<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 语言做的证明题，在大学高数里<strong>「了解即可」</strong>——不是考试重点。后面更常用、更省力的手段（极限的四则运算、重要极限、等价无穷小、洛必达）都会陆续学。但是<strong>定义本身必须吃透</strong>，因为它定义了「收敛」这个词的含义，后面所有关于极限的判断都建立在它上面。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s8">两个容易被忽略的细节</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=2530">42:10</a>例 3、例 4 里我们写出了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 的具体表达式，但有一件事必须掰开说：</p>
+
+<div class="blk plain">
+  <span class="lbl">细节一 · <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 不是唯一的</span>
+  <p>定义说的是「存在」一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span>，没说「只有这一个」。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>1</mn></math></span> 算出来 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 够用，那把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>0</mn><mn>0</mn><mi>N</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>0</mn><mn>0</mn><mn>0</mn><mn>0</mn><mi>N</mi></math></span> 当然更够用——<strong>只要项数够靠后，就越没问题</strong>。</p>
+  <p>所以考试时不必纠结「我的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 和答案不一样是不是错了」。不一样是正常的，尤其是用了放缩之后——<span class="t">放缩会牺牲精确度，换来的是算式干净</span>。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">细节二 · 只能往后挪，不能往前挪</span>
+  <p>如果从第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 项开始所有项都在带子里，那么从第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>+</mo><mn>1</mn></math></span> 项、第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>+</mo><mn>5</mn></math></span> 项开始当然也在——<strong>往后取永远安全</strong>。但往前就不行了：从第 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>−</mo><mn>3</mn></math></span> 项开始未必满足，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 前面可能正好有落在带外的项。</p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=5&amp;t=2587">43:07</a>课上打了个比方：班里同学按身高排成一排，要挑跳高的人。说「1.75 米以上的都来试试」，那么 1.78、1.80 的都可以来；但站在 1.75 前面的 1.65 就不该拉进来。</p>
+  <p><strong>一句话：<span class="bad">往大取可以，往小取不行。</span></strong>所以做题时宁可把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 取大一点、式子糙一点，也不要冒险取小。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>数列极限 = <strong>误差随便报，某一项之后全都合格</strong>。带外只剩有限个，这就是收敛。</p>
+
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>∀</mo><mspace width="0.25em"></mspace><mo>ε</mo><mo>&gt;</mo><mn>0</mn><mo>,</mo><mspace width="1em"></mspace><mo>∃</mo><mspace width="0.25em"></mspace><mi>N</mi><mo>,</mo><mspace width="1em"></mspace><mi>n</mi><mo>&gt;</mo><mi>N</mi><mo>:</mo><mspace width="1em"></mspace><mo>|</mo><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mo>ε</mo></math></div>
+
+  <h3>四步走</h3>
+  <ol class="tight">
+    <li>猜 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>：看趋势看出来的</li>
+    <li>草稿纸倒推：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mi>A</mi><mo>|</mo><mo>&lt;</mo><mo>ε</mo></math></span> 反解出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo></math></span> 什么</li>
+    <li>取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>=</mo></math></span> 那个东西<strong>取整加一</strong></li>
+    <li>卷面正写：任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> → 取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> → 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span> 时推到成立</li>
+  </ol>
+
+  <h3>定义里的三个字</h3>
+  <dl class="kv">
+    <dt>任给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span></dt><dd>你先报，多小都行</dd>
+    <dt>存在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span></dt><dd>我后找，只需要找到一个</dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>&gt;</mo><mi>N</mi></math></span></dt><dd>往后全部算数，前面有限项不管</dd>
+  </dl>
+
+  <h3>三条经验</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> <strong>不唯一</strong>，写出来和答案不同不算错</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 只能<strong>往大取</strong>，不能往小取</li>
+    <li>式子难看就<strong>放缩</strong>：把分母放大（分式变小）、或换成更简单的上界，把大的压住就够了</li>
+  </ul>
+
+  <h3>四个例题的钥匙</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>n</mi></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi><mo>=</mo><mrow><mo stretchy="true">[</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mo>ε</mo></mrow></mfrac><mo stretchy="true">]</mo></mrow><mo>+</mo><mn>1</mn></math></span>，模板题</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>n</mi><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup></mrow><mrow><mi>n</mi></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span>：减完之后绝对值吃掉正负号，回到上一题</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></math></span>：放缩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mo>(</mo><mi>n</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>&lt;</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>n</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>q</mi><mrow><mspace width="1em"></mspace><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn><mspace width="1em"></mspace><mo>(</mo><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>1</mn><mo>)</mo></math></span>：两边<strong>取对数</strong>，记得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>q</mi><mo>|</mo><mo>&lt;</mo><mn>0</mn></math></span> 要变号</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><span class="cur">数列与通项公式</span></li>
+      <li><span class="cur">绝对值不等式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>|</mo><mo>&lt;</mo><mi>a</mi><mo>⟺</mo><mspace width="0.25em"></mspace><mo>−</mo><mi>a</mi><mo>&lt;</mo><mi>x</mi><mo>&lt;</mo><mi>a</mi></math></span></span></li>
+      <li><span class="cur">对数与指数运算、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 的单调性</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P006-收敛数列的性质/index.html">收敛数列的性质</a> 收敛数列的性质（唯一性、有界性、保号性）</li>
+      <li><a href="../P007-函数极限定义/index.html">函数极限定义</a> 函数极限的定义（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span>–<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>δ</mo></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>）</li>
+      <li><a href="../P008-函数极限的性质/index.html">函数极限的性质</a> 无穷小与无穷大</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>「趋于」是趋势，<strong>「极限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>」是可检验的命题</strong></li>
+      <li>有界 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>≠</mo></math></span> 收敛（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><msup><mo>)</mo><mrow><mi>n</mi></mrow></msup></math></span> 有界但不收敛）</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ε</mo></math></span> 是<strong>任给</strong>的，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>N</mi></math></span> 是<strong>存在</strong>的，顺序不能换</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 5 讲</span><a href="../P004-初等函数（补充了cot x 和反三角函数）/index.html">← P004</a><a href="../index.html">全部目录</a><a href="../P006-收敛数列的性质/index.html">P006 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">数列：一句话说完</a>
+    <a href="#s2">极限值是「猜」出来的</a>
+    <a href="#s3">「无限接近」到底该怎么描述</a>
+    <a href="#s4">画在图上，就没那么玄了</a>
+    <a href="#s5">再看一个从两侧逼近的例子</a>
+    <a href="#s6">数列极限的定义</a>
+    <a href="#s7">怎么用定义证明一个极限</a>
+    <a href="#s8">两个容易被忽略的细节</a>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>牛顿–莱布尼兹公式 · 高等数学笔记</title>
+<meta name="description" content="在这页之前，「定积分」只是一个黎曼和的极限，谁也算不出它的具体值。牛顿–莱布尼兹公式把这个死结一刀解开：只要 f 在 [a,b] 上连续，定积分就等于原函数在两端取值之差——求定积分从此变成「先求不定积分、再把上下限代进去」两步。但它有一条不能碰的红线：被积函数在积分区间上必须处处「正常」，一旦区间">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 5 章  定积分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 48 讲</div>
+    <h1 class="title"><span class="pnum">P048</span>牛顿–莱布尼兹公式</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>在这页之前，「定积分」只是一个黎曼和的极限，谁也<strong>算不出</strong>它的具体值。牛顿–莱布尼兹公式把这个死结一刀解开：只要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，定积分就等于<strong>原函数在两端取值之差</strong>——求定积分从此变成「先求不定积分、再把上下限代进去」两步。但它有一条不能碰的红线：<mark>被积函数在积分区间上必须处处「正常」</mark>，一旦区间内部藏着无界点，公式会给出荒谬的负数。</p></div>
+    <div class="meta"><span>时长 38m49s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=0">00:00</a><span class="vv"><b>定理登场</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 连续、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的任一原函数，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mspace width="0.25em"></mspace><mi>f</mi><mo>=</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span>。老师一句话点题：到目前为止大家<b>一点都不会求定积分</b>。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=55">00:55</a><span class="vv"><b>书写形式</b>：手写用<b>竖线</b> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><msubsup><mo>]</mo><mi>a</mi><mi>b</mi></msubsup></math></span>，书上印刷体偏爱<b>中括号</b>。两种都对。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=110">01:50</a><span class="vv"><b>代入次序</b>：先带上限、再带下限，<em>谁减谁差别很大</em>。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=204">03:24</a><span class="vv"><b>意义</b>：这一公式把「定积分」和「不定积分」焊在了一起——不定积分干的事就是求原函数。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=243">04:03</a><span class="vv"><b>例 1</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><msup><mi>x</mi><mn>2</mn></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mfrac><mn>1</mn><mn>3</mn></mfrac></math></span>。定积分<b>不用再加常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span></b>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=320">05:20</a><span class="vv"><b>例 2</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><msqrt><mn>3</mn></msqrt></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>1</mn><mn>2</mn></mrow></mfrac></math></span>，顺带把反三角函数的取值复习一遍。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=460">07:40</a><span class="vv"><b>定理的证明</b>：用变上限积分函数与原函数只差常数。老师说「可看可不看」。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=687">11:27</a><span class="vv"><b>例 3</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mn>2</mn></math></span>——这里必须用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span> 的绝对值，是同学长期出错的地方。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=743">12:23</a><span class="vv"><b>变式</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mn>3</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi mathvariant="normal">ln</mi><mn>3</mn></math></span>。区间全在正半轴，绝对值可以<em>不加</em>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=813">13:33</a><span class="vv"><b>例 4</b>：用定积分算面积，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mo>π</mo></mrow></munderover><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>2</mn></math></span>。老师感叹 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 这个整数「挺神奇」。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=919">15:19</a><span class="vv"><b>超重要题型</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>1</mn></mrow></munderover><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span> 当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 的极限——洛必达 + 变上限积分求导，<b>各类考试都爱考</b>。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1525">25:25</a><span class="vv"><b>例 6</b>：证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span> 单调增，关键手法是<b>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 收进积分号</b>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1969">32:49</a><span class="vv"><b>收官</b>：反过来用牛顿–莱布尼兹公式 + 拉格朗日中值定理，去证明<b>积分中值定理</b>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、先承认一件事：没有这个公式，定积分算不出来</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=0">00:00</a>我们花了整整一章讲不定积分，又用一页讲定积分的定义——把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 分成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi></math></span> 份、每份取一点、作和、再让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>n</mi><mo>→</mo><mo>∞</mo></math></span>。定义很漂亮，但它<strong>几乎没法用来做题</strong>：除了极少数能凑成等差求和的例子，你既写不出那个和式，也求不出那个极限。</p>
+
+<p>老师在这里说得很直接：<strong>到牛顿–莱布尼兹公式之前，同学们一个定积分都还不会求。</strong>这不是谦虚，而是事实——定义只是「告诉你它是什么」，而牛顿–莱布尼兹公式是「告诉你它等于几」。所以它是求定积分<em>最基本、最常用</em>的第一种方法，后面所有技巧（换元、分部积分、几何意义）都是在它的基础上长出来的。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=204">03:24</a>更有意思的是它带来的「统一」：第四章讲的不定积分只干一件事——求原函数；而这里，求定积分的第一步居然也是求原函数。两类积分本来各说各话，是这个公式把它们焊在了一起。老师还顺带说明：有的教材先讲定积分再讲不定积分，本课程是反过来；正因如此，前面讲的定积分性质与不定积分「一点关系都没有」，直到这一页才接上头。</p>
+
+<h2 id="s2">二、定理的准确陈述</h2>
+
+<div class="blk thm">
+  <span class="lbl">牛顿–莱布尼兹公式（微积分基本定理）</span>
+  <p>设函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在闭区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上<strong>连续</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在该区间上的<strong>一个原函数</strong>，则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></div>
+  <p>常用的书写形式是</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo>[</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><msubsup><mo>]</mo><mi>a</mi><mi>b</mi></msubsup><mo>=</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=55">00:55</a>定义里那句「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的一个原函数」措辞很小心。为什么说「一个」而不是「它的原函数」？因为原函数<strong>从来就不唯一</strong>：你求出一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>，再加上任意常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span>，得到的还是原函数。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=110">01:50</a>公式右边是<strong>先带上限、再带下限，然后相减</strong>。这一步看着简单，却是折损率最高的地方——因为中间是减号，<em>谁减谁结果差一个负号</em>。老师原话是「这玩意儿差别老大了」。手写时大家习惯写一根较长的竖线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><msubsup><mo>|</mo><mi>a</mi><mi>b</mi></msubsup></math></span>，书上印刷体则喜欢写中括号 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><msubsup><mo>]</mo><mi>a</mi><mi>b</mi></msubsup></math></span>，两种写法在数学上完全一样，写哪一种都不算错。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=243">04:03</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><msup><mi>x</mi><mn>2</mn></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先不管上下限，只管把原函数求出来</span>
+    <p>老师说了一句非常好用的操作习惯：<strong>看到定积分，先别管上下限是从几到几，先把不定积分那部分做出来。</strong>这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup></math></span> 的原函数是「加一次、配上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>3</mn></mfrac></math></span>」，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mn>3</mn></mfrac><msup><mi>x</mi><mn>3</mn></msup></math></span>。于是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><msup><mi>x</mi><mn>2</mn></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo>[</mo><mfrac><mrow><msup><mi>x</mi><mn>3</mn></msup></mrow><mrow><mn>3</mn></mrow></mfrac><msubsup><mo>]</mo><mn>0</mn><mn>1</mn></msubsup><mo>=</mo><mfrac><mn>1</mn><mn>3</mn></mfrac><mo>−</mo><mn>0</mn><mo>=</mo><mfrac><mn>1</mn><mn>3</mn></mfrac></math></div>
+    <p>代入时<strong>先带上限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、再带下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msup><mn>1</mn><mn>3</mn></msup></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><msup><mn>0</mn><mn>3</mn></msup></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mn>3</mn></mfrac></math></span>。</p>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">求出原函数以后，习惯性地在末尾加一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mi>C</mi></math></span>。</span>不定积分里加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 是对的——它表示「全体原函数」。但定积分是一个<strong>确定的数</strong>，不是一族函数，所以<strong>只求一个原函数就够，不加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span></strong>。而且就算你加了也没用：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>+</mo><mi>C</mi><mo>)</mo><mo>−</mo><mo>(</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>+</mo><mi>C</mi><mo>)</mo></math></span> 里两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 会自己抵消掉。</p>
+    </div>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么「随便哪个原函数」都行</span>
+  <p>这是理解公式的第一道坎。设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>G</mi></math></span> 都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的原函数，那么由前面讲过的结论，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>−</mo><mi>G</mi><mo>≡</mo><mspace width="0.25em"></mspace><mi>C</mi></math></span>（常数）。于是</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>G</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>G</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><mo>(</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>+</mo><mi>C</mi><mo>)</mo><mo>−</mo><mo>(</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>+</mo><mi>C</mi><mo>)</mo><mo>=</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></div>
+  <p><strong>那个「任意的常数」在两个端点处被减掉了。</strong>所以公式右边只跟「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 在两端的高度差」有关，跟你在求原函数时顺手加了多少常数毫无关系。这就是定理为什么有底气说「一个原函数」——只要有一个，就足够定出这个数。</p>
+  <p>反过来看，这也解释了公式为什么长成「差」的样子：定积分衡量的是<em>增量</em>，而任何与常数有关的量，在取增量时都会消失。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 20 640 240" role="img" aria-label="左图是曲线下阴影面积，右图是原函数在两端的高度差">
+    <line x1="50" y1="232" x2="300" y2="232" class="m-line" stroke-width="1.4"></line>
+    <line x1="66" y1="232" x2="66" y2="50" class="m-line" stroke-width="1.4"></line>
+    <polygon points="304,232 294,228 294,236" class="m-fill"></polygon>
+    <polygon points="66,46 62,56 70,56" class="m-fill"></polygon>
+    <polygon points="96,232 96,220 126,213 156,205 186,196 216,185 246,173 276,160 276,232" class="m-bg-a"></polygon>
+    <path d="M 66 226 C 71 225 86 222.2 96 220 C 106 217.8 116 215.5 126 213 C 136 210.5 146 207.8 156 205 C 166 202.2 176 199.3 186 196 C 196 192.7 206 188.8 216 185 C 226 181.2 236 177.2 246 173 C 256 168.8 271 162.2 276 160" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <line x1="96" y1="232" x2="96" y2="220" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="276" y1="232" x2="276" y2="160" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <text x="60" y="42" class="m-txt" font-size="12">左边：曲线下的面积</text>
+    <text x="88" y="248" class="m-sub" font-size="12">a</text>
+    <text x="270" y="248" class="m-sub" font-size="12">b</text>
+    <text x="180" y="118" class="m-acc" font-size="12">y = f(x)</text>
+    <text x="304" y="248" class="m-sub" font-size="12">x</text>
+    <text x="48" y="58" class="m-sub" font-size="12">y</text>
+
+    <line x1="350" y1="232" x2="610" y2="232" class="m-line" stroke-width="1.4"></line>
+    <line x1="366" y1="232" x2="366" y2="50" class="m-line" stroke-width="1.4"></line>
+    <polygon points="614,232 604,228 604,236" class="m-fill"></polygon>
+    <polygon points="366,46 362,56 370,56" class="m-fill"></polygon>
+    <path d="M 366 226 C 371 224.7 386 221.3 396 218 C 406 214.7 416 210.7 426 206 C 436 201.3 446 195.8 456 190 C 466 184.2 476 177.8 486 171 C 496 164.2 506 156.8 516 149 C 526 141.2 536 132.7 546 124 C 556 115.3 571 101.5 576 97" fill="none" class="m-good" stroke-width="1.9"></path>
+    <line x1="426" y1="232" x2="426" y2="206" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="576" y1="232" x2="576" y2="97" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="366" y1="206" x2="426" y2="206" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <line x1="366" y1="97" x2="576" y2="97" class="m-thin" stroke-width="1" stroke-dasharray="4 3"></line>
+    <circle cx="426" cy="206" r="3.4" class="m-fill-g"></circle>
+    <circle cx="576" cy="97" r="3.4" class="m-fill-g"></circle>
+    <line x1="598" y1="206" x2="598" y2="97" class="m-vio" stroke-width="1.6"></line>
+    <polygon points="598,92 594,102 602,102" class="m-fill-v"></polygon>
+    <polygon points="598,211 594,201 602,201" class="m-fill-v"></polygon>
+    <text x="360" y="42" class="m-txt" font-size="12">右边：原函数在两端的高度差</text>
+    <text x="326" y="210" class="m-sub" font-size="12">F(a)</text>
+    <text x="326" y="101" class="m-sub" font-size="12">F(b)</text>
+    <text x="392" y="150" class="m-vio" font-size="12">高度差</text>
+    <text x="386" y="168" class="m-vio" font-size="12">F(b) − F(a)</text>
+    <text x="420" y="248" class="m-sub" font-size="12">a</text>
+    <text x="570" y="248" class="m-sub" font-size="12">b</text>
+    <text x="616" y="248" class="m-sub" font-size="12">x</text>
+    <text x="348" y="58" class="m-sub" font-size="12">y</text>
+  </svg>
+  <figcaption><b>同一个数，两种读法。</b>左边蓝色块是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上的带符号面积，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>；右边是原函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 的图象，紫色竖线标出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span>。<b>牛顿–莱布尼兹公式说这两者是同一个数</b>——「面积」这个看起来属于几何的量，居然能靠「原函数两端的高度差」这个看起来属于求导的量算出来。<em>注意右图只能读出「差」，读不出绝对值</em>：这正是公式里那个常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 可以随便加的原因。</figcaption>
+</figure>
+
+<h2 id="s3">三、使用条件：为什么非要「连续」</h2>
+
+<p>定理的假设只有两条：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的一个原函数。第二条是必要的，否则右边根本没有意义；真正容易被忽略的是第一条。</p>
+
+<div class="blk def">
+  <span class="lbl">条件逐条拆解</span>
+  <dl class="kv">
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续</dt>
+    <dd>保证「原函数一定存在」。这一点是上一页的推论给的：<strong>连续函数的变上限积分就是它的原函数</strong>。少了连续，可能出现「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 可积却写不出原函数」或「原函数存在但公式不成立」的复杂局面，超出本课程范围。</dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的原函数</dt>
+    <dd>准确含义是：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续、在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>)</mo></math></span> 内处处有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。它保证「求导」这一步在区间内部每一处都站得住。</dd>
+    <dt>区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span></dt>
+    <dd>整个区间上这两条都要成立，<strong>不能有例外点</strong>。区间内部只要有一个点破坏它们，公式就可能给出错误结果——下面第五节的反例就是这个。</dd>
+  </dl>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=460">07:40</a>连续这个条件，比看上去宽松</span>
+  <p>很多同学以为「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 连续」是个很苛刻的要求。其实它已经相当宽松了：三大类初等函数（幂、指、对、三角、反三角及其复合）在它们的定义域内部都连续，所以只要积分区间的每一点都落在定义域内部、且函数处处有界，条件就自动满足。</p>
+  <p>真正要当心的是「<strong>区间内部藏着函数没定义的点</strong>」的情形。比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 没定义，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> <em>不满足</em>连续条件；而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>]</mo></math></span> 整个区间都不碰 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，条件满足，可以放心算。判定的动作只有一个：<mark>先看被积函数在积分区间上有没有「断点」或「炸点」</mark>，有就先停下。</p>
+</div>
+
+<h2 id="s4">四、把公式用熟</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=320">05:20</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><msqrt><mn>3</mn></msqrt></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：定积分的部分先当不定积分做</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup></math></span> 分之一的原函数不是别的，正是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><msqrt><mn>3</mn></msqrt></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mo>[</mo><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi><msubsup><mo>]</mo><mn>1</mn><mrow><msqrt><mn>3</mn></msqrt></mrow></msubsup><mo>=</mo><mi mathvariant="normal">arctan</mi><msqrt><mn>3</mn></msqrt><mo>−</mo><mi mathvariant="normal">arctan</mi><mn>1</mn></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=377">06:17</a>接下来这一步是很多同学卡住的地方：反三角函数值是上大学以后才学的，脑子一时反应不过来。<strong>办法是反过来问「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 多少等于它」</strong>:</p>
+    <ul class="tight">
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 谁等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mn>3</mn></msqrt></math></span>？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><msqrt><mn>3</mn></msqrt></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><msqrt><mn>3</mn></msqrt><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>。</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 谁等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>？<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mn>1</mn><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac></math></span>。</li>
+    </ul>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mrow><msqrt><mn>3</mn></msqrt></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>1</mn><mn>2</mn></mrow></mfrac></math></div>
+    <div class="trap">
+      <span class="lbl">两个容易翻车的细节</span>
+      <p><span class="bad">一、把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><msqrt><mn>3</mn></msqrt></math></span> 当成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msqrt><mn>3</mn></msqrt></mrow><mrow><mn>3</mn></mrow></mfrac></math></span> 或别的数。</span>记住「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 多少等于它」这个反问法，就不会乱。</p>
+      <p><span class="bad">二、看着分母像 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msqrt></mrow></mfrac></math></span> 就写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi></math></span>。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span> 对应的是反<strong>正切</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msqrt></mrow></mfrac></math></span> 才对应反正弦——两者只差一个根号，效果完全不同。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=687">11:27</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>，并把它与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mn>3</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 作对比。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span>，绝对值不能省</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>——因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 可以是负的，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 只在正数上有定义。<strong>这是本页最容易长期出错的一处</strong>，老师特意说要「长个心眼」。</p>
+    <p>第一题区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>]</mo></math></span> 全在负半轴，绝对值必须写上：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mo>[</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><msubsup><mo>]</mo><mrow><mo form="prefix">−</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msubsup><mo>=</mo><mi mathvariant="normal">ln</mi><mn>1</mn><mo>−</mo><mi mathvariant="normal">ln</mi><mn>2</mn><mo>=</mo><mn>0</mn><mo>−</mo><mi mathvariant="normal">ln</mi><mn>2</mn><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mn>2</mn></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=743">12:23</a>第二题区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>]</mo></math></span> 全在正半轴，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>&gt;</mo><mn>0</mn></math></span>，此时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>|</mo><mo>=</mo><mi>x</mi></math></span>，所以<strong>绝对值可以省略</strong>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mn>3</mn></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mo>[</mo><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi><msubsup><mo>]</mo><mn>1</mn><mn>3</mn></msubsup><mo>=</mo><mi mathvariant="normal">ln</mi><mn>3</mn><mo>−</mo><mi mathvariant="normal">ln</mi><mn>1</mn><mo>=</mo><mi mathvariant="normal">ln</mi><mn>3</mn></math></div>
+    <p><strong>两道题的对照说明了一件事：绝对值不是「背不背」的问题，而是「看区间符号」当场判断的事。</strong>写绝对值永远安全；省略它则必须先确认区间上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 不变号。</p>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo><msubsup><mo>|</mo><mrow><mo form="prefix">−</mo><mn>2</mn></mrow><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msubsup></math></span> 算成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><mo>)</mo></math></span>。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 的自变量必须取绝对值之后再代入，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mo form="prefix">−</mo><mn>1</mn><mo>|</mo><mo form="prefix">−</mo><mi mathvariant="normal">ln</mi><mo>|</mo><mo form="prefix">−</mo><mn>2</mn><mo>|</mo><mo>=</mo><mn>0</mn><mo>−</mo><mi mathvariant="normal">ln</mi><mn>2</mn></math></span>。负数放进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 里在实数范围是没有定义的。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=813">13:33</a>求由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span> 上围成的面积。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：面积就是定积分</span>
+    <p>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span> 上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>≥</mo><mn>0</mn></math></span>，曲线全在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上方，所以面积等于定积分本身：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>A</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mo>π</mo></mrow></munderover><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo>[</mo><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><msubsup><mo>]</mo><mn>0</mn><mrow><mo>π</mo></mrow></msubsup><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mo>π</mo><mo>−</mo><mo>(</mo><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mn>0</mn><mo>)</mo><mo>=</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>2</mn></math></div>
+    <p>代入时先把上限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo></math></span> 带进去得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mo>π</mo><mo>=</mo><mn>1</mn></math></span>，再减去下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 处的值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">cos</mi><mn>0</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>，所以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>−</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>2</mn></math></span>。</p>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=872">14:32</a>老师在这里感慨了一句：一个由三角函数围出来的图形，面积居然正好是个整数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，这个数字「其实也挺神奇的」——他还顺带提到欧拉公式、傅立叶级数里那些漂亮的恒等式。</p>
+  </div>
+</div>
+
+<h2 id="s5">五、超高频题型：定积分与洛必达联手</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=919">15:19</a>下面这道题老师特别强调：「<strong>这个题目超级重要，期末考试、各种考试都会考到</strong>，所以先讲它。」它的形式是「含有变上限积分的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>/</mo><mn>0</mn></math></span> 型极限」。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=919">15:19</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>1</mn></mrow></munderover><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先判型，再洛必达；求导时注意下限是函数</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=919">15:19</a>第一步<strong>判型</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>→</mo><mn>0</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mn>0</mn><mo>=</mo><mn>1</mn></math></span>，于是积分变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>1</mn><mn>1</mn></munderover></math></span>，由定积分性质它是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。分子分母都趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>0</mn><mn>0</mn></mfrac></math></span> 型，可以洛必达。</p>
+    <p>分母求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi></math></span>。分子是<strong>下限为函数</strong>的变上限积分，用上一页公式四：先把下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 代进被积函数，再加一个负号，最后乘上下限的导数：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>1</mn></mrow></munderover><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mo form="prefix">−</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>x</mi></mrow></msup><mo>⋅</mo><mo>(</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>=</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+    <p>所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>2</mn><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>x</mi></mrow></msup><mo>⋅</mo><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>2</mn><mi>x</mi></mrow></mfrac></math></div>
+    <p>这里的关键动作是<strong>把极限拆成两块相乘</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>x</mi></mrow></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup></math></span>，不是未定式，可以<em>立刻提出来先算掉</em>；剩下 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 是熟悉的等价无穷小（也就是第一重要极限），极限为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mn>1</mn></mrow></munderover><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup><mo>⋅</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>e</mi></mrow></mfrac></math></div>
+    <div class="trap">
+      <span class="lbl">三个最容易错的地方</span>
+      <p><span class="bad">一、忘了下限带来的负号。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>=</mo><mo form="prefix">−</mo><mi>f</mi><mo>(</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo><mi>v</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，负号来自「交换上下限要变号」。这道题里下限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 又贡献一个负号，<strong>两个负号一抵消才是正的</strong>；漏掉一个符号，答案就变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>e</mi></mrow></mfrac></math></span>。</p>
+      <p><span class="bad">二、直接洛到底，不算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo form="prefix">−</mo><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>x</mi></mrow></msup></math></span>。</span>它趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>e</mi></mfrac></math></span> 是确定的，先提出来能少洛一次，也少犯一次错。老师原话：「你不要每次都死硬罗。」</p>
+      <p><span class="bad">三、洛必达之前不判型。</span>不判型就不敢用洛必达，这一步是「能不能动手」的凭据。</p>
+    </div>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1140">19:00</a>同一套路，老师当堂还练了两道「课堂小练习」。它们的骨架完全一样——<strong>判型、洛必达、把趋于常数的因子提出来</strong>——只是第二道多了一层复合求导。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">练习 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1140">19:00</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>。</span></p>
+  <div class="sol">
+    <p>先判型：上限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span>，积分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>0</mn></munderover><mo>=</mo><mn>0</mn></math></span>，分母 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>→</mo><mn>0</mn></math></span>，是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>0</mn><mn>0</mn></mfrac></math></span> 型。分母求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>；分子是「上限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」的最简单情形，直接把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 代进去即可：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>t</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mi>x</mi></mrow><mrow><mn>1</mn></mrow></mfrac><mo>=</mo><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mn>0</mn><mo>=</mo><mn>1</mn></math></div>
+    <p>注意最后落到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">cos</mi><mn>2</mn></msup><mn>0</mn></math></span>，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mn>1</mn><mn>2</mn></msup><mo>=</mo><mn>1</mn></math></span>，不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</p>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">练习 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1251">20:51</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><msup><mrow><mo stretchy="true">(</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo stretchy="true">)</mo></mrow><mn>2</mn></msup></mrow><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><mn>2</mn><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：分子是变上限积分的平方，求导要走复合函数</span>
+    <p>仍是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>0</mn><mn>0</mn></mfrac></math></span> 型。分母那个积分用「凑微分」一眼就能积：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><mn>2</mn><msup><mi>t</mi><mn>2</mn></msup></mrow></msup></math></span> 里那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 正是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>t</mi><mn>2</mn></msup></math></span> 的导数的一半，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><mn>2</mn><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo>(</mo><msup><mi>e</mi><mrow><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mo>−</mo><mn>1</mn><mo>)</mo></math></span>。不过<strong>没必要真积出来</strong>——洛必达只需要导数：分母求导直接得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></math></span>。</p>
+    <p>分子是一个平方，外层是「平方」，先对外层求导得「二倍的它」，再乘内层的导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>(</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><msup><mo>)</mo><mn>2</mn></msup><mo>=</mo><mn>2</mn><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></div>
+    <p>于是原式等于</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>2</mn><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mi>x</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><mn>2</mn><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><mn>2</mn><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mi>x</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1343">22:23</a>这里做了两件「省事」的事：上下<strong>约掉一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></math></span></strong>；再把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mo>→</mo><mn>1</mn></math></span> 这个确定的因子单独看。剩下来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mi>x</mi></mrow></mfrac></math></span> 仍是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>0</mn><mn>0</mn></mfrac></math></span> 型，再洛一次（或直接用变上限积分求导）：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>x</mi><mo>→</mo><mn>0</mn></mrow></munder><mfrac><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><mi>x</mi></mrow></mfrac><mo>=</mo><msup><mi>e</mi><mrow><mn>0</mn></mrow></msup><mo>=</mo><mn>1</mn><mspace width="2em"></mspace><mo>⟹</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mtext>原式</mtext><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>1</mn><mo>⋅</mo><mn>1</mn><mo>=</mo><mn>2</mn></math></div>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">把分子的求导当成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><msup><mi>e</mi><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow></msup><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span>，漏掉那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></math></span>。</span>平方是<em>复合</em>结构：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>□</mo><msup><mo>)</mo><mn>2</mn></msup></math></span> 求导是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>□</mo><mo>⋅</mo><mo>□</mo><mo>'</mo></math></span>，而这里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>□</mo><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></math></span>（变上限积分求导的结果），不能丢。</p>
+    </div>
+  </div>
+</div>
+
+<p>两道练习合起来说明同一件事：<strong>这类题的难点从来不是积分本身，而是「什么时候停下来化简」。</strong>老师讲得很直白——「你不要每次都死硬罗」，该约的先约、该提的先提，洛必达用一次少一次。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 6</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1525">25:25</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span> 上连续且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>。证明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span> 上单调增加。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：证明单调性＝证明导数大于零；难点全在求导那一步</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1601">26:41</a>这道题是「商的求导法则 + 变上限积分求导」的组合。按商的求导法则「分母平方，上导下不导减上不导下导」：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>x</mi><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>−</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><msup><mrow><mo stretchy="true">(</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo stretchy="true">)</mo></mrow><mn>2</mn></msup></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1673">27:53</a>分母是个完全平方，一定大于零，可以先放到一边不管；只看分子，并把公因子 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 提出来：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mrow><mo stretchy="true">[</mo><mi>x</mi><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>−</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo stretchy="true">]</mo></mrow></mrow><mrow><msup><mrow><mo stretchy="true">(</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo stretchy="true">)</mo></mrow><mn>2</mn></msup></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1734">28:54</a>接下来是全题最漂亮的一步：<strong>把外面的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 收进积分号里</strong>。这一步之所以合法，是因为这里的积分变量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 相对于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 而言是「常数」，常数进出积分号不受限制。于是</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>−</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mo>(</mo><mi>x</mi><mo>−</mo><mi>t</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></div>
+    <p>现在逐项判断符号：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mi>x</mi><mo>]</mo></math></span> 上取值，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>−</mo><mi>t</mi><mo>≥</mo><mn>0</mn></math></span>；又 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>。被积函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>t</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mi>x</mi><mo>]</mo></math></span> 上<em>恒非负且不恒为零</em>，于是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mo>(</mo><mi>x</mi><mo>−</mo><mi>t</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>&gt;</mo><mn>0</mn></math></div>
+    <p>代回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo></math></span> 的表达式：分子是「正 × 正」，分母是平方（正），所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>。导数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo form="prefix">+</mo><mo>∞</mo><mo>)</mo></math></span> 上恒正，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 单调增加。证毕。</p>
+    <div class="trap">
+      <span class="lbl">这一刻最容易错</span>
+      <p><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 拿进积分号时，顺手把含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的表达式也拿了出来。</span>规则只有一条：<strong>积分变量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，凡是与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 无关的（比如这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>）可以自由进出；凡含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 的（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>t</mi><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></span> 里那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>）绝对不许提到积分号外</strong>。老师原话说得很重：「积分变量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi></math></span>，你含有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi></math></span> 的表达式想拿到积分的外头去，那绝对不可以。」</p>
+      <p>另外，判断 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mo>(</mo><mi>x</mi><mo>−</mo><mi>t</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>&gt;</mo><mn>0</mn></math></span> 时不能说「因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>x</mi><mo>−</mo><mi>t</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>&gt;</mo><mn>0</mn></math></span>」——在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>=</mo><mi>x</mi></math></span> 处它是等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的。正确说法是「非负且不恒为零」，由积分的保号性才得严格大于零。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s6">六、红线：区间内部有「炸点」时，公式会骗你</h2>
+
+<p>这是本页最需要记住的一条警告。牛顿–莱布尼兹公式要求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在<strong>整个</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续；如果区间<em>内部</em>藏着函数无界的点，硬套公式会得到一个明显荒谬的答案。</p>
+
+<div class="blk trap">
+  <span class="lbl">反例：一个必错的算法</span>
+  <p>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span>。<span class="bad">错误做法</span>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span> 的原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span>，于是</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mo>[</mo><mo form="prefix">−</mo><mfrac><mn>1</mn><mi>x</mi></mfrac><msubsup><mo>]</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></msubsup><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>−</mo><mn>1</mn><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mspace width="2em"></mspace><mo>(</mo><mtext>这是错的</mtext><mo>)</mo></math></div>
+  <p>结果是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span>，一个<strong>负数</strong>。可是被积函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>]</mo></math></span> 上（除 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 点外）<em>处处大于零</em>，曲线整个在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上方，它围出的面积怎么可能是负的？</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 320" role="img" aria-label="反例：1 除以 x 平方在负一到一上处处为正，两侧面积都为正，硬套公式却得到负数">
+    <line x1="80" y1="250" x2="600" y2="250" class="m-line" stroke-width="1.4"></line>
+    <line x1="340" y1="250" x2="340" y2="60" class="m-line" stroke-width="1.4"></line>
+    <polygon points="604,250 594,246 594,254" class="m-fill"></polygon>
+    <polygon points="340,56 336,66 344,66" class="m-fill"></polygon>
+    <polygon points="428,85 452,148 476,181 500,200 524,212 548,220 572,226 580,228 580,250 428,250" class="m-bg-a"></polygon>
+    <polygon points="252,85 228,148 204,181 180,200 156,212 132,220 108,226 100,228 100,250 252,250" class="m-bg-a"></polygon>
+    <path d="M 428 85 C 432 95.5 444 132 452 148 C 460 164 468 172.3 476 181 C 484 189.7 492 194.8 500 200 C 508 205.2 516 208.7 524 212 C 532 215.3 540 217.7 548 220 C 556 222.3 568 225 572 226" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <path d="M 252 85 C 248 95.5 236 132 228 148 C 220 164 212 172.3 204 181 C 196 189.7 188 194.8 180 200 C 172 205.2 164 208.7 156 212 C 148 215.3 140 217.7 132 220 C 124 222.3 112 225 108 226" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <line x1="100" y1="250" x2="100" y2="228" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="580" y1="250" x2="580" y2="228" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="340" y1="250" x2="340" y2="70" class="m-warn" stroke-width="1.4" stroke-dasharray="4 4"></line>
+    <line x1="428" y1="250" x2="428" y2="85" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <line x1="252" y1="250" x2="252" y2="85" class="m-thin" stroke-width="1" stroke-dasharray="3 3"></line>
+    <text x="58" y="36" class="m-txt" font-size="12">被积函数 1/x² 在 [−1, 1] 上处处为正</text>
+    <text x="58" y="56" class="m-txt" font-size="12">每一块面积都大于 0，定积分必须是正数</text>
+    <text x="474" y="128" class="m-acc" font-size="12">y = 1/x²</text>
+    <text x="146" y="128" class="m-acc" font-size="12">y = 1/x²</text>
+    <text x="290" y="66" class="m-warn" font-size="11.5">无界</text>
+    <text x="332" y="266" class="m-sub" font-size="12">O</text>
+    <text x="92" y="266" class="m-sub" font-size="12">−1</text>
+    <text x="574" y="266" class="m-sub" font-size="12">1</text>
+    <text x="606" y="266" class="m-sub" font-size="12">x</text>
+    <text x="326" y="48" class="m-sub" font-size="12">y</text>
+    <text x="210" y="292" class="m-warn" font-size="12">x = 0 处函数没有定义，它是这个区间的「炸点」</text>
+    <text x="188" y="312" class="m-warn" font-size="12">硬套公式算出来的 −2，与「面积为正」直接矛盾</text>
+  </svg>
+  <figcaption><b>负数的破绽，肉眼就能看出来。</b>两块蓝色区域的被积函数都大于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，所以它们各自的定积分都是正数，加起来也必须是正数。可一旦把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 代进上下限，牛顿–莱布尼兹公式却吐出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span>。<b>问题不在公式本身，而在用公式的人</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处无界（红虚线），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上「处处连续」这条前提根本没被满足。这种积分叫<em>反常积分</em>，要单独处理，不能当普通定积分算。<b>经验法则：算出负的「面积」，第一反应就该是回头查区间内部有没有瑕点。</b></figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">为什么公式会「失效」——从证明的哪一步断掉</span>
+  <p>下一节会看到，牛顿–莱布尼兹公式的证明只用了一个事实：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 有原函数，且原函数在区间上连续</strong>。在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span> 这个例子里，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span> 处是<em>没有定义</em>的，更谈不上连续；于是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续」这一条被破坏，证明链从中间断开，结论自然不再生效。</p>
+  <p>更直白地说：公式做的事是「用两端的高度差还原整段面积」。而这个还原之所以成立，是因为中间每一小段都被「原函数的变化」如实记录了下来。中间一旦有一个点原函数不存在，这段记录就是伪造的——算出来的数自然与真相无关。</p>
+</div>
+
+<h2 id="s7">七、公式为什么成立</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=460">07:40</a>老师对这段证明的评价是「可看可不看」，理由很实在：公式已经能用了。但这段证明是理解「微分与积分互为逆运算」的入口，而且只用到了已经学过的两条结论，值得走一遍。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 330" role="img" aria-label="牛顿莱布尼兹公式证明的四步流程">
+    <rect x="30" y="24" width="310" height="46" rx="6" class="m-panel"></rect>
+    <text x="48" y="52" class="m-txt" font-size="12">① f 在 [a, b] 上连续</text>
+    <text x="366" y="52" class="m-sub" font-size="11.5">这是「有原函数」的保证</text>
+
+    <line x1="185" y1="70" x2="185" y2="94" class="m-line" stroke-width="1.6"></line>
+    <polygon points="185,98 180,88 190,88" class="m-fill"></polygon>
+
+    <rect x="30" y="98" width="310" height="46" rx="6" class="m-panel"></rect>
+    <text x="48" y="126" class="m-txt" font-size="12">② 变上限积分 Phi(x) 就是一个原函数</text>
+    <text x="366" y="126" class="m-sub" font-size="11.5">上一页的主定理 Phi′(x) = f(x)</text>
+
+    <line x1="185" y1="144" x2="185" y2="168" class="m-line" stroke-width="1.6"></line>
+    <polygon points="185,172 180,162 190,162" class="m-fill"></polygon>
+
+    <rect x="30" y="172" width="310" height="46" rx="6" class="m-panel-a"></rect>
+    <text x="48" y="200" class="m-txt" font-size="12">③ F 与 Phi 相差一个常数：Phi = F + C</text>
+    <text x="366" y="200" class="m-sub" font-size="11.5">两个原函数之差必为常数</text>
+
+    <line x1="185" y1="218" x2="185" y2="242" class="m-line" stroke-width="1.6"></line>
+    <polygon points="185,246 180,236 190,236" class="m-fill"></polygon>
+
+    <rect x="30" y="246" width="310" height="64" rx="6" class="m-panel-a"></rect>
+    <text x="48" y="270" class="m-txt" font-size="12">④ x = a：Phi(a) = 0，定出常数 C = −F(a)</text>
+    <text x="48" y="294" class="m-txt" font-size="12">    x = b：得 ∫ f(x)dx = F(b) − F(a)</text>
+    <text x="366" y="274" class="m-sub" font-size="11.5">把 C 代回，再让 x = b</text>
+    <text x="366" y="294" class="m-sub" font-size="11.5">移项即得所求</text>
+  </svg>
+  <figcaption><b>四步，只用了两条旧结论。</b>第一步用「连续 ⟹ 有原函数」（上一页的推论）；第三步用「两个原函数之差为常数」（不定积分那一章讲过）。<b>整个证明没有任何新技巧，全是已经会的东西重新组合</b>——这也是数学里最常见的证明形态。注意④里那个不起眼的动作：<em>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 取成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span></em>，让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>a</mi></munderover><mi>f</mi><mo>=</mo><mn>0</mn></math></span>，常数就被钉死了。</figcaption>
+</figure>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=538">08:58</a>把上图写成式子，就是下面四步：</p>
+
+<ol class="steps">
+  <li><span class="sh">造一个原函数。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=538">08:58</a>由上一页的主定理，变上限积分
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></math></div>
+  满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，所以它是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上的一个原函数。</li>
+  <li><span class="sh">和已知的那个原函数作差。</span>题设说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 也是原函数。两个原函数之间只差常数，因此存在常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span>，使
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mi>C</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>x</mi><mo>∈</mo><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></div></li>
+  <li><span class="sh">让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span> 定出来。</span>代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span>，左边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>a</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mn>0</mn></math></span>（上下限相同），于是
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mn>0</mn><mo>=</mo><mo>Φ</mo><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>+</mo><mi>C</mi><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>C</mi><mo>=</mo><mo form="prefix">−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></div>
+  所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span> 对一切 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 成立。</li>
+  <li><span class="sh">让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>b</mi></math></span>，收尾。</span>代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>b</mi></math></span>：
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Φ</mo><mo>(</mo><mi>b</mi><mo>)</mo><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></div>
+  把积分变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 写回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，正是牛顿–莱布尼兹公式。证毕。</li>
+</ol>
+
+<div class="why">
+  <span class="lbl">把第 3 步的动机说清楚</span>
+  <p>为什么想到「让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span>」？因为上一步留下了一个<strong>未知常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span></strong>。要把它定下来，就得找一个能让等式两边都变成<em>已知数</em>的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo></math></span> 这个函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span> 处的值是我们唯一「白捡」的：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>a</mi></munderover></math></span> 上下限相同，等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，根本不用计算。</p>
+  <p>这个「找特殊点定常数」的手法在本课程里会反复出现——证明「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>」时先证导数相同得「只差常数」，再挑一个好算的点把常数钉死，靠的是同一套思路。</p>
+</div>
+
+<h2 id="s8">八、反过来用：证明积分中值定理</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=1969">32:49</a>这节课的最后，老师用牛顿–莱布尼兹公式做了一件「倒过来」的事——去证明上一页已经用过的积分中值定理。这既是一次复习，也展示了公式的另一种用法：<strong>它可以把「积分」翻译成「函数值之差」，从而让中值定理有机会插手</strong>。</p>
+
+<div class="blk def">
+  <span class="lbl">要证的结论</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，则至少存在一点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>ξ</mo><mo>∈</mo><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span>，使</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mspace width="1em"></mspace><mo>(</mo><mi>b</mi><mo>−</mo><mi>a</mi><mo>)</mo></math></div>
+</div>
+
+<ol class="steps">
+  <li><span class="sh">把定积分换成原函数之差。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=48&amp;t=2081">34:41</a>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续，所以它有原函数，记之为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>。由牛顿–莱布尼兹公式
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></div></li>
+  <li><span class="sh">对大写的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 用拉格朗日中值定理。</span>拉格朗日中值定理比罗尔定理少一个条件（不要求两端函数值相等），只需要「闭区间连续 + 开区间可导」。而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 作为原函数，这两条自动满足——它能求导，且导数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span>，连续性也随之而来。</li>
+  <li><span class="sh">注意符号要换。</span>原定理说的是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mfrac><mrow><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mrow><mi>b</mi><mo>−</mo><mi>a</mi></mrow></mfrac></math></span>」。现在被施术的对象是<em>大写</em> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>，所以定理里的小写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 都要换成大写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span>：
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mfrac><mrow><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mrow><mi>b</mi><mo>−</mo><mi>a</mi></mrow></mfrac></math></div></li>
+  <li><span class="sh">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo></math></span> 换回 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span>。</span>原函数的定义就是「求导等于被积函数」，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mo>ξ</mo><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo></math></span>。代入并两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>b</mi><mo>−</mo><mi>a</mi><mo>)</mo></math></span>，得
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mspace width="1em"></mspace><mo>(</mo><mi>b</mi><mo>−</mo><mi>a</mi><mo>)</mo></math></div></li>
+  <li><span class="sh">合起来。</span>左边正是第 1 步的定积分，于是
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>f</mi><mo>(</mo><mo>ξ</mo><mo>)</mo><mspace width="1em"></mspace><mo>(</mo><mi>b</mi><mo>−</mo><mi>a</mi><mo>)</mo></math></div>
+  这正是积分中值定理。</li>
+</ol>
+
+<div class="why">
+  <span class="lbl">这段证明的「漂亮」在哪里</span>
+  <p>它把两个看起来毫不相干的东西接在了一起：<strong>积分中值定理说的是「积分等于某个函数值乘区间长度」，拉格朗日中值定理说的是「函数增量等于某个导数值乘自变量增量」。</strong>而牛顿–莱布尼兹公式恰好指出「定积分 = 原函数的增量」——于是前者的左边就是后者的左边，后者的右边被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo><mo>=</mo><mi>f</mi></math></span> 翻译回前者。整个证明只有一句实质内容：<mark>把定积分认成原函数的增量，中值定理就能接上去</mark>。</p>
+  <p>这也解释了为什么老师把这段放在最后讲：它不是新知识，而是前面所有内容的<strong>一次汇合</strong>——连续性、原函数存在性、中值定理、牛顿–莱布尼兹公式，四样东西各就各位才对得上。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>f 连续</b> 保证有原函数</span><span class="ar">→</span>
+    <span class="n"><b>求原函数 F</b> 当成不定积分做</span><span class="ar">→</span>
+    <span class="n"><b>先带上限、再带下限</b> 相减</span><span class="ar">→</span>
+    <span class="n"><b>得到定积分的值</b></span>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>公式：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>F</mi><mo>(</mo><mi>b</mi><mo>)</mo><mo>−</mo><mi>F</mi><mo>(</mo><mi>a</mi><mo>)</mo></math></span>，写法 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><msubsup><mo>]</mo><mi>a</mi><mi>b</mi></msubsup></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>(</mo><mi>x</mi><mo>)</mo><msubsup><mo>|</mo><mi>a</mi><mi>b</mi></msubsup></math></span>。</li>
+    <li>条件两条：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上连续</strong>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 的一个原函数（只要一个）。</li>
+    <li>定积分<strong>不加常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span></strong>；加了也会自己抵消。</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mn>1</mn><mi>x</mi></mfrac></math></span> 的原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span>——区间在正半轴时可省略绝对值，在负半轴时必须写。</li>
+    <li>变上限积分求导（下限是函数）：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mrow><mi>b</mi></mrow></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo>=</mo><mo form="prefix">−</mo><mi>f</mi><mo>(</mo><mi>v</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo><mspace width="1em"></mspace><mi>v</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。</li>
+  </ul>
+
+  <h3>三类考查方式</h3>
+  <ol class="tight">
+    <li><strong>直接算</strong>：求原函数、代上下限。注意反三角函数值（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><msqrt><mn>3</mn></msqrt><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>）与绝对值（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span>）。</li>
+    <li><strong>含变上限积分的极限</strong>：先判型 → 洛必达 → 能把趋于常数的因子先提出来就先提出来。典型答数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>e</mi></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>。</li>
+    <li><strong>证明题</strong>：造辅助函数求导定号，例如用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mo>(</mo><mi>x</mi><mo>−</mo><mi>t</mi><mo>)</mo><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi></mrow><mrow><msup><mrow><mo stretchy="true">(</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mi>x</mi></munderover><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>t</mi><mo stretchy="true">)</mo></mrow><mn>2</mn></msup></mrow></mfrac></math></span> 证明单调性。</li>
+  </ol>
+
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li><strong>区间内部有瑕点时不能硬套公式。</strong>反例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow><mrow><mn>1</mn></mrow></munderover><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span> 硬算得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn></math></span>，而积分为正——一出现「负的面积」就该回头查炸点。</li>
+    <li><strong>代入次序不能错。</strong>一定先上限后下限，中间是减号；上下限写反，结果差一个负号。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P047-变上限积分函数/index.html">变上限积分函数</a> 变上限积分函数（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Φ</mo><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 与「连续必有原函数」是本页证明的两根支柱）</li>
+      <li><a href="../P046-定积分的性质/index.html">定积分的性质</a> 定积分的性质（区间可加性、上下限相同则积分为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）</li>
+      <li><span class="cur">不定积分的原函数表（含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>）</span></li>
+      <li><a href="../P029-微分中值定理/index.html">微分中值定理</a> 拉格朗日中值定理（本页最后一节直接调用）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P049-定积分的换元法（上集）/index.html">定积分的换元法（上集）</a> 定积分的换元法（上）：换元必换限</li>
+      <li><a href="../P050-定积分的换元法（下集）/index.html">定积分的换元法（下集）</a> 定积分的换元法（下）：奇偶性与对称区间</li>
+      <li><a href="../P051-定积分分部积分法/index.html">定积分分部积分法</a> 定积分的分部积分法</li>
+      <li><a href="../P052-无穷限的反常积分/index.html">无穷限的反常积分</a> 无穷限的反常积分 · <a href="../P053-无界函数的反常积分/index.html">无界函数的反常积分</a> 无界函数的反常积分（本页反例的正解）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>|</mo><mi>x</mi><mo>|</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>：负半轴区间少了绝对值就算错</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arctan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msqrt></mrow></mfrac></math></span> 才对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">arcsin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span></li>
+      <li>变上限积分的<strong>下限</strong>是函数时，前面要加负号</li>
+      <li>「连续」是公式成立的前提，不是客套话——区间内部有瑕点公式会失效</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 48 讲</span><a href="../P047-变上限积分函数/index.html">← P047</a><a href="../index.html">全部目录</a><a href="../P049-定积分的换元法（上集）/index.html">P049 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">一、先承认一件事：没有这个公式，定积分算不出来</a>
+    <a href="#s2">二、定理的准确陈述</a>
+    <a href="#s3">三、使用条件：为什么非要「连续」</a>
+    <a href="#s4">四、把公式用熟</a>
+    <a href="#s5">五、超高频题型：定积分与洛必达联手</a>
+    <a href="#s6">六、红线：区间内部有「炸点」时，公式会骗你</a>
+    <a href="#s7">七、公式为什么成立</a>
+    <a href="#s8">八、反过来用：证明积分中值定理</a>
+  </aside>
+</div>
+</body>
+</html>

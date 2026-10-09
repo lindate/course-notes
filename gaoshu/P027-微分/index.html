@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>微分：给函数增量找一个线性替身 · 高等数学笔记</title>
+<meta name="description" content="微分就是给「函数值的改变」找一个线性近似：把 Δy 里最要紧的那块 f&#x27;(x)Δx 单独拎出来叫 dy。Δy 是真实增量，dy 是近似值——这一字之差，正是「以直代曲」的数学表达。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 2 章  导数与微分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 27 讲</div>
+    <h1 class="title"><span class="pnum">P027</span>微分：给函数增量找一个线性替身</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>微分就是给「函数值的改变」找一个<strong>线性近似</strong>：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 里最要紧的那块 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 单独拎出来叫 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是真实增量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 是<strong>近似值</strong>——这一字之差，正是「以直代曲」的数学表达。</p></div>
+    <div class="meta"><span>时长 32m13s</span><span class="w" title="考试权重">●●●●○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1">00:01</a><span class="vv"><b>从面积说起</b>：边长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 受热增加 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，面积增量分成两块。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=158">02:38</a><span class="vv"><b>可微的定义</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span>。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=314">05:14</a><span class="vv"><b>线性主部</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 无关、却与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 有关；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是精确值，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 是近似值。</span></li>
+    <li class="sep"><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=364">06:04</a><span class="vv"><b>可微 ⟺ 可导</b>（一元函数），并且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 本身就记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=519">08:39</a><span class="vv"><b>核心公式</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，求导再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。老师说「这一节一分钟就讲完了」。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=589">09:49</a><span class="vv"><b>例一</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn></math></span> 处的微分，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>,</mo><mn>4</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>,</mo><mn>6</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=734">12:14</a><span class="vv"><b>例二</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn><mo>,</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn></math></span> 处求微分，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn></math></span>。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=825">13:45</a><span class="vv"><b>几何含义</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是曲线上的真实增量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 是切线上的线性增量。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=964">16:04</a><span class="vv"><b>四则与复合</b>：微分的四则公式、复合函数与「形式不变性」。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1073">17:53</a><span class="vv"><b>课堂质疑</b>：同学问「这公式跟求导差不多，你在干嘛」——可用可不用，直接求导乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 也行。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1286">21:26</a><span class="vv"><b>实战提醒</b>：用四则公式算时，最后两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 必须合并成一个；商公式顺序别写反。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1611">26:51</a><span class="vv"><b>复合微分</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mn>1</mn><mo>−</mo><mn>3</mn><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">从一个正方形的面积变化说起</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1">00:01</a>先别急着记定义，看一个最朴素的例子。一个正方形，边长本来是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>，因为受热膨胀，边长增加了一小块 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>。问：面积增加了多少？原来面积是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mi>x</mi><mn>0</mn><mn>2</mn></msubsup></math></span>，新面积是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span>，所以面积增量</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>A</mi><mo>=</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup><mo>−</mo><msubsup><mi>x</mi><mn>0</mn><mn>2</mn></msubsup><mo>=</mo><mn>2</mn><msub><mi>x</mi><mn>0</mn></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=54">00:54</a>把这块多出来的面积单独画出来，它其实是三部分拼成的：右边一条竖着的矩形（面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>⋅</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>）、上边一条横着的矩形（面积也是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>⋅</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>），再加上右上角那个小小方块（面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span>）。前两块合起来就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msub><mi>x</mi><mn>0</mn></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，第三块是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span>。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 280" role="img" aria-label="正方形边长增加 delta x 时，面积增量等于两个 x0 delta x 加一个 delta x 平方">
+    <line x1="100" y1="250" x2="360" y2="250" class="m-thin" stroke-width="1"/>
+    <line x1="100" y1="250" x2="100" y2="6" class="m-thin" stroke-width="1"/>
+    <rect x="100" y="60" width="190" height="190" class="m-acc" fill="none" stroke-width="1.8"/>
+    <rect x="290" y="60" width="54" height="190" class="m-good m-fill-g" stroke-width="1.2"/>
+    <rect x="100" y="6" width="190" height="54" class="m-good m-fill-g" stroke-width="1.2"/>
+    <rect x="290" y="6" width="54" height="54" class="m-warn m-fill-a" stroke-width="1.2"/>
+    <text x="190" y="162" text-anchor="middle" class="m-txt" font-size="13">A = x0^2</text>
+    <text x="317" y="155" text-anchor="middle" class="m-sub" font-size="11.5">x0·Δx</text>
+    <text x="195" y="38" text-anchor="middle" class="m-sub" font-size="11.5">x0·Δx</text>
+    <text x="317" y="38" text-anchor="middle" class="m-warn" font-size="11.5">(Δx)^2</text>
+    <text x="195" y="270" text-anchor="middle" class="m-sub" font-size="11.5">x0</text>
+    <text x="317" y="270" text-anchor="middle" class="m-sub" font-size="11.5">Δx</text>
+    <text x="490" y="64" class="m-txt" font-size="12.5">面积增量 ΔA =</text>
+    <text x="490" y="90" class="m-good" font-size="12.5">2 x0 Δx</text>
+    <text x="490" y="116" class="m-txt" font-size="12.5">+ (Δx)^2</text>
+    <text x="490" y="148" class="m-sub" font-size="11.5">Δx→0 时</text>
+    <text x="490" y="166" class="m-sub" font-size="11.5">(Δx)^2 可忽略</text>
+    <text x="490" y="194" class="m-txt" font-size="11.5">故 ΔA ≈ 2 x0 Δx</text>
+  </svg>
+  <figcaption><b>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 很小时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span> 比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msub><mi>x</mi><mn>0</mn></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 小得多，可以丢掉。</b>于是面积增量被一个关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的<strong>一次式</strong>近似代替——这正是微分思想的雏形：用线性部分抓住变化的主干，把高阶小量当成误差忽略。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=107">01:47</a>为什么偏偏丢掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span></span>
+  <p>丢的不是任意一块，而是「<strong>比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 更高阶的无穷小</strong>」。当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></math></span>，说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span> 趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的速度比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 快得多，在「一次项」面前可以放心忽略。这个「只保留线性主部、丢掉高阶项」的操作，就是微分全部故事的起点。</p>
+</div>
+
+<h2 id="s2">可微的定义</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=158">02:38</a>把上面的直觉抽象成一般定义。设函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 附近平滑，函数值改变量</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></div>
+
+<p>如果它能写成下面这个样子：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></div>
+
+<p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是一个<strong>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 无关</strong>的常数（它当然可以依赖于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 取在哪个点），而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span> 是比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 更高阶的无穷小，我们就说函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处<strong>可微</strong>，并且把最前面的线性部分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 专门记出来：</p>
+
+<div class="blk def">
+  <span class="lbl">微分的定义</span>
+  <p>若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>，则称 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 可微，并称</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+  <p>为函数在该点的<strong>微分</strong>（也叫线性主部）。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=256">04:16</a>回到正方形，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mn>2</mn><msub><mi>x</mi><mn>0</mn></msub></math></span>，它确实和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 无关（只跟当下的边长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 有关）。于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>A</mi><mo>=</mo><mn>2</mn><msub><mi>x</mi><mn>0</mn></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span> 那块当成了误差。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=314">05:14</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是精确值，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 是近似值</span>
+  <p>这是整页最容易被混的一点：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是函数值改变的真实值</strong>（多出来的全部面积），而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 只取了其中<strong>主要的线性那一块</strong>，把高阶小量剔除了，所以它是对真实改变量的<em>估计</em>、是<em>近似值</em>。两者差一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>：</p>
+  <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mtext>即</mtext><mspace width="1em"></mspace><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>≈</mo><mspace width="0.25em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+  <p>当 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 越小时，这个近似越好。所以微分不是「另一个增量」，而是「增量最划算的线性替身」。</p>
+</div>
+
+<h2 id="s3">可微与可导：一元函数里是同一件事</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=364">06:04</a>现在揭晓 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 到底是谁。对一元函数，可微的充要条件就是<strong>可导</strong>，而且那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 恰好就是导数：</p>
+
+<div class="blk thm">
+  <span class="lbl">可微 ⟺ 可导（一元函数）</span>
+  <p>函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处可微，当且仅当它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处可导，且</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+  <p>同时约定把自变量的增量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 直接记成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，于是</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=364">06:04</a>这个「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇔</mo></math></span>」不是天上掉下来的，两个方向各只有一步，而且第一步你已经见过。</p>
+
+<p><strong>方向一：可微 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 可导。</strong>已知 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>。两边同除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>≠</mo><mn>0</mn></math></span>，除得起）：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mi>A</mi><mo>+</mo><mfrac><mrow><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac></math></div>
+
+<p>按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span> 的定义，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>→</mo><mn>0</mn></math></span>，所以左边那个差商的极限存在、且恰好等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>。这既说明 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处可导，也顺手把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 的身份定了下来：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。</p>
+
+<p><strong>方向二：可导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 可微。</strong>用的就是 <a href="../P019-可导与连续关系/index.html">可导与连续关系</a> 里证明「可导必连续」的那一招。因为差商的极限 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 存在，可以把差商写成「极限值 + 一个趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>」：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mo>α</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mspace width="0.25em"></mspace><mn>0</mn></mrow></munder><mo>α</mo><mo>=</mo><mn>0</mn></math></div>
+
+<p>两边乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，就得到了定义里的那个形状：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mo>α</mo><mspace width="1em"></mspace><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+
+<p>还差最后半句：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mspace width="1em"></mspace><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 得是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span> 才行。验证一下——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>α</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mo>α</mo><mo>→</mo><mn>0</mn></math></span>，符合「比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 高阶的无穷小」的定义。对照 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 即可。<strong>两个方向都通了，所以一元函数里「可微」与「可导」是同一件事的两种说法。</strong></p>
+
+<div class="note">
+  <span class="lbl">顺带一个推论：可微一定连续</span>
+  <p>既然「可微 ⟺ 可导」，而 <a href="../P019-可导与连续关系/index.html">可导与连续关系</a> 里已经证明了「可导 ⟹ 连续」，那就自动得到：<strong>可微 ⟹ 连续</strong>。其实也可以从微分定义直接看出来——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span> 里两项都含趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的因子，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>→</mo><mn>0</mn></math></span>，这正好就是连续的增量定义。</p>
+  <p>这个推论的价值在于给出一个<em>反向判据</em>：如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在某点<strong>不连续</strong>，那它既不可导、也<strong>不可微</strong>。所以拿到一道「判断某点是否可微」的题，第一件事仍是查连续——断了就直接判「不可微」，不用去算差商。这也解释了为什么 P019 里那三类反例（尖角、垂直切线、振荡）在本页依然成立：它们连续但不可导，等价地说就是<mark>连续但不可微</mark>。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 只能是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，没有第二个选择</span>
+  <p>方向一已经能把这件事问死：不管你怎么把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 拆成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>，两边除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 再取极限，右边只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，左边就是差商的极限——所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 只能是导数。</p>
+  <p>这保证了「微分」是<em>定义良好</em>的：若同一个函数在同一点能写出两个不同的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mspace width="0.25em"></mspace></mrow><mi>d</mi><mi>y</mi></math></span> 就会有两个答案，定义立刻报废。所以写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 时可以放心——这是唯一可能的线性主部。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=436">07:16</a>为什么只说「一元函数」</span>
+  <p>这个结论对一元函数是充要条件，但<strong>到了多元函数就不成立了</strong>。多元里「偏导数都存在」推不出「可微」，必须加上更强的条件（各偏导连续之类）。所以老师特意强调这是一元情形——等你学到全微分时会发现，那里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是一组偏导数拼成的线性组合，关系要复杂得多。本节所有结论都只在一元框架下成立。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=466">07:46</a>记牢「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>」这个约定：它意味着自变量的微分就是它自己的增量，于是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>x</mi></math></span> 可以像分数一样摆在一起，写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>——这也就是为什么导数符号长成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow></math></span> 比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow></math></span>」的样子。</p>
+
+<div class="why">
+  <span class="lbl">凭什么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>≠</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span></span>
+  <p>这是全页最容易觉得别扭的一处「不对称」：同样是微分，为什么自变量的就等于增量，因变量的就不等于？</p>
+  <p>答案在<strong>定义的方向</strong>。对自变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 自己来说，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数时导数恒等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，代进公式只能得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>1</mn><mo>⋅</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>——于是我们干脆<em>约定</em> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，让记号自洽。而对因变量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是一条<strong>算出来的</strong>线性估计，它和真实的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 一般相差一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>，只有在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 本身是一次函数时才恰好相等。</p>
+  <p>所以这一「不对称」不是笔误，而是一句总结：<b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是约定，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>≈</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是结论。</b>正因为先有了这个约定，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac></math></span> 才能被当成一个真正的商看待，后面学积分换元时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 也才能被当作一个可以搬运的因子。</p>
+</div>
+
+<h2 id="s4">导数与微分：一个是「率」，一个是「量」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=825">13:45</a>既然一元函数里可微就是可导，很容易把两者当成同一件事。它们确实<em>同生共死</em>（一个存在另一个就存在），但<strong>说的不是同一样东西</strong>——一个是比值，一个是乘积：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th></th><th>导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span></th><th>微分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span></th></tr></thead>
+    <tbody>
+      <tr><td>本质</td><td>一个<strong>变化率</strong>（差商的极限）</td><td>一个<strong>改变量</strong>（线性主部）</td></tr>
+      <tr><td>怎么来</td><td>让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>→</mo><mn>0</mn></math></span> 取极限</td><td>把系数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 乘上自变量的增量</td></tr>
+      <tr><td>是哪类结果</td><td>一个<strong>数</strong>（可正可负）</td><td>一个带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 的<strong>表达式</strong>（或具体数值）</td></tr>
+      <tr><td>依赖什么</td><td>只依赖取在哪个点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span></td><td>既依赖 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span>，也依赖这次走多远 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span></td></tr>
+      <tr><td>几何上是什么</td><td>切线的<strong>倾斜程度</strong></td><td>切线上纵坐标的<strong>实际增量</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>一句话区分：<strong>导数回答「变得有多快」，微分回答「大约变了多少」。</strong>前者是「率」，后者是「量」。</p>
+
+<div class="note">
+  <span class="lbl">题目怎么问，就该写什么形状的答案</span>
+  <ul class="tight">
+    <li>「求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mn>2</mn><mo>)</mo></math></span>」→ 一个<strong>数</strong>，例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>2</mn></math></span>。</li>
+    <li>「求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span> 的微分」→ 一个<strong>带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 的式子</strong>，例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><msup><mi>x</mi><mn>2</mn></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</li>
+    <li>「求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn><mo>,</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn></math></span> 时的微分」→ 一个<strong>具体数值</strong>，例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn></math></span>。</li>
+  </ul>
+  <p>这三种问法在本页例题里都出现过，答案的形状完全不同。可微与可导虽然等价，但落笔写成什么，取决于题目要的是「率」还是「量」。</p>
+</div>
+
+<h2 id="s5">核心公式：求导再乘 dx</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=519">08:39</a>可微的实用价值几乎全在这个公式里。只要你<strong>会求导，再乘上一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span></strong>，微分就出来了：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+
+<p>课本上把整套微分公式表列在导数公式表右边，其实两表完全一样，只是微分表每一项后面多写了个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。所以根本不用另背一张表。</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=519">08:39</a>视频原话（大意）</span>
+  <p><q>这个公式就是把它求导，再乘上一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，就完事了。如果给我一分钟的时间给你讲完，这个公式一讲，这一节就讲完了。</q></p>
+  <p>话说得夸张，但优先级很清楚：<strong>会求导就等于会求微分</strong>，后面的四则公式、复合公式都只是「换个姿势再算一遍」。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=589">09:49</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn></math></span> 处的微分。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先求导，再乘 dx</span>
+    <p>求导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>2</mn><mi>x</mi></math></span>，于是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>分别在三点代入：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn><mo>:</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>1</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>2</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>;</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>2</mn><mo>:</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>4</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>;</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>3</mn><mo>:</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>6</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>写的时候老师特别提醒：<strong>以后不再写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span></strong>。</p>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=659">10:59</a>再补两个一眼能出的：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mi>x</mi></msup><mspace width="1em"></mspace><mo>⇒</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><msup><mi>e</mi><mi>x</mi></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。都是「导数 × <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>」，没有任何新花样。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=734">12:14</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup></math></span>，求在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn><mo>,</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn></math></span> 处的微分。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span>，再代具体数值</span>
+    <p>先一般地求微分：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>3</mn><msup><mi>x</mi><mn>2</mn></msup></math></span>，所以</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>3</mn><msup><mi>x</mi><mn>2</mn></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 就是题目给的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span>。代入：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>3</mn><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mn>2</mn><mn>2</mn></msup><mo>⋅</mo><mspace width="0.25em"></mspace><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn><mo>=</mo><mn>3</mn><mo>⋅</mo><mn>4</mn><mo>⋅</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn><mo>=</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn></math></div>
+    <div class="trap">
+      <span class="lbl">这一步最容易错</span>
+      <p><span class="bad">把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 当成同一个东西。</span>老师打了个比方：体重 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是「吃饭前」的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>5</mn><mn>0</mn></math></span> 斤，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是「吃完这顿」涨的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>0</mn></math></span> 斤，两者不是一回事。本题里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 是「点」， <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn></math></span> 是「增量」，必须各填各的位置。</p>
+    </div>
+    <div class="note">
+      <span class="lbl">顺手量一下「缝」有多宽</span>
+      <p>这题还能直接算出<strong>那截误差的真实大小</strong>，让「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>」不再抽象。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>2</mn></math></span> 代入原函数，真实增量是</p>
+      <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mo>(</mo><mn>2</mn><mo>.</mo><mn>0</mn><mn>2</mn><msup><mo>)</mo><mrow><mn>3</mn></mrow></msup><mo>−</mo><msup><mn>2</mn><mrow><mn>3</mn></mrow></msup><mo>=</mo><mn>8</mn><mo>.</mo><mn>2</mn><mn>4</mn><mn>2</mn><mn>4</mn><mn>0</mn><mn>8</mn><mo>−</mo><mn>8</mn><mo>=</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn><mn>2</mn><mn>4</mn><mn>0</mn><mn>8</mn></math></div>
+      <p>而微分给的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn></math></span>。两者之差</p>
+      <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>−</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn><mn>2</mn><mn>4</mn><mn>0</mn><mn>8</mn><mo>−</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn><mo>=</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>2</mn><mn>4</mn><mn>0</mn><mn>8</mn></math></div>
+      <p>正好等于被丢掉的两项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><mi>x</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup><mo>+</mo><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>3</mn></msup><mo>=</mo><mn>3</mn><mo>⋅</mo><mn>2</mn><mo>⋅</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>0</mn><mn>4</mn><mo>+</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>0</mn><mn>0</mn><mn>0</mn><mn>8</mn></math></span>。<strong>误差只占真增量的约 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>%</mo></math></span></strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>2</mn><mn>4</mn><mn>0</mn><mn>8</mn><mo>/</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>4</mn><mn>2</mn><mn>4</mn><mn>0</mn><mn>8</mn><mo>≈</mo><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>9</mn><mn>9</mn></math></span>）——这就是「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>」在具体数字上的分量：它不小到可以无视，但确实比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 那一阶小得多。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s6">微分的几何含义：以直代曲</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=825">13:45</a>在图上，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 是什么？取曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处一点，过这点作切线。当横坐标从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 走到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>：</p>
+
+<ul class="tight">
+  <li><strong>曲线上的点</strong>纵坐标从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 升到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>，这段真实的竖直线段就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span>（精确增量）。</li>
+  <li><strong>切线上</strong>纵坐标从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 升到切线上对应高度，这段竖直线段就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>（线性增量）。</li>
+</ul>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=927">15:27</a>两者之间有那么一小段缝——那就是被我们忽略掉的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>。我这张图故意把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 画得偏大，所以缝看得清楚；实际 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 很小时，缝会缩到几乎看不见，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 就贴在一起了。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="微分的几何含义：曲线上的真实增量 delta y 与切线上的线性增量 dy">
+    <line x1="60" y1="250" x2="580" y2="250" class="m-thin" stroke-width="1.2"/>
+    <line x1="60" y1="250" x2="60" y2="40" class="m-thin" stroke-width="1.2"/>
+    <path d="M 130 230 Q 350 230 540 80" class="m-acc" fill="none" stroke-width="1.9"/>
+    <line x1="140" y1="238" x2="440" y2="184" class="m-good" stroke-width="1.6" stroke-dasharray="6 4"/>
+    <circle cx="240" cy="220" r="4" class="m-fill"/>
+    <line x1="400" y1="250" x2="400" y2="60" class="m-thin" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="240" y1="220" x2="400" y2="220" class="m-warn" stroke-width="1.4" stroke-dasharray="5 3"/>
+    <line x1="400" y1="220" x2="400" y2="191" class="m-good" stroke-width="2.4"/>
+    <line x1="400" y1="220" x2="400" y2="169" class="m-acc" stroke-width="2.4"/>
+    <circle cx="400" cy="169" r="4" class="m-fill"/>
+    <circle cx="400" cy="191" r="4" class="m-fill-g"/>
+    <line x1="410" y1="165" x2="410" y2="189" class="m-warn" stroke-width="1.6"/>
+    <text x="250" y="212" class="m-warn" font-size="12">Δx</text>
+    <text x="416" y="205" class="m-acc" font-size="12">Δy 真实</text>
+    <text x="416" y="183" class="m-good" font-size="12">dy 线性</text>
+    <text x="416" y="160" class="m-warn" font-size="11.5">误差</text>
+    <text x="120" y="272" class="m-sub" font-size="11.5">x0</text>
+    <text x="392" y="272" class="m-sub" font-size="11.5">x0+Δx</text>
+  </svg>
+  <figcaption><b>「以直代曲」：在很小一段里，用切线代替曲线。</b><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 是沿切线走出来的增量，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是沿曲线走出来的真实增量，两者之差就是被丢掉的误差。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 越小，这块误差越可以忽略——微分就是在「局部」用直线段去顶替曲线段。</figcaption>
+</figure>
+
+<div class="why">
+  <span class="lbl">「以直代曲」到底省了什么</span>
+  <p>曲线段的长度是弯的、算起来麻烦；切线段是直的，它的增量就是「斜率 × 横移」=<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，一个乘法就完事。微分之所以有用，正是因为它把「弯的、难算的」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 换成了「直的、好算的」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span>。后一页的近似计算，干的就是这件事。</p>
+</div>
+
+<h2 id="s7">微分与近似：机制在哪里</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=825">13:45</a>把「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>≈</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>」这句话里的两个量各自展开，微分的全部用处就露出来了：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>≈</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mspace width="1em"></mspace><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+
+<p>移项，得到课本上那个最常用的模样：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>≈</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mspace width="1em"></mspace><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+
+<p>意思很直白：<strong>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 附近用一次函数（切线）顶替原来的函数</strong>。左边的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 可能带根号、带对数、带三角，右边只用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 两个数，全是四则运算。</p>
+
+<p>误差就是前面图上那条「缝」：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>−</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>。这条缝缩得特别快——正方形例子里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 减半，误差只剩四分之一。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 取得够小，这个一次式就足够准。</p>
+
+<p>特别地，如果把基准点取成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></math></span>（前提是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 附近可微），就得到最方便的一支：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>≈</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>+</mo><mi>f</mi><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mspace width="1em"></mspace><mi>x</mi><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mo>(</mo><mo>|</mo><mi>x</mi><mo>|</mo><mtext>很小</mtext><mo>)</mo></math></div>
+
+<p>这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo></math></span> 都是常数，右边就是一个标准的一次式。下一节的近似计算题，思路无非两条：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 选成「好算的点」</strong>（让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span> 一眼能出），<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 取得尽量小</strong>（让误差可控）。具体怎么选点、误差怎么估，见 <a href="../P028-微分在近似计算应用/index.html">微分在近似计算应用</a>；本页只负责说清机制：<b>微分把求函数值换成了算切线值。</b></p>
+
+<h2 id="s8">微分的四则运算与复合</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=964">16:04</a>虽然「求导乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>」万能，但书上也给了四则公式，遇到复合结构时心里有数更稳：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead><tr><th>运算</th><th>微分公式</th><th>与求导公式的关系</th></tr></thead>
+    <tbody>
+      <tr><td>和差</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><mi>u</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>)</mo><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi><mo>±</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>v</mi></math></span></td><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mo>±</mo><mspace width="0.25em"></mspace><mi>v</mi><mo>'</mo></math></span> 对应</td></tr>
+      <tr><td>常数倍</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>=</mo><mi>C</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></span></td><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>C</mi><mi>u</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>C</mi><mi>u</mi><mo>'</mo></math></span> 对应</td></tr>
+      <tr><td>乘积</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>=</mo><mi>u</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>v</mi><mo>+</mo><mi>v</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></span></td><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>'</mo><mo>=</mo><mi>u</mi><mo>'</mo><mi>v</mi><mo>+</mo><mi>u</mi><mi>v</mi><mo>'</mo></math></span> 对应</td></tr>
+      <tr><td>商</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>u</mi></mrow><mrow><mi>v</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mfrac><mrow><mi>v</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi><mo>−</mo><mi>u</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>v</mi></mrow><mrow><msup><mi>v</mi><mn>2</mn></msup></mrow></mfrac></math></span></td><td>与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mfrac><mrow><mi>u</mi></mrow><mrow><mi>v</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><mfrac><mrow><mi>u</mi><mo>'</mo><mi>v</mi><mo>−</mo><mi>u</mi><mi>v</mi><mo>'</mo></mrow><mrow><msup><mi>v</mi><mn>2</mn></msup></mrow></mfrac></math></span> 对应</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1073">17:53</a>课堂上的当场质疑（大意）</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1127">18:47</a>四个公式刚写完，同学就举手了：<q>老师你在干嘛呀？这个公式跟求导的那个东西差不多啊，这是什么东西啊？</q></p>
+  <p>老师也认：<q>对所有的东西求微分，我们其实用一个公式搞定就行——把它求完导以后乘以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，完事。那你说这四个公式在干啥呢？可用可不用。你不愿意用，就直接求导乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</q></p>
+  <p>所以这段的正确定位是：公式表不是<em>必须</em>用的工具，而是<strong>多给的一条路</strong>。尤其商那一条，写起来比求导公式还别扭，顺序（先分子微分、再分母微分）也容易写反——记不住就直接整体求导乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1182">19:42</a>用两种方法求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：一条走主路（求导乘 dx），一条走四则公式，结果必须一致</span>
+    <p><b>方法一（求导再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>）：</b>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span> 当整体求导，用乘积法则：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mo>'</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>2</mn><mi>x</mi><mo stretchy="true">)</mo></mrow></math></div>
+    <p>再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 就得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>2</mn><mi>x</mi><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</p>
+    <p><b>方法二（套乘积的微分公式）：</b>用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><mi>u</mi><mi>v</mi><mo>)</mo><mo>=</mo><mi>u</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>v</mi><mo>+</mo><mi>v</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>v</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mrow><mo stretchy="true">(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>)</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>把两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 提出来合并：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><mn>2</mn><mi>x</mi><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>两条路殊途同归。方法二的价值不在「算得快」，而在于它把<strong>乘法结构拆成了两个更简单的微分</strong>——这种「拆」的眼光，到后面学积分换元、分部积分时还会反复用到。</p>
+  </div>
+</div>
+
+<div class="trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1286">21:26</a>用四则公式时最容易错的一步</span>
+  <p>中间过程一旦出现两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，<strong>最后必须合并成一个</strong>。比如上面方法二算到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>⋅</mo><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 时，不能就此收工，要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 提出来写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>2</mn><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</p>
+  <p><span class="bad">写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 就交卷。</span>这不算错，但没化简完——微分的答案永远是<em>一个</em> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 乘上一个系数。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1344">22:24</a>至于四个公式的<strong>顺序</strong>：乘积那条「谁先求导谁后求导无所谓」，因为中间是加号；但<strong>商那条顺序是死的</strong>——先分子微分、减去分母微分，和求导公式「上导下不导、减上不导下导」完全对应，写反就全错。记不住的时候，干脆别用它，直接整体求导乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1402">23:22</a>到了复合函数，微分有一个很妙的性质。设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>u</mi><mo>)</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 最终是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的函数：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mspace width="1em"></mspace><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></div>
+
+<p>注意最后一步用了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi><mo>=</mo><mi>g</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。也就是说，<strong>不管 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 是自变量还是中间变量，微分都写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></span></strong>——形式完全一样，这叫：</p>
+
+<div class="blk thm">
+  <span class="lbl">微分形式不变性</span>
+  <p>对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>u</mi><mo>)</mo></math></span>，无论 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 是自变量还是另一个变量的可微函数，都有</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></div>
+  <p>这个性质在直接求微分时很少单独使用，但它是后面推导积分换元等结论的隐形地基。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1611">26:51</a>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">sin</mi><mo>(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo></math></span> 的微分。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn></math></span> 当中间变量，整体求导乘 dx</span>
+    <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn></math></span> 视作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span>，先对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 求导得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>u</mi></math></span>，再乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi><mo>=</mo><mrow><mrow><mi>d</mi></mrow></mrow><mo>(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>2</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>2</mn><mi mathvariant="normal">cos</mi><mo>(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>当然也可以一步到位：直接对整体求导，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>(</mo><mo>⋯</mo><mo>)</mo></math></span> 导数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>(</mo><mo>⋯</mo><mo>)</mo></math></span>，再乘里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn></math></span> 的导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，末尾补 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。两种写法结果一致。</p>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1657">27:37</a>顺手再练两个同类型的：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi mathvariant="normal">ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mo>)</mo></math></span> 时，外层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">ln</mi></math></span> 导数是倒数，里层 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></math></span> 再微分得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mo>⋅</mo><mn>2</mn><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mfrac><mrow><mn>2</mn><mi>x</mi><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><msup><mi>x</mi><mn>2</mn></msup></mrow></msup></mrow></mfrac><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mn>1</mn><mo>−</mo><mn>3</mn><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 用乘积处理：</p>
+
+<div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mo>(</mo><msup><mi>e</mi><mrow><mn>1</mn><mo>−</mo><mn>3</mn><mi>x</mi></mrow></msup><mo>(</mo><mo form="prefix">−</mo><mn>3</mn><mo>)</mo><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><msup><mi>e</mi><mrow><mn>1</mn><mo>−</mo><mn>3</mn><mi>x</mi></mrow></msup><mo>(</mo><mo form="prefix">−</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>)</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo form="prefix">−</mo><msup><mi>e</mi><mrow><mn>1</mn><mo>−</mo><mn>3</mn><mi>x</mi></mrow></msup><mo>(</mo><mn>3</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1926">32:06</a>视频原话（大意）</span>
+  <p><q>今天这节就学了一个公式：求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 就是把它求导，再乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 就完事了。你就直接求导，完事！</q></p>
+  <p>一句话总结整页：<strong>微分 = 导数 × 自变量的微分</strong>，其余都是这句话的注脚。</p>
+</div>
+
+<h2 id="s9">一个用数字说话的例子</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=158">02:38</a>把定义落到具体数字上更踏实。取正方形边长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mn>2</mn></math></span>、受热膨胀 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>1</mn></math></span>：真实面积增量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>A</mi><mo>=</mo><mo>(</mo><mn>2</mn><mo>.</mo><mn>1</mn><msup><mo>)</mo><mn>2</mn></msup><mo>−</mo><mn>4</mn><mo>=</mo><mn>0</mn><mo>.</mo><mn>4</mn><mn>1</mn></math></span>，而线性主部 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>A</mi><mo>=</mo><mn>2</mn><msub><mi>x</mi><mn>0</mn></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>=</mo><mn>0</mn><mo>.</mo><mn>4</mn><mn>0</mn></math></span>。两者之差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>0</mn><mn>1</mn><mo>=</mo><mn>0</mn><mo>.</mo><msup><mn>1</mn><mn>2</mn></msup></math></span>，正是被丢掉的高阶项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span>。若把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 减半取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>0</mn><mn>5</mn></math></span>，微分是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>2</mn><mn>0</mn></math></span>、真实值是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>.</mo><mn>0</mn><mn>5</mn><msup><mo>)</mo><mn>2</mn></msup><mo>−</mo><mn>4</mn><mo>=</mo><mn>0</mn><mo>.</mo><mn>2</mn><mn>0</mn><mn>2</mn><mn>5</mn></math></span>，误差只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>0</mn><mn>0</mn><mn>2</mn><mn>5</mn></math></span>——<strong>自变量减半，误差缩小到四分之一</strong>，「高阶无穷小」的含义在数字上一目了然。</p>
+
+<div class="why">
+  <span class="lbl">「线性主部」里的「线性」到底指什么</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mspace width="0.25em"></mspace></mrow><mi>d</mi><mi>y</mi><mo>=</mo><mi>A</mi><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的<strong>一次式</strong>（正比例函数），不含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>2</mn></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><msup><mo>)</mo><mn>3</mn></msup></math></span> 这些高阶项，所以叫「线性」。正因为线性，它才「好算」——一个乘法就完事。微分干的事，本质上就是：用「关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的一次多项式」去顶替「关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 的复杂函数」<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span>。一次式好算、高阶项太小先扔，这就是全部思路。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1517">25:17</a>再回头看「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 无关、却与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 有关」这句话。上面的数里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mn>2</mn><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mn>4</mn></math></span> 只取决于边长取在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，跟这次膨胀了多少（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>1</mn></math></span> 还是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>.</mo><mn>0</mn><mn>5</mn></math></span>）毫无关系；但只要把基准点换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mn>3</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 立刻变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>6</mn></math></span>。所以「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi></math></span> 是常数」是<strong>相对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 而言</strong>的常数——换个点它就可以不一样。这一点在多元函数里会演化成「偏导数随位置变化」，但一元这里认准「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>」就够了。</p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=27&amp;t=1402">23:22</a>「形式不变性」到底有什么用</span>
+  <p>老师也坦言，做题时几乎不单独用它。它的价值在「幕后」：后面学不定积分的换元法、以及多元微积分里链式法则的统一写法，都建立在「不论变量是不是最终自变量，微分形式都长一个样」这个事实上。先在这里混个眼熟，后面会回来认亲——它属于「现在看着多余、以后处处用得着」的那类结论。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>增量</b> Δy = f(x0+Δx) − f(x0)</span><span class="ar">→</span>
+    <span class="n"><b>可微</b> Δy = AΔx + o(Δx)</span><span class="ar">→</span>
+    <span class="n"><b>微分</b> dy = AΔx = f'(x)dx</span><span class="ar">→</span>
+    <span class="n"><b>近似</b> Δy ≈ dy</span>
+  </div>
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>（一元函数可微 ⟺ 可导）</li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 精确、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span> 近似；差一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span></li>
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 就记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>；故 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></mrow><mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></mrow></mfrac><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span></li>
+    <li>近似：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo><mo>≈</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>+</mo><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>（取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>≈</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mn>0</mn><mo>)</mo><mo>+</mo><mi>f</mi><mo>'</mo><mo>(</mo><mn>0</mn><mo>)</mo><mi>x</mi></math></span>）</li>
+  </ul>
+  <h3>两条线</h3>
+  <ul class="tight">
+    <li><b>证明线</b>：可微 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 除 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 取极限得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>A</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo></math></span>；可导 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> 写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow><mrow><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>+</mo><mo>α</mo></math></span>，乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>)</mo></math></span>。</li>
+    <li><b>计算线</b>：认准外层函数 → 整体求导 → 末尾乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> → 合并 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</li>
+  </ul>
+  <h3>两个坑</h3>
+  <ul class="tight">
+    <li>别把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 混成一个量（点是点，增量是增量）</li>
+    <li>复合函数：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi><mo>=</mo><mi>f</mi><mo>'</mo><mo>(</mo><mi>u</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>u</mi></math></span>，形式不变；商公式顺序别写反</li>
+    <li>结果里只能有<strong>一个</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，中途多出来的要合并</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P017-导数的定义/index.html">导数的定义</a> 导数的定义</li>
+      <li><a href="../P020-求导公式/index.html">求导公式</a> 求导公式</li>
+      <li><a href="../P022-复合函数求导/index.html">复合函数求导</a> 复合函数求导</li>
+      <li><a href="../P019-可导与连续关系/index.html">可导与连续关系</a> 可导与连续的关系（证明里用到的「极限拆成常数+无穷小」）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P028-微分在近似计算应用/index.html">微分在近似计算应用</a> 微分在近似计算中的应用</li>
+      <li><a href="../P029-微分中值定理/index.html">微分中值定理</a> 微分中值定理（微分思想的深化）</li>
+      <li><a href="../P078-全微分/index.html">全微分</a> 多元全微分（可微 ≠ 偏导存在）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi><mi>y</mi></math></span>：一个是精确增量，一个是线性近似</li>
+      <li>导数（变化率，一个数）与微分（改变量，带 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>）：等价但不同物</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 是<strong>约定</strong>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>≈</mo><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span> 是<strong>结论</strong></li>
+      <li>一元「可微⟺可导」；多元不成立</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 27 讲</span><a href="../P026-参数方程求导/index.html">← P026</a><a href="../index.html">全部目录</a><a href="../P028-微分在近似计算应用/index.html">P028 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">从一个正方形的面积变化说起</a>
+    <a href="#s2">可微的定义</a>
+    <a href="#s3">可微与可导：一元函数里是同一件事</a>
+    <a href="#s4">导数与微分：一个是「率」，一个是「量」</a>
+    <a href="#s5">核心公式：求导再乘 dx</a>
+    <a href="#s6">微分的几何含义：以直代曲</a>
+    <a href="#s7">微分与近似：机制在哪里</a>
+    <a href="#s8">微分的四则运算与复合</a>
+    <a href="#s9">一个用数字说话的例子</a>
+  </aside>
+</div>
+</body>
+</html>

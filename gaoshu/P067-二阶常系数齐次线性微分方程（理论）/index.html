@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>二阶常系数齐次线性微分方程：特征方程与三种根 · 高等数学笔记</title>
+<meta name="description" content="这一族方程的全部秘密可以用一句话说完：拿 y=erx 去试。因为 erx 求导后形式不变、又永远不等于零，代进去之后剩下的只能是一个关于 r 的二次方程——特征方程。特征方程的三个根的情形，对应三种通解；本页把「为什么这样设」「为什么重根要多乘一个 x」「共轭复根为什么会冒出 cos 与 sin」都">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 7 章  微分方程</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 67 讲</div>
+    <h1 class="title"><span class="pnum">P067</span>二阶常系数齐次线性微分方程：特征方程与三种根</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>这一族方程的全部秘密可以用一句话说完：<strong>拿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 去试</strong>。因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 求导后形式不变、又永远不等于零，代进去之后剩下的只能是一个关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 的二次方程——<mark>特征方程</mark>。特征方程的三个根的情形，对应三种通解；本页把「为什么这样设」「为什么重根要多乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」「共轭复根为什么会冒出 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>」都讲清楚。</p></div>
+    <div class="meta"><span>时长 41m38s</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=0">00:00</a><span class="vv"><b>标题逐字拆</b>：二阶、常系数、线性、齐次，四个词各管一件事。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=183">03:03</a><span class="vv">分两类：右边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 叫<b>齐次</b>，右边不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 叫非齐次；齐次是主要考点。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=282">04:42</a><span class="vv"><b>定理</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub></math></span> 都是解、且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow></mfrac></math></span> 不等于常数，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub></math></span> 是通解。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=553">09:13</a><span class="vv"><b>为什么不能成比例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub><mo>=</mo><mi>K</mi><msub><mi>y</mi><mn>2</mn></msub></math></span> 时，通解里只剩一个任意常数。线性相关 / 无关。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=778">12:58</a><span class="vv">核心任务：<b>找出两个不成比例的解</b>。先问「什么样的函数求导后形式不变」。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=928">15:28</a><span class="vv">拿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 去试，<b>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 提出来约掉</b>，剩下的就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>p</mi><mi>r</mi><mo>+</mo><mi>q</mi><mo>=</mo><mn>0</mn></math></span>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=1100">18:20</a><span class="vv"><b>特征方程的写法</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>→</mo><mspace width="0.25em"></mspace><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>→</mo><mspace width="0.25em"></mspace><mi>r</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>→</mo><mn>1</mn></math></span>。课上当场写了两道。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=1252">20:52</a><span class="vv"><b>情况一</b>：两个不等实根，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></span>——最完美的一种。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=1383">23:03</a><span class="vv"><b>情况二</b>：重根。为什么不能把两个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 合并，以及 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mi>x</mi><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></span> 怎么来的。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=2149">35:49</a><span class="vv"><b>情况三</b>：共轭复根，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>p</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mfrac><mrow><msqrt><mrow><mn>4</mn><mi>q</mi><mo>−</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，通解里出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">把标题四个词逐字拆开</h2>
+
+<p>这节课的标题很长——「二阶常系数齐次线性微分方程」，老师原话是<q>这个标题特别长哈</q>。但它的好处是：<strong>四个词每个都限定了一件事，拆开之后形式就没有含糊的地方了</strong>。</p>
+
+<p>这类方程的样子是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><mi>y</mi><mo>'</mo><mo>+</mo><mi>q</mi><mi>y</mi><mo>=</mo><mn>0</mn><mspace width="2em"></mspace><mo>(</mo><mi>p</mi><mo>,</mo><mspace width="1em"></mspace><mi>q</mi><mspace width="0.25em"></mspace><mtext> 是常数</mtext><mo>)</mo></math></div>
+
+<dl class="kv">
+  <dt>二阶</dt>
+  <dd>方程里<strong>必须有</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 可以有、也可以没有（比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mn>4</mn><mi>y</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 里就没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>），但二阶导数不能缺。</dd>
+  <dt>常系数</dt>
+  <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 前面的系数<strong>必须是常数</strong>。标准写法里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 的系数取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 的系数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的系数记作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span>。<mark>系数里不能出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></mark>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo></math></span> 都不行。</dd>
+  <dt>线性</dt>
+  <dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 三者之间只能是线性关系：各自一次方、不相乘。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mi>y</mi><mo>'</mo></math></span>（两个导数相乘）不行，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span>（平方）也不行。<strong>但系数可以是任何常数</strong>，比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mi>y</mi><mo>'</mo><mo>−</mo><mn>3</mn><mi>y</mi></math></span> 就是合法的线性表达式。</dd>
+  <dt>齐次</dt>
+  <dd>等号右边是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。右边换成非零的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，就叫<strong>非齐次</strong>。</dd>
+</dl>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=127">02:07</a>这里有一个容易被问住的地方：既然系数可以随便取，为什么标准形式里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span> 前面的系数一定写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>？老师的回答很干脆：<q>那你两边除以二不就完了嘛。</q>——系数不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 的时候，两边同除，把最高阶导数的系数化成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，就得到标准形式。</p>
+
+<p>按右边是否为零分成两种之后，老师说得很明确：<strong>右边等于零的这一种</strong>（齐次）<q>是实打实的、期末考试或者考研的一个比较主要的考点</q>。理由也很实在：二阶方程一旦出难了就不好做，所以命题时会往简单处出，而「常系数 + 齐次」正是最简单又最能考出方法的那一类。</p>
+
+<h2 id="s2">定理：两个解就能拼出通解</h2>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 齐次方程通解的结构</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub></math></span> 都是方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><mi>y</mi><mo>'</mo><mo>+</mo><mi>q</mi><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 的解，并且</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow></mfrac><mo>≠</mo><mtext>常数</mtext></math></div>
+  <p>则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub></math></div>
+  <p>就是该方程的<strong>通解</strong>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>2</mn></msub></math></span> 为任意常数）。</p>
+</div>
+
+<p>这个定理的价值在于：它把「解二阶方程」这件大事，<mark>换成了「找出两个不成比例的解」这件小事</mark>。一旦找到两个，把它们线性组合起来就是通解，不用再做别的。</p>
+
+<div class="why">
+  <span class="lbl">定理的证明：代入 + 分组合并</span>
+  <p>证明要证两件事：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub></math></span> 确实是解，以及它带两个任意常数。</p>
+  <p>先求导（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>2</mn></msub></math></span> 是常数，直接穿过去）：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>'</mo><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>'</mo><mo>'</mo><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo>'</mo></math></div>
+  <p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 一并代进方程左边：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>'</mo><mo>'</mo><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>'</mo><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo stretchy="true">)</mo></mrow><mo>+</mo><mi>q</mi><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub><mo stretchy="true">)</mo></mrow></math></div>
+  <p>按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>2</mn></msub></math></span> 重新分组：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>C</mi><mn>1</mn></msub><mrow><mo stretchy="true">(</mo><msub><mi>y</mi><mn>1</mn></msub><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><msub><mi>y</mi><mn>1</mn></msub><mo>'</mo><mo>+</mo><mi>q</mi><msub><mi>y</mi><mn>1</mn></msub><mo stretchy="true">)</mo></mrow><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mrow><mo stretchy="true">(</mo><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo>+</mo><mi>q</mi><msub><mi>y</mi><mn>2</mn></msub><mo stretchy="true">)</mo></mrow></math></div>
+  <p>而题目说了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub></math></span> 都是解，所以<strong>两个括号各自等于零</strong>，于是整个左边等于零，方程成立。</p>
+  <p><mark>这里能分组的理由只有一个：方程是线性的、系数是常数。</mark>正因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 不随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 变、也不会被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub></math></span> 之外的因子影响，我们才敢把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub></math></span> 整块提到括号外面。这也是「线性」这两个字在本题里的具体用处。</p>
+</div>
+
+<h2 id="s3">为什么两个解不能成比例</h2>
+
+<p>定理里那条附加条件——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow></mfrac></math></span> 不能是常数——看着像技术细节，其实是整个结构能不能成立的关键。老师用「反着试一试」的方式讲：假设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mi>K</mi></math></span>（常数），那么 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub><mo>=</mo><mi>K</mi><msub><mi>y</mi><mn>2</mn></msub></math></span>，代进通解：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><mo>⋅</mo><mspace width="0.25em"></mspace><mi>K</mi><msub><mi>y</mi><mn>2</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mi>K</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mo stretchy="true">)</mo></mrow><msub><mi>y</mi><mn>2</mn></msub></math></div>
+
+<p>式子看着挺正常，但<strong>括号里那一整块只是一个任意常数</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub><mi>K</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>2</mn></msub></math></span> 各自任意，加起来仍然任意。也就是说，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的表达里只剩下<mark>一个</mark>任意常数了。</p>
+
+<p>而二阶方程的通解<strong>必须有两个</strong>任意常数。所以这样拼出来的不是通解，最多是通解的一部分。老师说这个场面很有意思：<q>老师我还免费赠送了一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span>——两个常数我给你三个。行不行啊？不行。</q>多出来的那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>K</mi></math></span> 不是自由度，它只是把两个常数里的一部分信息重新写了一遍。</p>
+
+<dl class="kv">
+  <dt>线性相关</dt>
+  <dd>两个函数之比等于常数（一个是另一个的常数倍）。例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>：比值恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。老师提醒：这里的「线性相关」与线性代数里的定义<strong>略有不同</strong>，本课按「比值是否为常数」来判定。</dd>
+  <dt>线性无关</dt>
+  <dd>比值不是常数。例如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>（比值是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi><mspace width="0.25em"></mspace><mi>x</mi></math></span>，随 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 变）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>（比值是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mi>x</mi></mrow></mfrac></math></span>）。</dd>
+</dl>
+
+<p>所以定理的条件可以记成一句话：<strong>要找的两个解必须线性无关</strong>。这也是下面三种情形里，第二种情形会「不完美」的原因——重根时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></span> 是同一个函数，比值恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，必须另想办法造出第二个解。</p>
+
+<h2 id="s4">特征方程从哪冒出来的</h2>
+
+<p>现在任务很明确了：<strong>给方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><mi>y</mi><mo>'</mo><mo>+</mo><mi>q</mi><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 找出两个线性无关的解。</strong>直接猜是猜不出来的，老师给了一个思路：先看方程有什么特点。</p>
+
+<p>方程里只出现三样东西：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>；它们的系数是常数；三项加起来要求等于零。这让人想到一个问题：<q>什么样的函数，求导之后还是自己（至多差一个系数）？</q></p>
+
+<div class="why">
+  <span class="lbl">为什么偏偏挑 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 来试</span>
+  <p>老师说，求导公式里有一个非常特殊的：<q><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 求导还是它本身。</q>换成带系数的形式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mi>y</mi><mo>'</mo><mo>=</mo><mi>r</mi><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></div>
+  <p>三次求导的结果<strong>形式完全一样，只是前面多了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 的幂</strong>。这正是我们想要的：三项相加时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 可以整体提出来，剩下的只是一堆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 的多项式。</p>
+  <p>对比一下别的函数：若取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>=</mo><mn>2</mn><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>2</mn></math></span>——三样东西的形式完全不同，根本提不出公因子，方程会变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>+</mo><mn>2</mn><mi>p</mi><mi>x</mi><mo>+</mo><mi>q</mi><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span>，那是关于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的恒等式，不可能对整个区间成立。<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 的「求导不变形」是它能通过试探的唯一理由。</mark></p>
+</div>
+
+<p>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 代进去试试：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup><mo>+</mo><mi>p</mi><mspace width="1em"></mspace><mi>r</mi><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup><mo>+</mo><mi>q</mi><mspace width="1em"></mspace><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup><mo>=</mo><mn>0</mn><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>p</mi><mi>r</mi><mo>+</mo><mi>q</mi><mo stretchy="true">)</mo></mrow><mo>=</mo><mn>0</mn></math></div>
+
+<p>到这一步，第二个关键性质登场：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 永远不等于零</strong>（指数函数恒正，图像一路往上走）。所以要让乘积等于零，只能是括号里那一项等于零：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>p</mi><mi>r</mi><mo>+</mo><mi>q</mi><mo>=</mo><mn>0</mn></math></div>
+
+<p>这就是<strong>特征方程</strong>。老师说：<q>说白了就是你只要把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span> 求出来，它的两个解就解出来了。</q>于是整个问题被压成了「解一个一元二次方程」。</p>
+
+<div class="note">
+  <span class="lbl">特征方程的写法：一个「翻译表」</span>
+  <p>从微分方程写特征方程，动作机械到老师用「半分钟就能教会你」来形容：</p>
+  <div class="tbl-wrap">
+    <table class="k">
+      <thead><tr><th>微分方程里的</th><th>换成</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></math></span></td></tr>
+        <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span></td></tr>
+        <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>课上当场演示了两道：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mn>2</mn><mi>y</mi><mo>'</mo><mo>+</mo><mi>y</mi><mo>=</mo><mn>0</mn></math></span> 的特征方程是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>2</mn><mi>r</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mn>4</mn><mi>y</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 因为<strong>没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></strong>，所以翻译出来就没有常数项，是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>4</mn><mi>r</mi><mo>=</mo><mn>0</mn></math></span>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="特征方程的三种根情形分别对应三种通解形式">
+    <rect x="20" y="10" width="600" height="42" rx="6" class="m-panel-a"></rect>
+    <text x="320" y="30" text-anchor="middle" class="m-fill-a" font-size="12">特征方程 r² + pr + q = 0　（由 y = e^(rx) 代入、约去 e^(rx) 得到）</text>
+    <text x="320" y="46" text-anchor="middle" class="m-sub" font-size="11.5">判别式 Δ = p² − 4q 的符号，决定接下来走哪一条路</text>
+
+    <line x1="320" y1="52" x2="320" y2="64" class="m-line" stroke-width="1.4"></line>
+    <line x1="105" y1="64" x2="535" y2="64" class="m-line" stroke-width="1.4"></line>
+    <line x1="105" y1="64" x2="105" y2="72" class="m-line" stroke-width="1.4"></line>
+    <line x1="320" y1="64" x2="320" y2="72" class="m-line" stroke-width="1.4"></line>
+    <line x1="535" y1="64" x2="535" y2="72" class="m-line" stroke-width="1.4"></line>
+    <polygon points="105,78 100,68 110,68" class="m-fill"></polygon>
+    <polygon points="320,78 315,68 325,68" class="m-fill"></polygon>
+    <polygon points="535,78 530,68 540,68" class="m-fill"></polygon>
+
+    <rect x="20" y="78" width="170" height="40" rx="5" class="m-panel-s"></rect>
+    <text x="105" y="96" text-anchor="middle" class="m-txt" font-size="12">Δ &gt; 0</text>
+    <text x="105" y="112" text-anchor="middle" class="m-sub" font-size="11.5">两个不等的实根</text>
+
+    <rect x="235" y="78" width="170" height="40" rx="5" class="m-panel-s"></rect>
+    <text x="320" y="96" text-anchor="middle" class="m-txt" font-size="12">Δ = 0</text>
+    <text x="320" y="112" text-anchor="middle" class="m-sub" font-size="11.5">二重根 r₁ = r₂</text>
+
+    <rect x="450" y="78" width="170" height="40" rx="5" class="m-panel-s"></rect>
+    <text x="535" y="96" text-anchor="middle" class="m-txt" font-size="12">Δ &lt; 0</text>
+    <text x="535" y="112" text-anchor="middle" class="m-sub" font-size="11.5">共轭复根</text>
+
+    <rect x="20" y="130" width="170" height="66" rx="5" class="m-panel-s"></rect>
+    <text x="105" y="152" text-anchor="middle" class="m-sub" font-size="11.5">两个解</text>
+    <text x="105" y="172" text-anchor="middle" class="m-math" font-size="12">e^(r₁x)，e^(r₂x)</text>
+    <text x="105" y="189" text-anchor="middle" class="m-sub" font-size="11.5">比值不是常数</text>
+
+    <rect x="235" y="130" width="170" height="66" rx="5" class="m-panel-s"></rect>
+    <text x="320" y="152" text-anchor="middle" class="m-sub" font-size="11.5">两个解</text>
+    <text x="320" y="172" text-anchor="middle" class="m-math" font-size="12">e^(rx)，x·e^(rx)</text>
+    <text x="320" y="189" text-anchor="middle" class="m-sub" font-size="11.5">第二个多一个 x</text>
+
+    <rect x="450" y="130" width="170" height="66" rx="5" class="m-panel-s"></rect>
+    <text x="535" y="152" text-anchor="middle" class="m-sub" font-size="11.5">两个解</text>
+    <text x="535" y="172" text-anchor="middle" class="m-math" font-size="12">e^(αx)cos βx</text>
+    <text x="535" y="189" text-anchor="middle" class="m-math" font-size="12">e^(αx)sin βx</text>
+
+    <line x1="105" y1="196" x2="105" y2="208" class="m-line" stroke-width="1.4"></line>
+    <polygon points="105,214 100,204 110,204" class="m-fill"></polygon>
+    <line x1="320" y1="196" x2="320" y2="208" class="m-line" stroke-width="1.4"></line>
+    <polygon points="320,214 315,204 325,204" class="m-fill"></polygon>
+    <line x1="535" y1="196" x2="535" y2="208" class="m-line" stroke-width="1.4"></line>
+    <polygon points="535,214 530,204 540,204" class="m-fill"></polygon>
+
+    <rect x="20" y="214" width="170" height="60" rx="5" class="m-panel-hi"></rect>
+    <text x="105" y="238" text-anchor="middle" class="m-txt" font-size="11.5">通解</text>
+    <text x="105" y="258" text-anchor="middle" class="m-math" font-size="11.5">C₁e^(r₁x)+C₂e^(r₂x)</text>
+
+    <rect x="235" y="214" width="170" height="60" rx="5" class="m-panel-hi"></rect>
+    <text x="320" y="238" text-anchor="middle" class="m-txt" font-size="11.5">通解</text>
+    <text x="320" y="258" text-anchor="middle" class="m-math" font-size="11.5">(C₁+C₂x)e^(rx)</text>
+
+    <rect x="450" y="214" width="170" height="60" rx="5" class="m-panel-hi"></rect>
+    <text x="535" y="238" text-anchor="middle" class="m-txt" font-size="11.5">通解</text>
+    <text x="535" y="258" text-anchor="middle" class="m-math" font-size="11.5">e^(αx)(C₁cos βx</text>
+    <text x="535" y="272" text-anchor="middle" class="m-math" font-size="11.5">+ C₂sin βx)</text>
+  </svg>
+  <figcaption><b>整节课的骨架就在这张图里。</b>从上往下读：先用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 试探，得到特征方程；再看判别式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>q</mi></math></span> 的符号，分成三类；每一类给出两个线性无关的解，拼成通解。<em>三条路的差别只在「第二个解要不要加工」</em>——两个不等实根时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></span> 天然与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></span> 无关，直接用；重根时两根撞在一起，第二个解要乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>；复根时解是复数，凑成一对实值的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>。注意第三列的公式太长，图中分了两行写，实际是一个整体。</figcaption>
+</figure>
+
+<h2 id="s5">情况一：两个不等的实根</h2>
+
+<p>这是最舒服的一种。<strong>判别式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>q</mi><mo>&gt;</mo><mn>0</mn></math></span></strong>，特征方程给出两个不同的实数根 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>r</mi><mn>2</mn></msub></math></span>。两个解就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></span>，它们的比值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><msub><mi>r</mi><mn>1</mn></msub><mo>−</mo><msub><mi>r</mi><mn>2</mn></msub><mo>)</mo><mi>x</mi></mrow></msup></math></span> 显然不是常数，符合定理要求，直接组合：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></div>
+
+<p>课上的例子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>r</mi><mo>−</mo><mn>2</mn><mo>=</mo><mn>0</mn></math></span>。因式分解得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>r</mi><mo>+</mo><mn>2</mn><mo>)</mo><mo>(</mo><mi>r</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn></math></span>，通解就是</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>2</mn><mi>x</mi></mrow></msup><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></div>
+
+<p>老师说这一类<q>是我们同学最喜欢见到的</q>——「最完美的，就是没有任何好解释的，搞定」。它的确不需要任何额外手续：根解出来，直接照公式摆上。</p>
+
+<h2 id="s6">情况二：重根——第二个解要多乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></h2>
+
+<p>判别式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><mn>0</mn></math></span> 时，特征方程只有一个（二重的）实根 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>=</mo><msub><mi>r</mi><mn>2</mn></msub><mo>=</mo><mi>r</mi></math></span>。这时候麻烦来了：按公式照抄会得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>，也就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mo>)</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>——<strong>只剩一个任意常数</strong>，而且两个解比值恒等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。两条要求同时违反，这一路走不通。</p>
+
+<p>出路是：既然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 已经有了，那就给第二个解「动个手脚」，让它是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 乘上一个函数。老师原话：<q>他俩相比不能是个常数，那看来它相比是不是得和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 有点关系啊？</q>于是设</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><msub><mi>y</mi><mn>1</mn></msub><mo>=</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></div>
+
+<p>把这个形式的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub></math></span> 代回方程，看看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 该长什么样。先把导数算出来：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><mi>u</mi><mo>'</mo><mo>+</mo><msub><mi>r</mi><mn>1</mn></msub><mi>u</mi><mo stretchy="true">)</mo></mrow><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>y</mi><mn>2</mn></msub><mo>'</mo><mo>'</mo><mo>=</mo><mrow><mo stretchy="true">(</mo><mi>u</mi><mo>'</mo><mo>'</mo><mo>+</mo><mn>2</mn><msub><mi>r</mi><mn>1</mn></msub><mi>u</mi><mo>'</mo><mo>+</mo><msubsup><mi>r</mi><mn>1</mn><mrow><mn>2</mn></mrow></msubsup><mi>u</mi><mo stretchy="true">)</mo></mrow><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></div>
+
+<p>代入 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><mi>y</mi><mo>'</mo><mo>+</mo><mi>q</mi><mi>y</mi><mo>=</mo><mn>0</mn></math></span>，两边把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></span> 约掉（它不为零，可以放心约）：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>+</mo><mrow><mo stretchy="true">(</mo><mn>2</mn><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><mi>p</mi><mo stretchy="true">)</mo></mrow><mi>u</mi><mo>'</mo><mo>+</mo><mrow><mo stretchy="true">(</mo><msubsup><mi>r</mi><mn>1</mn><mrow><mn>2</mn></mrow></msubsup><mo>+</mo><mi>p</mi><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><mi>q</mi><mo stretchy="true">)</mo></mrow><mi>u</mi><mo>=</mo><mn>0</mn></math></div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=1604">26:44</a>这个式子看起来复杂，其实有两项自动消失</span>
+  <p><strong>第三项消失了</strong>，因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msubsup><mi>r</mi><mn>1</mn><mrow><mn>2</mn></mrow></msubsup><mo>+</mo><mi>p</mi><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><mi>q</mi><mo>=</mo><mn>0</mn></math></span>——<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 是特征方程的根，这个式子就是特征方程本身。</p>
+  <p><strong>第二项也消失了</strong>，因为重根时两根相等。由韦达定理，两根之和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><msub><mi>r</mi><mn>2</mn></msub><mo>=</mo><mo form="prefix">−</mo><mi>p</mi></math></span>；这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>=</mo><msub><mi>r</mi><mn>2</mn></msub></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msub><mi>r</mi><mn>1</mn></msub><mo>=</mo><mo form="prefix">−</mo><mi>p</mi></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><mi>p</mi><mo>=</mo><mn>0</mn></math></span>。</p>
+  <p>两个系数都是零，方程一下子瘦成了</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></div>
+  <p>老师说这一步「看起来挺复杂，但是你把这两件事想起来，它就没有了」——<mark>消掉的两项分别来自「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 是根」和「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 是重根」</mark>，把这两个条件各用一次，方程就只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span>。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=2000">33:20</a>接下来要解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span>。这很容易，但要小心一个细节：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 是<strong>常数</strong>行不行？不行——我们设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><msub><mi>y</mi><mn>1</mn></msub></math></span> 的初衷就是让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow></mfrac><mo>=</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 不是常数。所以要取满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 的<strong>非常数</strong>解。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 的通解是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><mi>x</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub></math></span>，取最简单的一个：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>u</mi><mo>=</mo><mi>x</mi><mspace width="1em"></mspace><mo>⟹</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mi>x</mi><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></div>
+
+<p>于是重根情形的通解是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>x</mi><mo stretchy="true">)</mo></mrow><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></div>
+
+<p>课上的例子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>2</mn><mi>r</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>r</mi><mo>−</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span>，得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>=</mo><msub><mi>r</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn></math></span>，通解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mo>(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>x</mi><mo>)</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span>。</p>
+
+<div class="said">
+  <span class="lbl">老师说这段证明可以跳过，但结论要记住</span>
+  <p><q>这个呢其实我们还给了大家一个比较严格的证明过程，其实你如果不看这个证明过程、光记答案的话，也没有什么大问题。</q></p>
+  <p>不过老师特意强调，重根这一段的推导<strong>在三种情形里是唯一需要「造解」的</strong>。记住「重根要乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」很容易，但知道那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 里解出来的，就不会在别的地方乱乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 260" role="img" aria-label="重根情形下推导第二个解的路线：设 y2 等于 u 乘 y1，两项系数自动为零，得到 u 两撇等于零，取 u 等于 x">
+    <rect x="20" y="10" width="600" height="38" rx="6" class="m-panel-s"></rect>
+    <text x="320" y="34" text-anchor="middle" class="m-txt" font-size="12">① 设第二个解 y₂ = u(x) · y₁ = u(x) · e^(r₁x)（要求 u 不是常数）</text>
+    <line x1="320" y1="48" x2="320" y2="60" class="m-line" stroke-width="1.4"></line>
+    <polygon points="320,66 315,56 325,56" class="m-fill"></polygon>
+
+    <rect x="20" y="66" width="600" height="38" rx="6" class="m-panel-s"></rect>
+    <text x="320" y="90" text-anchor="middle" class="m-txt" font-size="12">② 代回方程、约去 e^(r₁x)：u″ + (2r₁+p)u′ + (r₁²+pr₁+q)u = 0</text>
+    <line x1="320" y1="104" x2="320" y2="116" class="m-line" stroke-width="1.4"></line>
+    <polygon points="320,122 315,112 325,112" class="m-fill"></polygon>
+
+    <rect x="20" y="122" width="600" height="38" rx="6" class="m-panel-a"></rect>
+    <text x="320" y="139" text-anchor="middle" class="m-fill-a" font-size="11.5">③ 两个系数都为零：r₁²+pr₁+q = 0（r₁ 是根）；2r₁+p = 0（r₁ 是重根）</text>
+    <text x="320" y="155" text-anchor="middle" class="m-sub" font-size="11.5">后者来自两根之和 r₁+r₂ = 2r₁ = −p</text>
+    <line x1="320" y1="160" x2="320" y2="172" class="m-line" stroke-width="1.4"></line>
+    <polygon points="320,178 315,168 325,168" class="m-fill"></polygon>
+
+    <rect x="20" y="178" width="600" height="38" rx="6" class="m-panel-s"></rect>
+    <text x="320" y="202" text-anchor="middle" class="m-txt" font-size="12">④ 只剩 u″ = 0　→　取非常数解 u = x（常数解不能用）</text>
+    <line x1="320" y1="216" x2="320" y2="228" class="m-line" stroke-width="1.4"></line>
+    <polygon points="320,234 315,224 325,224" class="m-fill"></polygon>
+    <text x="320" y="248" text-anchor="middle" class="m-fill-a" font-size="12">⑤ 得 y₂ = x·e^(r₁x)，通解 y = (C₁ + C₂x)·e^(rx)</text>
+  </svg>
+  <figcaption><b>重根时那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>×</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 不是规定，是解出来的。</b>第 ③ 步是全图的关键：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo></math></span> 之外的两项系数，一个因为「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 是特征根」而为零，另一个因为「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 是重根（两根之和等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>p</mi></math></span>）」而为零。两项一去，方程只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span>，最简的非常数解就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>x</mi></math></span>。<em>这也解释了一件常被忽略的事：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi></math></span> 本来可以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub><mi>x</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub></math></span>，但 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>2</mn></msub></math></span> 那部分与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub></math></span> 是同一个解，会被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 吸收掉，所以只留 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 就够。</em></figcaption>
+</figure>
+
+<h2 id="s7">情况三：共轭复根</h2>
+
+<p>判别式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>q</mi><mo>&lt;</mo><mn>0</mn></math></span> 时，特征方程的一元二次求根公式会开出一个负数，于是两根是一对共轭复数。直接写求根公式：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>r</mi><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>p</mi><mo>±</mo><msqrt><mrow><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>q</mi></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>p</mi><mo>±</mo><msqrt><mrow><mo form="prefix">−</mo><mrow><mo stretchy="true">(</mo><mn>4</mn><mi>q</mi><mo>−</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup><mo stretchy="true">)</mo></mrow></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>p</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>i</mi><msqrt><mrow><mn>4</mn><mi>q</mi><mo>−</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+
+<p>把它写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>±</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi></math></span> 的形式，得到两个系数：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>α</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>p</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mo>β</mo><mo>=</mo><mfrac><mrow><msqrt><mrow><mn>4</mn><mi>q</mi><mo>−</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+
+<p>老师特别提醒了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 的取法：<q>这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 的地方是不包含它那个正负号的部分。</q>也就是说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 一律取正数——正负号已经由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo></math></span> 承担了，不要重复带进去。</p>
+
+<div class="note">
+  <span class="lbl"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 不用背，用求根公式现推</span>
+  <p>老师说他见过同学硬记 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 的公式，这个完全没必要：<q>解一元二次方程的时候，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mi>b</mi><mo>±</mo><msqrt><mrow><msup><mi>b</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>a</mi><mi>c</mi></mrow></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></math></span> 是不是每个同学都能写出来？</q>写出来之后，把根式里那个负数提出一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>i</mi></math></span>，得到的表达式天然就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>±</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi></math></span> 的形状：实部就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>，虚部那个系数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span>。</p>
+  <p>举个数：若特征方程是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>2</mn><mi>r</mi><mo>+</mo><mn>5</mn><mo>=</mo><mn>0</mn></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><mn>4</mn><mo>−</mo><mn>2</mn><mn>0</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mn>6</mn><mo>&lt;</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi><mo>=</mo><mfrac><mrow><mo form="prefix">−</mo><mn>2</mn><mo>±</mo><mn>4</mn><mi>i</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mo>±</mo><mn>2</mn><mi>i</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mn>2</mn></math></span>。</p>
+</div>
+
+<h3 id="s8">从复根到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span></h3>
+
+<p>如果只是把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>±</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi></math></span> 代进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>，得到的解是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>α</mo><mo>+</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi><mo>)</mo><mi>x</mi></mrow></msup></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>α</mo><mo>−</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi><mo>)</mo><mi>x</mi></mrow></msup></math></span>——它们都带虚数单位。但实际问题的解应当是实值函数，所以要把这两个复值解<strong>重新组合成一对实值解</strong>。做法是用欧拉公式把复指数拆成三角形式：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>α</mo><mo>±</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi><mo>)</mo><mi>x</mi></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>±</mo><mspace width="0.25em"></mspace><mi>i</mi><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo stretchy="true">)</mo></mrow></math></div>
+
+<p>把这两个式子相加、相减再各除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>i</mi></math></span>，就得到两个纯实值的东西：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>y</mi><mn>1</mn></msub><mo>=</mo><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></div>
+
+<p>它们仍然都是方程的解（复值解取实部与虚部，得到的仍是解——这一步与「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub></math></span> 是解」用的是同一套线性叠加的道理）。而它们的比值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mi mathvariant="normal">cot</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> <strong>不是常数</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi></math></span> 之外第二个线性无关的解有了，于是通解是</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo stretchy="true">)</mo></mrow></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=67&amp;t=2401">40:01</a>课上让同学们点头认可的一点正是这个比值：<q>因为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 跟 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span> 它俩相比，一般来说不可能是一个固定的常数。</q>至于「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 为什么确实满足方程」，老师没有展开验算：<q>这个就是一个重复性的工作</q>——把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub></math></span> 的两阶导数代进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mi>p</mi><mi>y</mi><mo>'</mo><mo>+</mo><mi>q</mi><mi>y</mi></math></span>，按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi></math></span> 的关系（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>q</mi><mo>=</mo><msup><mo>α</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mo>β</mo><mrow><mn>2</mn></mrow></msup></math></span>）合并同类项，两边正好抵消。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 306" role="img" aria-label="共轭复根在复平面上的位置，实部决定衰减、虚部决定振荡">
+    <line x1="60" y1="170" x2="612" y2="170" class="m-line" stroke-width="1.3"></line>
+    <polygon points="618,170 608,166 608,174" class="m-fill"></polygon>
+    <line x1="310" y1="286" x2="310" y2="34" class="m-line" stroke-width="1.3"></line>
+    <polygon points="310,28 306,38 314,38" class="m-fill"></polygon>
+    <text x="604" y="188" class="m-sub" font-size="11.5">实部</text>
+    <text x="318" y="40" class="m-sub" font-size="11.5">虚部</text>
+    <text x="286" y="188" class="m-sub" font-size="11.5">O</text>
+
+    <line x1="310" y1="80" x2="250" y2="80" class="m-thin" stroke-width="1.1" stroke-dasharray="4 3"></line>
+    <line x1="250" y1="80" x2="250" y2="170" class="m-thin" stroke-width="1.1" stroke-dasharray="4 3"></line>
+    <line x1="310" y1="260" x2="250" y2="260" class="m-thin" stroke-width="1.1" stroke-dasharray="4 3"></line>
+    <line x1="250" y1="260" x2="250" y2="170" class="m-thin" stroke-width="1.1" stroke-dasharray="4 3"></line>
+
+    <circle cx="250" cy="80" r="5" class="m-fill-a"></circle>
+    <circle cx="250" cy="260" r="5" class="m-fill-a"></circle>
+    <text x="196" y="70" class="m-fill-a" font-size="12">r₁ = α + βi</text>
+    <text x="196" y="284" class="m-fill-a" font-size="12">r₂ = α − βi</text>
+
+    <text x="262" y="112" class="m-sub" font-size="11.5">β（虚部，取正）</text>
+    <text x="262" y="228" class="m-sub" font-size="11.5">−β</text>
+    <text x="220" y="196" class="m-sub" font-size="11.5">α（实部）</text>
+    <text x="330" y="196" class="m-sub" font-size="11.5">α 是负数时，点落在虚轴左边</text>
+
+    <rect x="352" y="34" width="264" height="96" rx="6" class="m-panel-s"></rect>
+    <text x="484" y="54" text-anchor="middle" class="m-txt" font-size="11.5">α = −p/2　管「涨还是消」</text>
+    <text x="484" y="76" text-anchor="middle" class="m-sub" font-size="11.5">α 出现在 e^(αx) 里</text>
+    <text x="484" y="98" text-anchor="middle" class="m-txt" font-size="11.5">β = √(4q−p²)/2　管「振多快」</text>
+    <text x="484" y="120" text-anchor="middle" class="m-sub" font-size="11.5">β 出现在 cos βx、sin βx 里</text>
+
+    <rect x="24" y="232" width="212" height="62" rx="6" class="m-panel-s"></rect>
+    <text x="130" y="252" text-anchor="middle" class="m-txt" font-size="11.5">共轭：实部相同、虚部相反</text>
+    <text x="130" y="272" text-anchor="middle" class="m-sub" font-size="11.5">两根之和 = 2α = −p</text>
+    <text x="130" y="288" text-anchor="middle" class="m-sub" font-size="11.5">两根之积 = α²+β² = q</text>
+
+    <rect x="352" y="232" width="264" height="62" rx="6" class="m-panel-a"></rect>
+    <text x="484" y="252" text-anchor="middle" class="m-fill-a" font-size="11.5">若 p = 0（α = 0，纯虚根）</text>
+    <text x="484" y="272" text-anchor="middle" class="m-txt" font-size="11.5">通解退化成 C₁cos βx + C₂sin βx</text>
+    <text x="484" y="290" text-anchor="middle" class="m-sub" font-size="11.5">这就是最简单的简谐振动</text>
+  </svg>
+  <figcaption><b>复根为什么会长成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>±</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi></math></span>：因为两根必须互为共轭。</b>共轭复根在复平面上关于实轴对称：实部相同（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mo form="prefix">−</mo><mi>p</mi><mo>/</mo><mn>2</mn></math></span>，由两根之和等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>p</mi></math></span> 定出），虚部互为相反数（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo><mo>β</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 取正）。<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 分工明确</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span> 进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></span>，决定解的涨落（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>&lt;</mo><mn>0</mn></math></span> 时衰减到零）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 进 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，决定振荡的快慢（周期是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn><mo>π</mo></mrow><mrow><mo>β</mo></mrow></mfrac></math></span>）。<em>右下角那格是常用的特例：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>=</mo><mn>0</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup></math></span> 变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，通解就是纯粹的三角函数——所有简谐振动的方程都属于这一格。</em></figcaption>
+</figure>
+
+<h2 id="s9">三种情形，一张表带走</h2>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>判别式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>4</mn><mi>q</mi></math></span></th><th>特征根</th><th>两个线性无关的解</th><th>通解</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>&gt;</mo><mn>0</mn></math></span></td>
+        <td>两个不等实根 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>≠</mo><mspace width="0.25em"></mspace><msub><mi>r</mi><mn>2</mn></msub></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></span></td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><mn>0</mn></math></span></td>
+        <td>二重根 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>=</mo><msub><mi>r</mi><mn>2</mn></msub><mo>=</mo><mi>r</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>x</mi><mo stretchy="true">)</mo></mrow><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span></td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>&lt;</mo><mn>0</mn></math></span></td>
+        <td>共轭复根 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>±</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo stretchy="true">)</mo></mrow></math></span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>这张表就是整节课要交的答卷。老师的说法是：前面那套证明<q>你都可以不看</q>，只要能从特征方程解出根、再照三种情形把公式摆上，题就能做。<mark>不过把推导听一遍的好处很直接</mark>：知道重根为什么要乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、知道复根里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span> 是怎么来的，遇到题目变形（比如系数不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>、或者缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span> 项）就不会慌。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q">求下列方程的通解：(1) <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>−</mo><mn>3</mn><mi>y</mi><mo>'</mo><mo>+</mo><mn>2</mn><mi>y</mi><mo>=</mo><mn>0</mn></math></span>；(2) <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mn>4</mn><mi>y</mi><mo>'</mo><mo>+</mo><mn>4</mn><mi>y</mi><mo>=</mo><mn>0</mn></math></span>；(3) <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>−</mo><mn>2</mn><mi>y</mi><mo>'</mo><mo>+</mo><mn>5</mn><mi>y</mi><mo>=</mo><mn>0</mn></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三道题的流程完全一样——写特征方程 → 解根 → 判断情形 → 摆通解</span>
+    <p><strong>(1)</strong> 特征方程为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>3</mn><mi>r</mi><mo>+</mo><mn>2</mn><mo>=</mo><mn>0</mn></math></span>，因式分解得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>r</mi><mo>−</mo><mn>1</mn><mo>)</mo><mo>(</mo><mi>r</mi><mo>−</mo><mn>2</mn><mo>)</mo><mo>=</mo><mn>0</mn></math></span>，两个不等的实根 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>2</mn></msub><mo>=</mo><mn>2</mn></math></span>，属于情况一：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msup><mi>e</mi><mrow><mn>2</mn><mi>x</mi></mrow></msup></math></div>
+    <p><strong>(2)</strong> 特征方程为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>4</mn><mi>r</mi><mo>+</mo><mn>4</mn><mo>=</mo><mn>0</mn></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>r</mi><mo>+</mo><mn>2</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>0</mn></math></span>，只有一个<strong>二重根</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi><mo>=</mo><mo form="prefix">−</mo><mn>2</mn></math></span>，属于情况二，第二个解要乘一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>x</mi><mo stretchy="true">)</mo></mrow><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>2</mn><mi>x</mi></mrow></msup></math></div>
+    <p><strong>(3)</strong> 特征方程为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mn>2</mn><mi>r</mi><mo>+</mo><mn>5</mn><mo>=</mo><mn>0</mn></math></span>，判别式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><mn>4</mn><mo>−</mo><mn>2</mn><mn>0</mn><mo>=</mo><mo form="prefix">−</mo><mn>1</mn><mn>6</mn><mo>&lt;</mo><mn>0</mn></math></span>，用求根公式得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi><mo>=</mo><mfrac><mrow><mn>2</mn><mo>±</mo><mn>4</mn><mi>i</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>1</mn><mo>±</mo><mn>2</mn><mi>i</mi></math></span>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mn>2</mn></math></span>（实部与虚部各取出来），属于情况三：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi><mo stretchy="true">)</mo></mrow></math></div>
+
+    <div class="trap">
+      <span class="lbl">三道题各自的一个坑</span>
+      <p><span class="bad">(2) 漏掉那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。</span>重根时若写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mo>)</mo><msup><mi>e</mi><mrow><mo form="prefix">−</mo><mn>2</mn><mi>x</mi></mrow></msup></math></span>，通解里只剩一个任意常数，不满足要求。</p>
+      <p><span class="bad">(3) 忘记 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 要从根里读出来。</span><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mn>2</mn></math></span> 来自虚部 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mi>i</mi></math></span> 的系数，它在通解里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi><mspace width="0.25em"></mspace><mn>2</mn><mi>x</mi></math></span> 里面的那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>——漏了它，答案就成了一对普通的常数。</p>
+    </div>
+  </div>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>拿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 去试 → 约掉 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> → 特征方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>p</mi><mi>r</mi><mo>+</mo><mi>q</mi><mo>=</mo><mn>0</mn></math></span> → 看判别式，三种根对应三种通解。</p>
+
+  <h3>两条定理</h3>
+  <ul class="tight">
+    <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>1</mn></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub></math></span> 是解且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow></mfrac><mo>≠</mo></math></span> 常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>⇒</mo></math></span> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msub><mi>y</mi><mn>2</mn></msub></math></span> 是<strong>通解</strong>（线性无关才能拼出两个常数）。</li>
+    <li>反之，若 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub></mrow><mrow><msub><mi>y</mi><mn>2</mn></msub></mrow></mfrac><mo>=</mo><mi>K</mi></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mo>(</mo><msub><mi>C</mi><mn>1</mn></msub><mi>K</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mo>)</mo><msub><mi>y</mi><mn>2</mn></msub></math></span> 只剩一个任意常数，<strong>不是通解</strong>。</li>
+  </ul>
+
+  <h3>翻译表</h3>
+  <dl class="kv">
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup></math></span></dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span></dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>（没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 就没有常数项）</dd>
+  </dl>
+
+  <h3>三种情形</h3>
+  <dl class="kv">
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>&gt;</mo><mn>0</mn></math></span> 两不等实根</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>1</mn></msub><mi>x</mi></mrow></msup><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><msup><mi>e</mi><mrow><msub><mi>r</mi><mn>2</mn></msub><mi>x</mi></mrow></msup></math></span></dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>=</mo><mn>0</mn></math></span> 重根</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>x</mi><mo stretchy="true">)</mo></mrow><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>——<mark>第二个解乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></mark></dd>
+    <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mo>&lt;</mo><mn>0</mn></math></span> 共轭复根</dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>e</mi><mrow><mo>α</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></msup><mrow><mo stretchy="true">(</mo><msub><mi>C</mi><mn>1</mn></msub><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo stretchy="true">)</mo></mrow></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mi>p</mi></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mfrac><mrow><msqrt><mrow><mn>4</mn><mi>q</mi><mo>−</mo><msup><mi>p</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span></dd>
+    <dt>特例 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>p</mi><mo>=</mo><mn>0</mn></math></span></dt><dd><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><mi mathvariant="normal">cos</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi mathvariant="normal">sin</mi><mo>β</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>（简谐振动）</dd>
+  </dl>
+
+  <h3>三个「为什么」</h3>
+  <ol class="tight">
+    <li><strong>为什么用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>。</strong>它求导后形式不变（只多出系数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>r</mi></math></span>），而且恒不为零，所以能把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span> 整体约掉。</li>
+    <li><strong>重根为什么乘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。</strong>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mi>u</mi><mo>(</mo><mi>x</mi><mo>)</mo><msub><mi>y</mi><mn>1</mn></msub></math></span> 代入后，靠「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 是根」与「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>r</mi><mn>1</mn></msub></math></span> 是重根」消掉两项，得到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>'</mo><mo>'</mo><mo>=</mo><mn>0</mn></math></span>，取非常数解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>u</mi><mo>=</mo><mi>x</mi></math></span>。</li>
+    <li><strong>复根为什么出现 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">sin</mi></math></span>。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mo>(</mo><mo>α</mo><mo>±</mo><mo>β</mo><mspace width="0.25em"></mspace><mi>i</mi><mo>)</mo><mi>x</mi></mrow></msup></math></span> 是复值解，用欧拉公式把实部虚部取出来，得到一对实值解。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P064-一阶线性微分方程/index.html">一阶线性微分方程</a> 一阶线性微分方程（同类问题的降维版）</li>
+      <li><a href="../P024-23高阶导数/index.html">23高阶导数</a> 高阶导数与求导公式</li>
+      <li><span class="cur">一元二次方程求根公式与韦达定理（两根之和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mo form="prefix">−</mo><mi>p</mi></math></span>、之积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mi>q</mi></math></span>）；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>e</mi><mrow><mi>x</mi></mrow></msup></math></span> 求导不变形、恒不为零</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P068-二阶常系数齐次线性微分方程（做题）/index.html">二阶常系数齐次线性微分方程（做题）</a> 二阶常系数非齐次线性微分方程（右边不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的情形）</li>
+      <li><a href="../P066-可降阶的高阶微分方程/index.html">可降阶的高阶微分方程</a> 可降阶的高阶微分方程（既不缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 也不缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 时用不上，可作对照）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>特征方程里<strong>没有常数项</strong>，意思是原方程没有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 这一项（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>'</mo><mo>'</mo><mo>+</mo><mn>4</mn><mi>y</mi><mo>'</mo><mo>=</mo><mn>0</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>r</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mn>4</mn><mi>r</mi><mo>=</mo><mn>0</mn></math></span>），不是「算错了」</li>
+      <li>重根时的通解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mi>x</mi><mo>)</mo><msup><mi>e</mi><mrow><mi>r</mi><mi>x</mi></mrow></msup></math></span>：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 在括号里、不在指数上</strong></li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span> 只取正数，正负号由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo></math></span> 负责</li>
+      <li>本页只处理右边为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 的<strong>齐次</strong>情形；右边不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 时通解还要另外加一项</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 67 讲</span><a href="../P066-可降阶的高阶微分方程/index.html">← P066</a><a href="../index.html">全部目录</a><a href="../P068-二阶常系数齐次线性微分方程（做题）/index.html">P068 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">把标题四个词逐字拆开</a>
+    <a href="#s2">定理：两个解就能拼出通解</a>
+    <a href="#s3">为什么两个解不能成比例</a>
+    <a href="#s4">特征方程从哪冒出来的</a>
+    <a href="#s5">情况一：两个不等的实根</a>
+    <a href="#s6">情况二：重根——第二个解要多乘一个 x</a>
+    <a href="#s7">情况三：共轭复根</a>
+    <a class="sub" href="#s8">从复根到 cos 与 sin</a>
+    <a href="#s9">三种情形，一张表带走</a>
+  </aside>
+</div>
+</body>
+</html>

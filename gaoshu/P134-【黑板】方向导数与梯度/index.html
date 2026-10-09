@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>【黑板】方向导数与梯度：一个数、一个向量、两条结论 · 高等数学笔记</title>
+<meta name="description" content="偏导数只回答「沿 x」「沿 y」两个方向的问题，方向导数把方向放开成任意。方向导数是数，可正可负可零；梯度是向量，是两个偏导拼成的平面箭头。两者的桥梁是一个点乘：方向导数 = 梯度 · 方向单位向量 = |gradf|cosθ。由此立刻得到两条核心结论：① 方向导数的最大值是 |gradf|，且就在">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 12 章 【黑板】专题精讲</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 134 讲</div>
+    <h1 class="title"><span class="pnum">P134</span>【黑板】方向导数与梯度：一个数、一个向量、两条结论</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>偏导数只回答「沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」「沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>」两个方向的问题，方向导数把方向放开成任意。<strong>方向导数是数</strong>，可正可负可零；<strong>梯度是向量</strong>，是两个偏导拼成的平面箭头。两者的桥梁是一个点乘：<mark>方向导数 = 梯度 · 方向单位向量 = <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span></mark>。由此立刻得到两条核心结论：① 方向导数的最大值是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span>，且就在梯度方向上取到；② 梯度垂直于等值线（等值面），并指向函数值增大的那一侧。</p></div>
+    <div class="meta"><span>时长 1h25m</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=38">00:38</a><span class="vv">开场实话：这部分<strong>「头重脚轻」</strong>——理论很多很麻烦，但求方向导数、求梯度的计算题其实很简单。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=95">01:35</a><span class="vv"><b>复习</b>：一元导数是切线斜率；二元偏导数是两个方向上的切线斜率。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=268">04:28</a><span class="vv">追问：二元偏导与一元导数的意义一样吗？——把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 代入就退成一元。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=333">05:33</a><span class="vv"><b>动机</b>：偏导只管两个方向，现在要沿<strong>任意方向</strong>看变化率。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=433">07:13</a><span class="vv">射线的参数方程：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mi mathvariant="normal">cos</mi><mo>β</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>≥</mo><mn>0</mn></math></span> 是<b>距离</b>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=491">08:11</a><span class="vv"><b>定义</b>：函数值改变量除以走过的距离，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span>。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=587">09:47</a><span class="vv">方向是<strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上</strong>的方向，不是空间中的方向——这句要刻在脑子里。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=661">11:01</a><span class="vv"><b>方向导数是一个数</b>：函数值相减还是个量，再除以距离还是量。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=727">12:07</a><span class="vv">课本只给两种特殊方向，老师<strong>补到四种</strong>。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1584">26:24</a><span class="vv">沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>x</mi></math></span> 方向得到的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub></math></span>：同一根棍，方向反了斜率变号。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1948">32:28</a><span class="vv"><b>公式</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><msub><mi>f</mi><mi>y</mi></msub><mi mathvariant="normal">cos</mi><mo>β</mo></math></span>；方向余弦必须<b>单位化</b>。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2005">33:25</a><span class="vv"><b>例</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>x</mi><msup><mi>e</mi><mrow><mn>2</mn><mi>y</mi></mrow></msup></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，方向导数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2365">39:25</a><span class="vv">三元函数：多一个方向角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo></math></span>，多一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>z</mi></msub><mi mathvariant="normal">cos</mi><mo>γ</mo></math></span>。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2540">42:20</a><span class="vv"><b>梯度</b>：两个偏导拼成的向量；方向导数是数、梯度是向量。</span></li>
+    <li><span class="no">15</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2865">47:45</a><span class="vv"><b>笔记本当山坡</b>：梯度就是站在坡上<strong>朝上爬最快</strong>的那个方向。</span></li>
+    <li><span class="no">16</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3371">56:11</a><span class="vv">三种夹角：同向最快上升、反向最快下降、垂直不变。</span></li>
+    <li><span class="no">17</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4153">1:09:13</a><span class="vv"><b>等值线</b>：梯度垂直于等值线，并指向函数值增大的那一侧。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">起点：偏导数其实只在两个方向上说话</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=95">01:35</a>先把上一章的东西翻出来。一元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 处的导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>'</mo><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>)</mo></math></span>，几何上是过该点<strong>切线的斜率</strong>。到了二元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，偏导数是这么定义的：</p>
+
+<ul class="tight">
+  <li>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 时<strong>让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span> 保持不变</strong>——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=95">01:35</a>「你垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴、过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>y</mi><mn>0</mn></msub></math></span> 这个点去切一刀」，和曲面切出一条曲线，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span> 就是这条曲线在该点切线的斜率。</li>
+  <li>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 时让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></math></span> 保持不变，垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴过 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>x</mi><mn>0</mn></msub></math></span> 切一刀，切出的那条曲线的切线斜率就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span>。</li>
+</ul>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=268">04:28</a>老师在这里问了一个看似多余、其实关键的问题：<strong>二元函数的偏导数和一元函数的导数，意义是不是一样的？</strong>答案是一样。因为一旦取了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></math></span>，函数就变成了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span>——只剩 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 一个变量，它就是个一元函数，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span> 就是它的一元导数。<em>「切一刀，把另一维冻住」，这一招后面证明极值的必要条件时还会再用一次。</em></p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=333">05:33</a>于是问题来了：偏导数说到底只是「沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴」和「沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴」这两个方向上的变化率。可现实里的问题不会挑方向——站在山坡上朝哪边走都能走，想知道的是「朝<em>这个</em>方向走，高度变化多快」。要把这两个特殊方向放开成任意方向，得到的量就叫<strong>方向导数</strong>。</p>
+
+<h2 id="s2">定义：一个数，被两个记号钉死</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=333">05:33</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上一点，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 是从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 出发的一条<strong>射线</strong>（有方向的，不是直线），它与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴正向的夹角分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span>。这条射线上的点可以写成</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mo stretchy="true">{</mo><mtable><mtr><mtd><mi>x</mi><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mi mathvariant="normal">cos</mi><mo>α</mo></mtd></mtr><mtr><mtd><mi>y</mi><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mi mathvariant="normal">cos</mi><mo>β</mo></mtd></mtr></mtable></mrow><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>t</mi><mo>≥</mo><mspace width="0.25em"></mspace><mn>0</mn></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=433">07:13</a>两个记号必须钉死，否则后面全乱：</p>
+
+<dl class="kv">
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></dt>
+  <dd>射线上的点到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的<strong>距离</strong>。因为方向向量取的是单位向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo></math></span>，走得越远 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 越大——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=433">07:13</a>「这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>T</mi></math></span> 呀其实是要求大于等于零的，它是个距离」，这也就是定义里写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mo>→</mo><mn>0</mn></math></span> 的原因。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo></math></span></dt>
+  <dd>方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的<strong>方向角</strong>，也就是单位向量的两个分量：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的单位向量就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo></math></span>。</dd>
+  <dt><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mi mathvariant="normal">cos</mi><mo>β</mo></math></span></dt>
+  <dd>分别是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的改变量。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=433">07:13</a>老师用三角形说的：「这条边因为是个邻边嘛，所以其实就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>；那这条边就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi><mi mathvariant="normal">cos</mi><mo>β</mo></math></span>。」</dd>
+</dl>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=491">08:11</a>定义 · 方向导数</span>
+  <p>设函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 的某邻域内有定义，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 是给定的方向。若极限</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>t</mi></mrow></mfrac></math></div>
+  <p>存在，则称它为函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处<strong>沿方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的方向导数</strong>。</p>
+  <p>记号用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∂</mo></math></span> 而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span>：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=491">08:11</a>「注意这个地方是求<em>偏</em>，不是求导——因为这里的这个方向是无数种方向，沿着很多的方向，所以这个地方是求偏导。」</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么分母是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，而不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 或 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi></math></span></span>
+  <p>变化率的标准长相永远是「<strong>改变量 ÷ 走过的距离</strong>」。这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 就是「沿着这个方向真正走出的距离」，所以分母取它。</p>
+  <p>如果分母换成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，算出来的就变成「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 每增加一点、函数值变多少」。这个量和方向之间的关系被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴上的投影比例搅在一起，既不是方向上的斜率，也丧失了「与坐标系无关」的性质。用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 作分母，得到的才是纯粹的、只依赖方向的量——<mark>沿着这个方向走，每走一个单位，函数值改变多少。</mark></p>
+  <p>顺便回答一个常见疑问：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 是距离，能不能取负？<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=491">08:11</a>不能。射线只管一个方向，反方向是<em>另一条射线</em>，有它自己的方向导数——这一点下一段马上会用上。</p>
+</div>
+
+<h2 id="s3">方向导数到底是个什么东西</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=661">11:01</a>老师停下来问了一个看似简单、其实极容易答错的问题：<strong>方向导数是个数，还是个向量？</strong></p>
+
+<p>答案是<mark>一个数</mark>。理由三句话就够：函数值是个数，两个函数值相减还是个数；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 是距离，大于等于零，也是个正数；一个数除以一个正数，当然还是个数。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=690">11:30</a>既然如此，它就可以是正、是负、是零：</p>
+
+<ul class="tight">
+  <li><strong>正</strong>：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=690">11:30</a>变化以后的函数值比变化以前大，分子为正，除以正的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，比值极限为正。</li>
+  <li><strong>零</strong>：变化前后函数值相等，分子是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</li>
+  <li><strong>负</strong>：变化以后的函数值更小，分子为负，比值极限为负。</li>
+</ul>
+
+<p>符号有具体的几何含义：<em>正号代表沿着这个方向函数值在增大，负号代表在减小。</em>这一点下一段要反复用。</p>
+
+<div class="blk trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=587">09:47</a>最该记住的一句话：方向是「平面上」的方向</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=587">09:47</a>老师原话：「这个地方大家一定要引起一个重视——我们这里指的这个方向，是<strong>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 这个面上的一个平面方向</strong>。」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2005">33:25</a>讲到例题时他又强调了一遍：「这里说的方向是平面上的方向，不是空间中的方向。你看我这个图，这一堆画的是空间上的方向，但是我们这里说的方向是在这个平面上的方向。」</p>
+  <p>这句话在别处可能只是啰嗦，在这里却是救命的：<mark>方向导数的定义图画在二维平面上，被描述的函数却是三维的一张曲面。</mark>先分清二维还是三维，从定义一直贯穿到等值线，是本页最容易翻车的地方。</p>
+</div>
+
+<h2 id="s4">四种特殊方向：老师比课本多补了两种</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=727">12:07</a>课本只讨论了两种特殊方向，老师说他再补两种，一共四种——因为把这四种凑齐，方向导数「带符号」这件事就彻底清楚了。</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span></th><th>单位向量</th><th>定义式里剩下什么</th><th>结果</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴正方向</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo></math></span>（课本有）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴负方向</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>−</mo><mi>t</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo></math></span>（<strong>老师补的</strong>）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴正方向</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>+</mo><mi>t</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo></math></span>（课本有）</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴负方向</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>−</mo><mi>t</mi><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 除以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>y</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo></math></span>（<strong>老师补的</strong>）</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1584">26:24</a>看第二行是怎么来的。取方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>，射线上的点是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>−</mo><mi>t</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span>——注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 依然是<strong>正的</strong>（它是距离），而坐标比原来小了。代人定义：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mfrac><mrow><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>−</mo><mi>t</mi><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo><mo>−</mo><mi>f</mi><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>t</mi></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1584">26:24</a>要把这个式子凑成偏导数的定义，就得把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>t</mi></math></span> 当成一个整体。老师在黑板上凑了一下：「我在这里凑个负号，在外头凑个负号，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>t</mi></math></span> 也做成个整体，它其实也是偏导数的定义——但是有一个问题，他现在外头多了一个负号。」于是结果是对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的偏导数<strong>取相反数</strong>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1262">21:02</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>x</mi><mo>+</mo><mi>y</mi></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span>，在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 处用<strong>定义</strong>分别求沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 两个方向的方向导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：故意不用公式，回到定义，看清那个「一正一负」是怎么来的</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1262">21:02</a>先看清楚这个函数：<strong>因为题目说 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span> 一直不变</strong>，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>——它其实是一个一元函数。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1333">22:13</a>「求二元函数偏导其实跟一元函数求导是一样的，因为你对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导的时候 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 假设是常数。」它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>z</mi></math></span> 面上是一条直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span>，斜率恒为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</p>
+    <p><strong>沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 方向。</strong>点从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 正方向移动距离 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，落到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，函数值从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>2</mn></math></span> 变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>t</mi><mo>,</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>2</mn><mo>+</mo><mi>t</mi></math></span>。代人定义：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mfrac><mrow><mo>(</mo><mn>2</mn><mo>+</mo><mi>t</mi><mo>)</mo><mo>−</mo><mn>2</mn></mrow><mrow><mi>t</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mfrac><mrow><mi>t</mi></mrow><mrow><mi>t</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1524">25:24</a>老师说这其实就是「对边比邻边，是它的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">tan</mi></math></span> 的值」——斜率为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，方向导数就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</p>
+    <p><strong>沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 方向。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1584">26:24</a>这次 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 依然是正的距离，但坐标<strong>减少</strong>了，点落到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>−</mo><mi>t</mi><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，函数值变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>−</mo><mi>t</mi></math></span>：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mfrac><mrow><mo>(</mo><mn>2</mn><mo>−</mo><mi>t</mi><mo>)</mo><mo>−</mo><mn>2</mn></mrow><mrow><mi>t</mi></mrow></mfrac><mo>=</mo><munder><mo largeop="true" movablelimits="true">lim</mo><mrow><mi>t</mi><mo>→</mo><mspace width="0.25em"></mspace><msup><mn>0</mn><mrow><mo form="prefix">+</mo></mrow></msup></mrow></munder><mfrac><mrow><mo form="prefix">−</mo><mi>t</mi></mrow><mrow><mi>t</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></div>
+    <p><strong>两个结果互为相反数。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1645">27:25</a>老师在黑板上把两支箭头画出来：「沿着这个方向，它的函数值是<em>越来越大</em>，变化率就是正的；沿着那个方向，它的函数值越来越小，变化率就是负的。」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1735">28:55</a>他给这个现象下了一句总结：「求这个偏导就一个数，但是沿着这两个方向，它的方向导数是俩数，并且这俩数<strong>成相反数</strong>。」</p>
+    <p><strong>要点</strong>：同一条直线、同一个点、同一个斜率，但沿着直线往两个相反方向走，变化率差一个符号。<mark>「方向导数」这个名字里的「方向」，指的就是这个朝向——它是双向直线之外多出来的那点信息。</mark></p>
+    <div class="trap">
+      <span class="lbl">这一步最容易错：以为「切线的斜率」就是方向导数</span>
+      <p><span class="bad">「方向导数就是切线斜率。」</span>这句话在这里<em>凑巧</em>对了（因为函数恰好退化成了一元），但一般情形下是错的。切线的斜率只有一个数，方向导数却随着方向变号。<strong>方向导数描述的是「沿某个方向函数值的变化率」，只有在函数退化成曲线时它才与某个斜率重合。</strong></p>
+      <p>把这一条和前面那张表放在一起看：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub></math></span> 是「沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mi>x</mi></math></span> 方向的方向导数」，而「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的偏导数」只有一个，就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1948">32:28</a>老师说他正是为了这件事才把四种方向都补上。</p>
+    </div>
+  </div>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="平面上从 P₀ 出发的四个坐标方向及它们对应的方向导数">
+    <line x1="34" y1="140" x2="308" y2="140" class="m-line" stroke-width="1.3"></line>
+    <polygon points="318,140 308,136 308,144" class="m-fill"></polygon>
+    <line x1="190" y1="242" x2="190" y2="36" class="m-line" stroke-width="1.3"></line>
+    <polygon points="190,28 186,38 194,38" class="m-fill"></polygon>
+    <text x="310" y="128" class="m-sub" font-size="11.5">x</text>
+    <text x="200" y="32" class="m-sub" font-size="11.5">y</text>
+
+    <line x1="190" y1="140" x2="288" y2="140" class="m-acc" stroke-width="2.4"></line>
+    <polygon points="296,140 284,135 284,145" class="m-fill-a"></polygon>
+    <line x1="190" y1="140" x2="98" y2="140" class="m-warn" stroke-width="2.4"></line>
+    <polygon points="90,140 102,135 102,145" class="m-fill-w"></polygon>
+    <line x1="190" y1="140" x2="190" y2="52" class="m-good" stroke-width="2.4"></line>
+    <polygon points="190,44 185,56 195,56" class="m-fill-g"></polygon>
+    <line x1="190" y1="140" x2="190" y2="228" class="m-vio" stroke-width="2.4"></line>
+    <polygon points="190,236 185,224 195,224" class="m-fill-v"></polygon>
+    <circle cx="190" cy="140" r="4.4" class="m-fill-a"></circle>
+    <text x="176" y="132" class="m-txt" font-size="11.5" text-anchor="end">P₀</text>
+
+    <text x="298" y="146" class="m-acc" font-size="11.5">(1, 0)</text>
+    <text x="82" y="146" class="m-warn" font-size="11.5" text-anchor="end">(−1, 0)</text>
+    <text x="200" y="52" class="m-good" font-size="11.5">(0, 1)</text>
+    <text x="200" y="234" class="m-vio" font-size="11.5">(0, −1)</text>
+
+    <text x="336" y="46" class="m-txt" font-size="12">四个方向、四个结果</text>
+    <text x="336" y="74" class="m-acc" font-size="11.5">x 正方向 → f x</text>
+    <text x="336" y="96" class="m-warn" font-size="11.5">x 负方向 → −f x</text>
+    <text x="336" y="118" class="m-good" font-size="11.5">y 正方向 → f y</text>
+    <text x="336" y="140" class="m-vio" font-size="11.5">y 负方向 → −f y</text>
+    <text x="336" y="172" class="m-txt" font-size="11.5">同一根棍，两个方向的</text>
+    <text x="336" y="192" class="m-txt" font-size="11.5">斜率互为相反数</text>
+    <text x="336" y="218" class="m-sub" font-size="11.5">所以「对 x 的偏导数」只有一个数，</text>
+    <text x="336" y="238" class="m-sub" font-size="11.5">而沿两个方向的方向导数是一对数</text>
+  </svg>
+  <figcaption><b>四个坐标方向，四个结果，恰好两两相反。</b>蓝色 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>，橙色 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub></math></span>；绿色 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span>，紫色 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>y</mi></msub></math></span>。<em>注意 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span> 在四次计算里始终是正的距离</em>——变号的不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>t</mi></math></span>，而是函数值的改变量。这就是「同一根棍，朝上斜率是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">+</mo><mn>1</mn></math></span>、朝下斜率是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>」的算术来源。</figcaption>
+</figure>
+
+<h2 id="s5">计算公式：定理与它要求的「单位化」</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1948">32:28</a>如果每次都回到定义算极限，这一节就没法用了。课本给出的定理把这件事一次解决：</p>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 方向导数的计算公式</span>
+  <p>如果函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> <strong>可微</strong>，那么它在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处沿任意方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的方向导数都存在，并且</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><msub><mi>f</mi><mi>x</mi></msub><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><msub><mi>f</mi><mi>y</mi></msub><mi mathvariant="normal">cos</mi><mo>β</mo></math></div>
+  <p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo></math></span> 是方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的<strong>单位向量</strong>。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1948">32:28</a>定理的证明老师说「这个值大家直接记这个计算的公式」，我们就照做——真正需要说清的是它要求什么、容易漏什么。</p>
+
+<div class="why">
+  <span class="lbl">为什么条件写的是「可微」，不是「偏导存在」</span>
+  <p>公式的右端只用到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span> 两个数，看上去「两个偏导存在」就够了。但左端是沿<strong>任意</strong>方向的极限，而两个偏导只提供了两个方向的信息——信息量根本不够。</p>
+  <p>真正让公式成立的是<mark>可微</mark>：它保证全增量能写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>z</mi><mo>=</mo><msub><mi>f</mi><mi>x</mi></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>+</mo><msub><mi>f</mi><mi>y</mi></msub><mo>Δ</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>+</mo><mi>o</mi><mo>(</mo><mo>ρ</mo><mo>)</mo></math></span> 这个样子，也就是说，曲面在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 附近「足够平」，可以被一张平面贴住。有了这张平面，任意方向的变化率当然由平面的倾斜情况完全决定，而平面的倾斜正好由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span> 两个数描述完。</p>
+  <p>这个「条件写在可微上」的细节值得单记一笔：<a href="../P085-方向导数与梯度/index.html">方向导数与梯度</a> 里给过一个反例——圆锥面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 在原点处两个偏导都不存在，但沿任意方向的方向导数都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。可见「偏导存在」与「方向导数存在」谁也不包含谁。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1948">32:28</a>头号丢分点：方向忘记单位化</span>
+  <p>公式里要的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo></math></span>，它<strong>必须是单位向量</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1948">32:28</a>老师说得很重：「有个问题就是这个方向余弦他一般不会直接给你——它指定的某一个方向，有的时候是用向量给你的。那么这时候<em>你一定要做单位化，或者叫标准化的这个过程</em>，这个地方是我们同学经常会忘掉的。」</p>
+  <p>判据：<mark>方向向量的模必须等于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</mark>题目给的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>P</mi><mi>Q</mi></mrow><mo>⃗</mo></mover></math></span> 这种量，先除以自己的模再代人。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2005">33:25</a>求函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>x</mi><msup><mi>e</mi><mrow><mn>2</mn><mi>y</mi></mrow></msup></math></span> 在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 处沿从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span> 方向的方向导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：方向单位向量 → 两个偏导在该点的值 → 套公式</span>
+    <p><strong>第一步，求方向单位向量。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>P</mi><mi>Q</mi></mrow><mo>⃗</mo></mover><mo>=</mo><mo>(</mo><mn>2</mn><mo>−</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo>−</mo><mn>0</mn><mo>)</mo><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，模为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>2</mn></mrow></msqrt></math></span>，所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mi>l</mi></msub><mo>=</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></div>
+    <p><strong>第二步，求偏导。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>x</mi></msub><mo>=</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>y</mi></mrow></msup></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>y</mi></msub><mo>=</mo><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mn>2</mn><msup><mi>e</mi><mrow><mn>2</mn><mi>y</mi></mrow></msup><mo>=</mo><mn>2</mn><mi>x</mi><msup><mi>e</mi><mrow><mn>2</mn><mi>y</mi></mrow></msup></math></span>。在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 处：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>x</mi></msub><mo>=</mo><mn>1</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>y</mi></msub><mo>=</mo><mn>2</mn></math></span>。</p>
+    <p><strong>第三步，套公式。</strong></p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>+</mo><mn>2</mn><mo>⋅</mo><mrow><mo stretchy="true">(</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo stretchy="true">)</mo></mrow><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2222">37:02</a>答案是负的。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2222">37:02</a>老师说这正好拿来印证前面那段理论：「大家看它的这个方向余弦其实是一个负数，也就是说沿着那个方向，它是一个<strong>函数值减小</strong>的方向。」</p>
+    <p><strong>要点</strong>：这道题从头到尾只有三个动作，老师说「纯用结论来做，做完了以后你还是不能理解方向导数是什么东西」——所以例 1 那种用定义硬算的题不能省。</p>
+  </div>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2365">39:25</a>三元的情形完全平行，只是多一个方向角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo></math></span>，多一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>z</mi></msub><mi mathvariant="normal">cos</mi><mo>γ</mo></math></span>：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><msub><mi>f</mi><mi>x</mi></msub><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><msub><mi>f</mi><mi>y</mi></msub><mi mathvariant="normal">cos</mi><mo>β</mo><mo>+</mo><msub><mi>f</mi><mi>z</mi></msub><mi mathvariant="normal">cos</mi><mo>γ</mo></math></div>
+
+<p>其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>)</mo></math></span> 是方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的单位向量，满足 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>α</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>β</mo><mo>+</mo><msup><mi mathvariant="normal">cos</mi><mrow><mn>2</mn></mrow></msup><mo>γ</mo><mo>=</mo><mn>1</mn></math></span>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2365">39:25</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mi>x</mi><mi>y</mi><mo>+</mo><mi>y</mi><mi>z</mi><mo>+</mo><mi>z</mi><mi>x</mi></math></span>，求它在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span> 处沿方向角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>α</mo><mo>=</mo><mn>6</mn><mn>0</mn><mo>°</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>β</mo><mo>=</mo><mn>4</mn><mn>5</mn><mo>°</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>γ</mo><mo>=</mo><mn>6</mn><mn>0</mn><mo>°</mo></math></span> 的方向导数。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：方向角直接给全了，省掉单位化那一步；剩下的就是求三个偏导</span>
+    <p><strong>第一步，求三个偏导。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mi>y</mi><mo>+</mo><mi>z</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mi>x</mi><mo>+</mo><mi>z</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>z</mi></msub><mo>=</mo><mi>x</mi><mo>+</mo><mi>y</mi></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2447">40:47</a>「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求导就是一，所以就是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 加上 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span>。」</p>
+    <p><strong>第二步，代人 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>)</mo></math></span>。</strong></p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo>=</mo><mn>3</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo>=</mo><mn>3</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>f</mi><mi>z</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>2</mn></math></div>
+    <p><strong>第三步，代人公式。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2447">40:47</a>「因为这个题的阿尔法、贝塔、伽马都给你了，那你就直接按公式来呗。」</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><mn>3</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>6</mn><mn>0</mn><mo>°</mo><mo>+</mo><mn>3</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>4</mn><mn>5</mn><mo>°</mo><mo>+</mo><mn>2</mn><mi mathvariant="normal">cos</mi><mspace width="0.25em"></mspace><mn>6</mn><mn>0</mn><mo>°</mo></math></div>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>=</mo><mn>3</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>+</mo><mn>3</mn><mo>⋅</mo><mfrac><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mo>+</mo><mn>2</mn><mo>⋅</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>3</mn><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></div>
+    <p><strong>要点</strong>：三元只是分子上多一项，做题流程一个字都不用改。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2365">39:25</a>老师提醒的仍然是同一件事：「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 的偏导其实每个同学都会求，那就是注意这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>β</mo></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>γ</mo></math></span>。」</p>
+    <div class="trap">
+      <span class="lbl">这里最容易错</span>
+      <p><span class="bad">方向角给全了就以为不必管单位化。</span>方向角确实直接给出单位向量，但要先检查三个余弦平方和是否为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。本题 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>4</mn></mrow></mfrac><mo>=</mo><mn>1</mn></math></span> ✓，合法。如果题目给的方向角平方和不为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，那它就不是方向角，得重新核对。</p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s6">梯度：把公式读成两个向量的点乘</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2540">42:20</a>现在的处境是：方向随便取，方向导数就跟着变。能不能把「所有方向的信息」打包成一个东西？能，而且它就在刚才那个公式里。把右边换个写法：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><msub><mi>f</mi><mi>y</mi></msub><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>f</mi><mi>y</mi></msub><mo>)</mo><mo>⋅</mo><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mspace width="1em"></mspace><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3025">50:25</a>右边是<strong>两个向量的数量积</strong>（老师叫它「点乘」）：第一个向量只与函数和点有关，第二个向量只与方向有关。给第一个向量一个名字，就是梯度。</p>
+
+<div class="blk def">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2540">42:20</a>定义 · 梯度</span>
+  <p>设函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span> 处可偏导，则称向量</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><msub><mo>|</mo><mrow><msub><mi>P</mi><mn>0</mn></msub></mrow></msub><mo>=</mo><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>f</mi><mi>y</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo><mo>)</mo><mo>=</mo><msub><mi>f</mi><mi>x</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo><mspace width="1em"></mspace><mi>i</mi><mo>+</mo><msub><mi>f</mi><mi>y</mi></msub><mo>(</mo><msub><mi>P</mi><mn>0</mn></msub><mo>)</mo><mspace width="1em"></mspace><mi>j</mi></math></div>
+  <p>为函数在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处的<strong>梯度</strong>。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2620">43:40</a>定义很短，但三件事必须记清：</p>
+
+<ol class="tight">
+  <li>梯度是一个<strong>向量</strong>（方向导数是一个<strong>数</strong>）。这是全节最大的一处混淆来源。</li>
+  <li>二元函数的梯度是<strong>二维</strong>向量。</li>
+  <li>它躺在<strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面</strong>上。虽然 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 描述的是一张三维曲面，但梯度本身是平面上的箭头。</li>
+</ol>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>对象</th><th>是数还是向量</th><th>维度</th><th>住在哪里</th><th>能不能取负</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>方向导数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac></math></span></td><td><strong>数</strong></td><td>—</td><td>—</td><td>能，可正可负可零</td></tr>
+      <tr><td>梯度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi></math></span>（二元）</td><td><strong>向量</strong></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span> 维</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面</td><td>不能，「负」只表示反向</td></tr>
+      <tr><td>梯度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi></math></span>（三元）</td><td><strong>向量</strong></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span> 维</td><td>空间</td><td>同上</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2687">44:47</a>拿一个最简单的例子把梯度落地：平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>4</mn></math></span>，点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。写成显函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>4</mn><mo>−</mo><mi>x</mi><mo>−</mo><mi>y</mi></math></span>，则 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>x</mi></msub><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>z</mi><mi>y</mi></msub><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span>。所以</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>z</mi><msub><mo>|</mo><mrow><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow></msub><mo>=</mo><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>1</mn><mo>)</mo></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2746">45:46</a>这条箭头指向第三象限。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2865">47:45</a>接下来是这一节最生动的三分钟：老师随手拿起手边的笔记本，斜着举起来当山坡。</p>
+
+<div class="said">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2865">47:45</a>「笔记本当山坡」</span>
+  <q>我随手拿了一个笔记本……平面就是个面呗，所以我的这个笔记本便是斜着放的。那么这时候刚才的那个点就对应到平面上的某一个点。我们求的这个梯度这个方向是什么方向呢？就是这个点——假设我们现在这个面是一个山坡，那么你在这个点爬山最快的方向，是不是直接朝上走啊？<strong>这就是爬山最快的方向，就是它的梯度。</strong></q>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=2912">48:32</a>他接着说：「所以这个梯度的方向，就是从空间上站在这个曲面上爬山最快、或者说它的函数值变化率最大的方向。」<mark>课本上没有给任何例子来解释「求出来的梯度到底是个什么东西」，这个笔记本就是那个例子。</mark></p>
+</div>
+
+<h2 id="s7">三条性质：θ 取三种值的时候</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3090">51:30</a>把定理的公式和梯度的定义拼在一起，再用数量积的公式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>：</p>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mi>l</mi></msub><mo>=</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mo>⋅</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>⋅</mo><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></div>
+
+<p>第二个向量的模是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>（它是单位向量），所以省掉了。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 是梯度与方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 的夹角。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3150">52:30</a>老师说课本「这个地方处理得比较精细」，正是因为它保留了「一个是梯度、一个是单位向量」这个区别——只有这样，才能顺理成章地把模 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 省掉。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3150">52:30</a>接下来是本节最关键的一个追问：<strong>谁固定、谁变化？</strong></p>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3229">53:49</a>「谁固定、谁变化」——三条性质的全部秘密</span>
+  <p>函数是确定的、点是确定的，所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span> 算出来就是两个确定的数——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3229">53:49</a>老师连问了三次：「谁是固定的？谁呀？<strong>梯度是固定的</strong>。」既然如此，它的模 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span> 也就是一个固定的正数。</p>
+  <p>而方向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>l</mi></math></span> 可以随便取，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span> 跟着变，<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3278">54:38</a>「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi></math></span> 的取值范围是从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，大家是比较熟的」。</p>
+  <p>于是方向导数就是「一个固定的正数」乘上「一个在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 之间摆动的数」：</p>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo form="prefix">−</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mspace width="1em"></mspace><mo>≤</mo><mspace width="1em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mspace width="1em"></mspace><mo>≤</mo><mspace width="1em"></mspace><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></div>
+  <p>上界在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mn>1</mn></math></span>（方向与梯度同向）时取到，下界在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mo form="prefix">−</mo><mn>1</mn></math></span> 时取到。这就把三条性质一次说完了——<mark>不需要额外记忆，只要分清谁在动谁不动。</mark></p>
+</div>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>夹角 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo></math></span></th><th><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span></th><th>方向导数的值</th><th>怎么理解（爬山）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>（方向 = 梯度方向）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></td>
+        <td>最大值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span></td>
+        <td><strong>直接朝上爬</strong>，升得最快</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn><mn>8</mn><mn>0</mn><mo>°</mo></math></span>（方向 = 梯度反向）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span></td>
+        <td>最小值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span></td>
+        <td><strong>直接朝下走</strong>，降得最快</td>
+      </tr>
+      <tr>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><mn>0</mn><mo>°</mo></math></span>（与梯度垂直）</td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></td>
+        <td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span></td>
+        <td><strong>横着走</strong>，高度一点也不变</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3570">59:30</a>老师讲到第三种情形时又把笔记本拿出来了：「你现在在爬山，你在中间的一个点，这个地方上山最快直接向上，下山最快直接向下；<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3666">1:01:06</a>你如果朝左或朝右平着走，那你就没上山也没下山，你就平着走啊。所以这时候函数值的变化率是个零。」</p>
+
+<div class="note">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3726">1:02:06</a>一个课本没写、老师补上的细节</span>
+  <p>课本在第三种情形里写的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3726">1:02:06</a>老师说这个写法很严谨，但他自己在黑板上顺手写了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，然后当场纠正：<strong>「与其说是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>，不如记住：和梯度垂直的方向有两个。」</strong>因为两个向量之间的夹角取值范围是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>3</mn><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 根本不在这个范围里。</p>
+  <p>记法改成这样最保险：<mark><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 都让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>，所以「变化率为零的方向」永远有<strong>两个</strong>（互为反向）。</mark>这一点在例题里是最常见的漏答案处。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 250" role="img" aria-label="方向导数是梯度在方向单位向量上的投影，夹角越大投影越短">
+    <line x1="110" y1="230" x2="390" y2="230" class="m-thin" stroke-width="1.1" stroke-dasharray="4 4"></line>
+    <line x1="110" y1="230" x2="110" y2="60" class="m-thin" stroke-width="1.1" stroke-dasharray="4 4"></line>
+    <line x1="110" y1="230" x2="330" y2="140" class="m-acc" stroke-width="2.4"></line>
+    <polygon points="338,136 324,138 328,147" class="m-fill-a"></polygon>
+    <line x1="110" y1="230" x2="208" y2="44" class="m-vio" stroke-width="2.2"></line>
+    <polygon points="212,36 205,48 214,49" class="m-fill-v"></polygon>
+    <line x1="330" y1="140" x2="195" y2="69" class="m-thin" stroke-width="1.2" stroke-dasharray="5 4"></line>
+    <line x1="110" y1="230" x2="195" y2="69" class="m-good" stroke-width="3.4"></line>
+    <circle cx="110" cy="230" r="4.4" class="m-fill-a"></circle>
+    <polyline points="163.7,208.1 159.1,199.1 153,191 145.6,184.2 137.1,178.7" fill="none" class="m-thin" stroke-width="1.2"></polyline>
+    <text x="166" y="196" class="m-txt" font-size="11.5">θ</text>
+    <text x="102" y="248" class="m-sub" font-size="11.5">O</text>
+    <text x="344" y="132" class="m-acc" font-size="12">梯度 grad f</text>
+    <text x="214" y="40" class="m-vio" font-size="11.5">方向单位向量 e，模为 1</text>
+    <text x="186" y="62" class="m-good" font-size="11.5">投影 = 方向导数</text>
+    <text x="272" y="104" class="m-sub" font-size="11.5">从梯度端点向 e 作垂线</text>
+    <text x="24" y="84" class="m-txt" font-size="11.5">方向导数</text>
+    <text x="24" y="104" class="m-txt" font-size="11.5">= |grad f| cos θ</text>
+    <text x="24" y="128" class="m-sub" font-size="11.5">= 梯度在 e 上的投影</text>
+    <text x="24" y="160" class="m-sub" font-size="11.5">θ 越大，投影越短；</text>
+    <text x="24" y="180" class="m-sub" font-size="11.5">θ = 90° 时投影缩成 0</text>
+  </svg>
+  <figcaption><b>「方向导数 = 梯度 · 单位向量」的几何读法。</b>橙色是梯度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi></math></span>，紫色是方向单位向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mi>l</mi></msub></math></span>（长度就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>）。从梯度的端点向 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mi>l</mi></msub></math></span> 作一条垂线，垂足落下的那一段<strong>绿色投影</strong>就是方向导数的值。<em><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mi>l</mi></msub></math></span> 转一圈，投影就在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mo form="prefix">−</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mo>,</mo><mspace width="1em"></mspace><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mo>]</mo></math></span> 之间来回伸缩</em>：与梯度同向时取到最长（最大值），与梯度垂直时缩成一个点（值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）。</figcaption>
+</figure>
+
+<h2 id="s8">结论一：最大变化率就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span></h2>
+
+<div class="blk thm">
+  <span class="lbl">结论 · 方向导数的最大值</span>
+  <ul class="tight">
+    <li>方向导数在<strong>沿梯度方向</strong>时取到最大值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span>；</li>
+    <li>在<strong>沿梯度反方向</strong>时取到最小值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span>；</li>
+    <li>函数值增加最快的方向就是梯度方向，这个「最快的速度」就是梯度的模。</li>
+  </ul>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3371">56:11</a>一句话就能背下来：<mark>梯度方向是函数值增加最快的方向，它的模就是这个最快的速度。</mark>注意「速度」和「方向」是两个答案——题目问「沿什么方向变化最快」要答方向（一个单位向量或一个向量），问「变化率是多少」要答数（梯度的模）。</p>
+
+<div class="said">
+  <span class="lbl">顺带一句：为什么课本那段读起来像循环定义</span>
+  <p>课本是先定义梯度、再用「方向导数最大」解释它的含义；可「哪个方向最大」这件事本身又要靠梯度来算。老师说他读到这儿很抓狂：</p>
+  <q>「方向导数最大」是用梯度定义的，然后又解释梯度是用方向导数定义的——什么是儿子？他爹的下一代就叫儿子；那什么是爹？他儿子的上一代就叫爹。两个搅和着定义，你说这玩意儿谁能受得了啊？</q>
+  <p>课本的写法逻辑上并没有错（它把「方向」和「最大值」两件事合在一起说，表述更完整），但读起来确实绕。<strong>建议：把梯度的定义 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>)</mo></math></span> 记死，把这三句话当成对定义的解释</strong>，不要试图从课本那段话里反推。</p>
+</div>
+
+<h2 id="s9">结论二：梯度垂直于等值线</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4153">1:09:13</a>先说什么叫等值线。给定二元函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo></math></span>，把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 固定成一个常数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>C</mi></math></span>，方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>C</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上画出一条曲线，就叫<strong>等值线</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4207">1:10:07</a>老师的描述是：「我先令 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 等于一，横着去切它，切完了以后在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上的这条曲线是这个部分；然后 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 等于二去切，投影是这个线；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 等于三去横着切，又是另一条。」</p>
+
+<div class="trap">
+  <span class="lbl">一句必须说清的话：等值线在平面上</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4207">1:10:07</a>老师连着强调了两次：「<mark>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上的这一组曲线，才叫等值线。不是这些（指着三维曲面的截线），是这些（指着平面上的投影）。</mark>」这是本节第二次出现「二维还是三维」的提醒。气压图上的等压线、地形图上的等高线，都是这个意思——它们是画在纸上的平面曲线。</p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4295">1:11:35</a>现在在等值线上取一点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub><mo>(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>)</mo></math></span>，问它在这点的法向量是什么。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4450">1:14:10</a>老师没有直接抄课本的结论，而是推了一遍。把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mi>C</mi></math></span> 看成隐函数 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>y</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，用隐函数求导公式（<a href="../P081-隐函数求导/index.html">隐函数求导</a>）：</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mi>d</mi><mi>y</mi></mrow><mrow><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><msub><mi>f</mi><mi>x</mi></msub></mrow><mrow><msub><mi>f</mi><mi>y</mi></msub></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4450">1:14:10</a>他顺带复习了隐函数求导的两个注意点：「一个是要加一个<strong>负号</strong>；这里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、这里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>」——分子放 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>，分母放 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span>，前面配一个负号。这个数就是等值线在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub></math></span> 处的<strong>切线斜率</strong>。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4518">1:15:18</a>切线与法线垂直，两条直线的斜率乘积为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>1</mn></math></span>，所以法线斜率是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mi>d</mi><mi>y</mi><mo>/</mo><mi>d</mi><mi>x</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>f</mi><mi>y</mi></msub></mrow><mrow><msub><mi>f</mi><mi>x</mi></msub></mrow></mfrac></math></span>。写成向量形式，法线方向可以取</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>f</mi><mi>y</mi></msub><mo>)</mo></math></div>
+
+<p>而这就是<strong>梯度</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4632">1:17:12</a>把它单位化，得到</p>
+
+<div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>)</mo></mrow><mrow><msqrt><mrow><msubsup><mi>f</mi><mi>x</mi><mrow><mn>2</mn></mrow></msubsup><mo>+</mo><msubsup><mi>f</mi><mi>y</mi><mrow><mn>2</mn></mrow></msubsup></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mrow><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi></mrow><mrow><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></mrow></mfrac></math></div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4684">1:18:04</a>课本写出这个式子之后又做了一步：把分母乘到左边，得到「梯度 = 它的模 × 单位法向量」。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4815">1:20:15</a>老师说这其实在说同一件事——<strong>梯度的方向就是等值线的法线方向</strong>。</p>
+
+<div class="blk thm">
+  <span class="lbl">结论 · 梯度与等值线</span>
+  <p>梯度与过该点的等值线<strong>垂直</strong>，并且指向<strong>函数值增大</strong>的那一侧。</p>
+  <p>把本页所有说法串起来：<mark>梯度 = 等值线的法向量 = 上升最快的方向，它的模 = 上升最快的速度。</mark></p>
+</div>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4815">1:20:15</a>三元函数的情形完全一样，只是等值线换成了<strong>等值面</strong>：方程 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mi>C</mi></math></span> 在空间里是一张曲面，比如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>z</mi><mrow><mn>2</mn></mrow></msup><mo>=</mo><mn>1</mn></math></span> 是球面。这时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>=</mo><mo>(</mo><msub><mi>f</mi><mi>x</mi></msub><mo>,</mo><msub><mi>f</mi><mi>y</mi></msub><mo>,</mo><msub><mi>f</mi><mi>z</mi></msub><mo>)</mo></math></span> 是一个三维向量，它的方向正是等值面在该点的法向量方向。这条结论正好就是 <a href="../P133-【黑板】多元函数微分学的几何应用/index.html">【黑板】多元函数微分学的几何应用</a> 里「曲面的法向量是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>」的另一个说法——<a href="../P133-【黑板】多元函数微分学的几何应用/index.html">【黑板】多元函数微分学的几何应用</a> 从「曲线在曲面上」推出来，本页从「方向导数最大」推出来，<strong>两条完全不同的路通向同一个结论。</strong></p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 290" role="img" aria-label="同心等值线与沿法向朝外的梯度向量场">
+    <circle cx="200" cy="150" r="34" class="m-thin" stroke-width="1.2" fill="none"></circle>
+    <circle cx="200" cy="150" r="66" class="m-line" stroke-width="1.6" fill="none"></circle>
+    <circle cx="200" cy="150" r="98" class="m-thin" stroke-width="1.2" fill="none"></circle>
+    <circle cx="200" cy="150" r="130" class="m-thin" stroke-width="1.2" fill="none"></circle>
+
+    <line x1="253.7" y1="181" x2="290.9" y2="202.5" class="m-acc" stroke-width="2"></line>
+    <polygon points="290.9,202.5 280.9,201.9 285.4,194.1" class="m-fill-a"></polygon>
+    <line x1="200" y1="212" x2="200" y2="255" class="m-acc" stroke-width="2"></line>
+    <polygon points="200,255 195.5,246 204.5,246" class="m-fill-a"></polygon>
+    <line x1="146.3" y1="181" x2="109.1" y2="202.5" class="m-acc" stroke-width="2"></line>
+    <polygon points="109.1,202.5 114.6,194.1 119.1,201.9" class="m-fill-a"></polygon>
+    <line x1="146.3" y1="119" x2="109.1" y2="97.5" class="m-acc" stroke-width="2"></line>
+    <polygon points="109.1,97.5 119.1,98.1 114.6,105.9" class="m-fill-a"></polygon>
+    <line x1="200" y1="88" x2="200" y2="45" class="m-acc" stroke-width="2"></line>
+    <polygon points="200,45 204.5,54 195.5,54" class="m-fill-a"></polygon>
+    <line x1="253.7" y1="119" x2="290.9" y2="97.5" class="m-acc" stroke-width="2"></line>
+    <polygon points="290.9,97.5 285.4,105.9 280.9,98.1" class="m-fill-a"></polygon>
+
+    <circle cx="200" cy="150" r="3.6" class="m-fill-w"></circle>
+    <text x="208" y="146" class="m-sub" font-size="11.5">越往外 f 越大</text>
+    <text x="336" y="66" class="m-txt" font-size="12">四个同心圆 = 等值线 f = C</text>
+    <text x="336" y="94" class="m-sub" font-size="11.5">同一个圆上 f 的值处处相同</text>
+    <text x="336" y="126" class="m-acc" font-size="12">每个箭头 = 该点的梯度</text>
+    <text x="336" y="150" class="m-sub" font-size="11.5">它一定与所在的等值线垂直</text>
+    <text x="336" y="174" class="m-sub" font-size="11.5">并且指向 f 增大的那一侧</text>
+    <text x="336" y="206" class="m-txt" font-size="11.5">沿着等值线横着走，f 一点不变</text>
+    <text x="336" y="230" class="m-sub" font-size="11.5">因为那个方向与梯度垂直，</text>
+    <text x="336" y="250" class="m-sub" font-size="11.5">方向导数等于 0</text>
+    <text x="24" y="282" class="m-sub" font-size="11.5">梯度垂直于等值线，且始终朝着「值更大」的一边——这就是「朝上爬最快」的平面版本</text>
+  </svg>
+  <figcaption><b>等高线 + 梯度向量场，本页最该记住的一张图。</b>四个同心圆是等值线，越往外函数值越大。图上六个橙色箭头是各点的梯度：<em>每一个都垂直于它所在的那条圆，并且一律朝外（指向值增大的一侧）</em>。<b>注意「垂直于等值线」和「沿等值线走变化率为零」其实是同一件事的两种说法</b>——因为切方向与梯度垂直，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>，方向导数自然就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。</figcaption>
+</figure>
+
+<h2 id="s10">三类计算题</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3783">1:03:03</a>老师说这一节的题目就三种：<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3783">1:03:03</a>「第一种类型的题目直接求梯度，那就不要太简单了，就直接把对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的偏导数求出来不就行了吗？」<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3960">1:06:00</a>第二种是「在某个点处问最快方向」，第三种是「问变化率为零的方向」。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 4</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3860">1:04:20</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span>，求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi></math></span>。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：没有指定点，就把带着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的表达式写出来</span>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3860">1:04:20</a>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></span> 看成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mo form="prefix">−</mo><mn>1</mn></mrow></msup></math></span>，按复合函数求导（外层幂函数、内层加一项）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mi>x</mi></mrow><mrow><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mi>y</mi></mrow><mrow><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac></math></div>
+    <p>拼成向量：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mi>x</mi></mrow><mrow><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mspace width="1em"></mspace><mi>i</mi><mo>−</mo><mfrac><mrow><mn>2</mn><mi>y</mi></mrow><mrow><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></mrow></mfrac><mspace width="1em"></mspace><mi>j</mi></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3860">1:04:20</a>老师说这道题<strong>没有指定点</strong>，所以「你就直接把带着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的给他写进去就行」；<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3960">1:06:00</a>考试时更常见的做法是指定一个点，「那你就把这个点给他带进去，最终得到一个向量就可以」。</p>
+    <div class="trap">
+      <span class="lbl">这里最容易错</span>
+      <p><span class="bad">对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导时把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 也一起处理掉。</span>求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 是常数，分母里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></math></span> 原样保留，只有 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的变化被求出来。反过来求 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span> 同理。<strong>两步都写全，别只写一半。</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 5</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3960">1:06:00</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>)</mo></math></span>，在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>P</mi><mn>0</mn></msub><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 处求：函数值增加最快的方向、减少最快的方向、以及变化率为零的方向。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三种问法分别对应「梯度方向」「梯度反向」「与梯度垂直」，所以先算梯度</span>
+    <p><strong>第一步，求偏导与梯度。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mi>y</mi></math></span>；在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 处</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><msub><mo>|</mo><mrow><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow></msub><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mn>1</mn><mo>)</mo><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mo>=</mo><msqrt><mrow><msup><mn>1</mn><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mn>1</mn><mrow><mn>2</mn></mrow></msup></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>2</mn></mrow></msqrt></math></div>
+    <p><strong>第二步，增加最快的方向。</strong>方向与梯度相同，<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3960">1:06:00</a>「你直接写一一这个方向是没问题的，课本上取的其实是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>,</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac></math></span> 也行」，要写成单位向量就是</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mn>1</mn></msub><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mi>i</mi><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mi>j</mi></math></div>
+    <p>此时方向导数取最大值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><mn>2</mn></mrow></msqrt></math></span>——<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=3960">1:06:00</a>「那不就是梯度的模吗？你这个梯度不是个一一吗，你的模不就是根二吗？」</p>
+    <p><strong>第三步，减少最快的方向。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4074">1:07:54</a>「减小最快的方向是他的梯度的<strong>反方向</strong>」，所以取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，此时方向导数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msqrt><mrow><mn>2</mn></mrow></msqrt></math></span>。</p>
+    <p><strong>第四步，变化率为零的方向。</strong>要方向导数为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>，就要 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>θ</mo><mo>=</mo><mn>0</mn></math></span>，即方向与梯度垂直。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4194">1:09:54</a>「两个向量垂直的话，不就有两个向量做点乘等于零吗？这个比较容易猜都能猜出来。」与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 垂直的可以取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span>，单位化得</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mn>3</mn></msub><mo>=</mo><mo form="prefix">±</mo><mfrac><mrow><mn>1</mn></mrow><mrow><msqrt><mrow><mn>2</mn></mrow></msqrt></mrow></mfrac><mo>(</mo><mi>i</mi><mo>−</mo><mi>j</mi><mo>)</mo></math></div>
+    <p>验证：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo><mo>⋅</mo><mo>(</mo><mn>1</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></span> ✓。</p>
+    <div class="trap">
+      <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4094">1:08:14</a>两个必须当心的坑</span>
+      <p><span class="bad">坑一：「变化最快的方向」只写梯度方向。</span>「变化最快」包含<strong>增加最快与减少最快</strong>两层意思，两者的变化率绝对值都是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span>。只写一个就漏了一半答案。</p>
+      <p><span class="bad">坑二：「变化率为零的方向」只写一个。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4094">1:08:14</a>老师把这一处单独拎出来说「这个地方我们同学<em>特别容易漏</em>」——与梯度垂直的方向在平面上有<strong>两个</strong>，互为反向，所以答案要写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">±</mo></math></span> 的形式。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 6</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4981">1:23:01</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>−</mo><mi>x</mi><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><mi>z</mi></math></span>，求在点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 处函数值变化最快的方向与变化率。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：三元函数的梯度是三维向量，其余步骤与二元完全一样</span>
+    <p><strong>第一步，求三个偏导。</strong><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4981">1:23:01</a>「对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 求偏导就是个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 求的话那这个就是一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>2</mn><mi>x</mi><mi>y</mi></math></span>，对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 求的话那这个地方就是个一。」</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><mn>3</mn><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mo form="prefix">−</mo><mn>2</mn><mi>x</mi><mi>y</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><msub><mi>f</mi><mi>z</mi></msub><mo>=</mo><mn>1</mn></math></div>
+    <p><strong>第二步，代人 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span>。</strong></p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><msub><mo>|</mo><mrow><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></msub><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mo>−</mo><mn>2</mn><mo>,</mo><mspace width="1em"></mspace><mn>1</mn><mo>)</mo></math></div>
+    <p><strong>第三步，求模。</strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mrow><msup><mn>2</mn><mrow><mn>2</mn></mrow></msup><mo>+</mo><mo>(</mo><mo form="prefix">−</mo><mn>2</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mn>1</mn><mrow><mn>2</mn></mrow></msup></mrow></msqrt><mo>=</mo><msqrt><mrow><mn>9</mn></mrow></msqrt><mo>=</mo><mn>3</mn></math></span>。</p>
+    <p><strong>第四步，回答两个方向。</strong></p>
+    <ul class="tight">
+      <li><strong>增加最快</strong>：沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>（写单位向量就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>），变化率为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>3</mn></math></span>。</li>
+      <li><strong>减少最快</strong>：沿 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo form="prefix">−</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>，变化率为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mn>3</mn></math></span>。</li>
+    </ul>
+    <p><strong>要点</strong>：这道题唯一的「新东西」是维度。从二元升到三元，梯度多一个分量，但「求偏导 → 拼成向量 → 取模」这个流程一个字都不用改。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4981">1:23:01</a>老师特别强调的仍然是那个坑：题目问「变化最快」，必须把<strong>两个</strong>方向都写出来。</p>
+  </div>
+</div>
+
+<h2 id="s11">易错清单</h2>
+
+<div class="blk trap">
+  <span class="lbl">一 · 方向忘记单位化</span>
+  <p>公式要的是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>)</mo></math></span>，它<strong>一定是单位向量</strong>。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=1948">32:28</a>题目给的方向向量（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mrow><mi>P</mi><mi>Q</mi></mrow><mo>⃗</mo></mover></math></span>）必须先除以自己的模。忘了这一步，答案会整体差一个「方向向量长度」倍。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">二 · 把方向导数当成向量</span>
+  <p>方向导数是<strong>数</strong>，可正可负可零；梯度才是<strong>向量</strong>。看到「求方向导数」就在心里念「一个数」，看到「求梯度」就念「一个箭头」。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">三 · 「变化最快」只写一个方向</span>
+  <p>「变化最快」含增加最快与减少最快<strong>两个</strong>方向；「变化率为零」也含<strong>两个</strong>方向（与梯度垂直的两个相反方向）。<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4094">1:08:14</a>这是全节最常见的漏答案点。</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">四 · 二维与三维混用</span>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=587">09:47</a>方向导数的<strong>定义图画在平面上</strong>，被描述的函数却是三维的；梯度的箭头<strong>画在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 平面上</strong>，但它不是曲面上某条切线的方向；<a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=134&amp;t=4207">1:10:07</a>等值线<strong>是平面上的曲线</strong>，不是三维曲面上的截线。做图、读图、写答案前都先问自己一句：我现在说的是平面上的事，还是空间里的事？</p>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">五 · 以为公式只要「偏导存在」</span>
+  <p>计算公式的前提是<strong>可微</strong>，比偏导存在强得多。<a href="../P085-方向导数与梯度/index.html">方向导数与梯度</a> 里的圆锥面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>+</mo><msup><mi>y</mi><mrow><mn>2</mn></mrow></msup></mrow></msqrt></math></span> 在原点处偏导不存在、方向导数却处处为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>，就是最标准的反例。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>偏导数</b> 只管两个方向</span><span class="ar">→</span>
+    <span class="n"><b>方向导数</b> 放开到任意方向（是个数）</span><span class="ar">→</span>
+    <span class="n"><b>梯度</b> 打包所有方向（是向量）</span><span class="ar">→</span>
+    <span class="n"><b>两条结论</b> 最大变化率 + 垂直等值线</span>
+  </div>
+
+  <h3>核心公式</h3>
+  <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><msub><mi>f</mi><mi>x</mi></msub><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><msub><mi>f</mi><mi>y</mi></msub><mi mathvariant="normal">cos</mi><mo>β</mo></math></div>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><msub><mi>e</mi><mi>l</mi></msub><mo>=</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></div>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mo largeop="true" movablelimits="true">max</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>f</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>l</mi></mrow></mfrac><mo>=</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo><mspace width="1em"></mspace><mo>(</mo><mtext>沿梯度方向</mtext><mo>)</mo></math></div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>方向导数是<strong>数</strong>，梯度是<strong>向量</strong>（二元函数时是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mi>O</mi><mi>y</mi></math></span> 面上的二维向量）。</li>
+    <li>超常的方向有<strong>四个</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mo form="prefix">−</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>x</mi></msub></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>y</mi></msub></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>0</mn><mo>,</mo><mo form="prefix">−</mo><mn>1</mn><mo>)</mo></math></span> 给 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><msub><mi>f</mi><mi>y</mi></msub></math></span>。</li>
+    <li>公式只要求方向取<mark>单位向量</mark>；三元时再加一项 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>z</mi></msub><mi mathvariant="normal">cos</mi><mo>γ</mo></math></span>。</li>
+    <li>三条性质：<strong>同向最快上升（值 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>=</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span>）、反向最快下降（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo form="prefix">−</mo><mo>|</mo><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi><mo>|</mo></math></span>）、垂直不变（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>）</strong>。</li>
+    <li>梯度<strong>垂直于等值线（等值面）</strong>，指向函数值增大的方向；三元函数的梯度就是等值面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>F</mi><mo>=</mo><mi>C</mi></math></span> 的法向量。</li>
+    <li>计算公式的前提是<strong>可微</strong>，不是「偏导存在」。</li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li>方向没有单位化。</li>
+    <li>「变化最快」漏掉减少最快的方向；「变化率为零」漏掉一个方向。</li>
+    <li>把二维的梯度箭头、等值线与三维曲面的截线、切线方向混为一谈。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P085-方向导数与梯度/index.html">方向导数与梯度</a> 方向导数与梯度（本页的原始版本，含圆锥面反例与方向导数公式的证明）</li>
+      <li><a href="../P076-偏导数/index.html">偏导数</a> 偏导数（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Δ</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 可正可负，与方向导数一正一负对照）</li>
+      <li><a href="../P078-全微分/index.html">全微分</a> 全微分（定理里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>o</mi><mo>(</mo><mo>ρ</mo><mo>)</mo></math></span> 那一项的来源）</li>
+      <li><a href="../P071-方向角 方向余弦 数量积 向量积/index.html">方向角 方向余弦 数量积 向量积</a> 数量积（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>⋅</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>=</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>a</mi><mo>|</mo><mo>|</mo><mover accent="true"><mspace width="0.25em"></mspace><mo>⃗</mo></mover><mi>b</mi><mo>|</mo><mi mathvariant="normal">cos</mi><mo>θ</mo></math></span>）</li>
+      <li><a href="../P081-隐函数求导/index.html">隐函数求导</a> 隐函数求导（推等值线法向量时用）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P133-【黑板】多元函数微分学的几何应用/index.html">【黑板】多元函数微分学的几何应用</a> 【黑板】几何应用（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>F</mi></math></span> 就是曲面的法向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><msub><mi>F</mi><mi>x</mi></msub><mo>,</mo><msub><mi>F</mi><mi>y</mi></msub><mo>,</mo><msub><mi>F</mi><mi>z</mi></msub><mo>)</mo></math></span>）</li>
+      <li><a href="../P135-【黑板】极值/index.html">【黑板】极值</a> 【黑板】极值（梯度为零 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mi>f</mi><mi>x</mi></msub><mo>=</mo><msub><mi>f</mi><mi>y</mi></msub><mo>=</mo><mn>0</mn></math></span> 是极值的必要条件）</li>
+      <li><a href="../P086-多元函数的极值/index.html">多元函数的极值</a> 多元函数的极值（条件极值与拉格朗日乘数法）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>方向导数（数） vs 梯度（向量）</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>g</mi><mi>r</mi><mi>a</mi><mi>d</mi></mrow></mrow><mspace width="1em"></mspace><mi>f</mi></math></span> 在平面内的箭头 vs 曲面上某条曲线的切向量</li>
+      <li>等值线（二元，平面上的封闭曲线） vs 等值面（三元，空间中的曲面）</li>
+      <li><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>θ</mo><mo>=</mo><mfrac><mrow><mn>3</mn><mo>π</mo></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>：后者超出了 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mn>0</mn><mo>,</mo><mo>π</mo><mo>]</mo></math></span>，只能说「垂直的方向有两个」</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 134 讲</span><a href="../P133-【黑板】多元函数微分学的几何应用/index.html">← P133</a><a href="../index.html">全部目录</a><a href="../P135-【黑板】极值/index.html">P135 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">起点：偏导数其实只在两个方向上说话</a>
+    <a href="#s2">定义：一个数，被两个记号钉死</a>
+    <a href="#s3">方向导数到底是个什么东西</a>
+    <a href="#s4">四种特殊方向：老师比课本多补了两种</a>
+    <a href="#s5">计算公式：定理与它要求的「单位化」</a>
+    <a href="#s6">梯度：把公式读成两个向量的点乘</a>
+    <a href="#s7">三条性质：θ 取三种值的时候</a>
+    <a href="#s8">结论一：最大变化率就是 |gradf|</a>
+    <a href="#s9">结论二：梯度垂直于等值线</a>
+    <a href="#s10">三类计算题</a>
+    <a href="#s11">易错清单</a>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>壳法求旋转体的体积：把筒剪开铺平 · 高等数学笔记</title>
+<meta name="description" content="壳法（柱壳法）是绕 y 轴旋转的第二条路：不横着切成圆环，而是竖着切成一条条细条，每条绕 y 轴转出一层薄圆筒，把它剪开铺平就是一个长方体，体积是 2πxf(x)dx。它出现的全部理由只有四个字——不用反解。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 6 章  定积分的应用</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 58 讲</div>
+    <h1 class="title"><span class="pnum">P058</span>壳法求旋转体的体积：把筒剪开铺平</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>壳法（柱壳法）是绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴旋转的<strong>第二条路</strong>：不横着切成圆环，而是竖着切成一条条细条，每条绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴转出一层薄圆筒，把它<mark>剪开铺平就是一个长方体</mark>，体积是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。它出现的全部理由只有四个字——<strong>不用反解</strong>。</p></div>
+    <div class="meta"><span>时长 14m25s</span><span class="w" title="考试权重">●●○○○</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=0">00:00</a>老师说这一节要讲一个「比较稀奇古怪的东西」：<strong>他在中文教材里到现在都没见过这个方法</strong>，是从《普林斯顿微积分读本》里看来的，叫<strong>壳法</strong>。名字怎么念他也不太确定（壳牌加油站的「壳」到底念 qiào 还是 ké），但这不重要——重要的是它确实另辟蹊径。</p>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=34">00:34</a>它解决的问题很具体：<strong>绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴旋转</strong>的题。上一节我们用圆盘法（圆环法）做过，也能做出来，但每次都要多做一步「把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 反解成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo>φ</mo><mo>(</mo><mi>y</mi><mo>)</mo></math></span>」。壳法的价值，就是<mark>把这一步彻底省掉</mark>。</p>
+
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=0">00:00</a><span class="vv"><b>壳法是什么来头</b>：中文教材上没有，来自《普林斯顿微积分读本》。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=34">00:34</a><span class="vv"><b>要解决的场景</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴旋转一周。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=87">01:27</a><span class="vv"><b>先走传统路线</b>：用圆盘法做一遍，把答案算出来备用。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=181">03:01</a><span class="vv"><b>圆盘法</b>：横着切得到圆环，外半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>，内半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo>φ</mo><mo>(</mo><mi>y</mi><mo>)</mo></math></span>。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=331">05:31</a><span class="vv"><b>算出结果</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mo stretchy="true">[</mo><mn>4</mn><mo>−</mo><mo>(</mo><mi>y</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo></math></span>。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=394">06:34</a><span class="vv"><b>换刀法</b>：不横着切，改成竖着切，「好戏开始了」。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=446">07:26</a><span class="vv"><b>薄壳诞生</b>：一条细条绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴转出一层极薄的圆筒。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=508">08:28</a><span class="vv"><b>拿刀剪开</b>：圆筒沿一条母线剪开、铺平——变成一个长方体。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=582">09:42</a><span class="vv"><b>长宽高</b>：长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>、高 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>、厚 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，三者相乘再积分。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=658">10:58</a><span class="vv"><b>用壳法回验</b>：同一个例子再算一遍，结果应当一致。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=713">11:53</a><span class="vv"><b>同一个答案</b>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>5</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo></math></span>，老师当场惊讶「这么巧」。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=759">12:39</a><span class="vv"><b>两种方法各自的场合</b>：什么时候圆盘法省事，什么时候壳法省事。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=34">00:34</a>先看清：绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴的题，麻烦到底在哪</h2>
+
+<p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上（且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi><mo>&gt;</mo><mn>0</mn></math></span>），把曲线、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>a</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>b</mi></math></span> 围成的这块区域绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴旋转一周。求体积。</p>
+
+<p>用上一节的办法（圆盘法），流程是这样：</p>
+
+<ol class="steps">
+  <li><span class="sh">转轴是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴，所以横截面垂直于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴。</span>那就得<strong>横着切</strong>，切出来一片圆环。</li>
+  <li><span class="sh">把圆环的两条半径写出来。</span>外半径是这一片最远能到的地方（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 一直延伸到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>，所以是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>）；内半径是这一片离转轴最近的地方，也就是曲线上的横坐标。</li>
+  <li><span class="sh">麻烦出现了。</span>内半径要用「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 等于多少时，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是多少」来表达，也就是<strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 反解成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo>φ</mo><mo>(</mo><mi>y</mi><mo>)</mo></math></span></strong>。</li>
+</ol>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=87">01:27</a>这一步在很多题里很好做，但在有些题里会很烦——甚至根本做不出来。壳法就是为了绕开它。</p>
+
+<h2 id="s2"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=181">03:01</a>传统做法先走一遍：横着切，得到圆环</h2>
+
+<p>老师说，先用老办法做一遍，把答案算出来存着，一会儿用壳法再算一遍，看两个结果对不对得上。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=87">01:27</a>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>−</mo><mn>1</mn></math></span>，取 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>[</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>]</mo></math></span>，把曲线、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 围成的区域绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴旋转一周，求所得立体的体积。（先用圆盘法。）</span></p>
+  <div class="sol">
+    <span class="lbl">思路：绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴 → 先看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的范围，再反解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></span>
+    <p>先把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的范围确定下来。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>1</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>0</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span> 时 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>1</mn></math></span>，而 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>−</mo><mn>1</mn></math></span> 在这段上是单调的，所以 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span></strong>。老师强调这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 的上限是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>b</mi><mo>)</mo></math></span>，是一个<strong>固定的数</strong>，不随积分变量变。</p>
+
+    <span class="lbl">第一步：反解</span>
+    <p>由 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>−</mo><mn>1</mn></math></span> 得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>y</mi><mo>+</mo><mn>1</mn></math></span>。在高度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 处，区域的横坐标从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>+</mo><mn>1</mn></math></span> 一直到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>，所以竖着切出来的圆环：</p>
+    <ul class="tight">
+      <li><strong>外半径</strong>是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>（区域的右边界一直是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>2</mn></math></span>）；</li>
+      <li><strong>内半径</strong>是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>y</mi><mo>+</mo><mn>1</mn></math></span>。</li>
+    </ul>
+
+    <span class="lbl">第二步：套圆环公式</span>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mo stretchy="true">[</mo><msup><mn>2</mn><mrow><mn>2</mn></mrow></msup><mo>−</mo><mo>(</mo><mi>y</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mo stretchy="true">[</mo><mn>4</mn><mo>−</mo><mo>(</mo><mi>y</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=331">05:31</a><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>y</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup></math></span> 的原函数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>(</mo><mi>y</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>（凑微分 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>+</mo><mn>1</mn></math></span> 即可）：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mo>π</mo><msubsup><mrow><mo stretchy="true">[</mo><mn>4</mn><mi>y</mi><mo>−</mo><mfrac><mrow><mo>(</mo><mi>y</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mfrac><mo stretchy="true">]</mo></mrow><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></msubsup></math></div>
+    <p>上限代入：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>4</mn><mo>−</mo><mfrac><mrow><mn>8</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>；下限代入：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>。相减得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>4</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>，所以</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo></math></div>
+    <p><strong>这个结果先记着</strong>，一会儿壳法要拿它对照。</p>
+  </div>
+</div>
+
+<h2 id="s3"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=394">06:34</a>换一个方向下刀：壳法</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=394">06:34</a>现在把刀转 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mo>∘</mo></msup></math></span>：不横着切，改成<strong>竖着切</strong>。老师说这句话之后就「好戏开始了」。</p>
+
+<ol class="steps">
+  <li><span class="sh">取一条细条。</span>在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处取一条宽为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 的竖条，高是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。它的位置离 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴的距离就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>。</li>
+  <li><span class="sh">让它绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴转一圈。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=446">07:26</a>这条竖条扫出来的，是一层<strong>非常薄的圆筒</strong>——像一个抽掉了上下底、筒壁极薄的易拉罐。这就是「壳」这个字的来历。</li>
+  <li><span class="sh">拿刀把它剪开、铺平。</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=508">08:28</a>老师形容这一步「超出你的想象力」：沿圆筒的一条母线剪一刀，再压平，它就成了一个<strong>长方体</strong>。</li>
+  <li><span class="sh">量出长方体的三个尺寸。</span>
+    <ul class="tight">
+      <li><strong>长</strong>：圆筒展开后的长度就是它的周长。半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，所以长是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>；</li>
+      <li><strong>高</strong>：原来的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，也就是细条的高度；</li>
+      <li><strong>厚</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，也就是细条的宽度。</li>
+    </ul>
+  </li>
+  <li><span class="sh">乘起来再累加。</span>一片薄壳的体积是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。让 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 走到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>，把这些薄壳一层层套起来，就得到整个立体：</li>
+</ol>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>a</mi></mrow><mrow><mi>b</mi></mrow></munderover><mi>x</mi><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+
+<div class="why">
+  <span class="lbl">为什么剪开铺平之后就是一个长方体</span>
+  <p>关键还是那个「薄」字。圆筒的厚度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，而它的周长是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>——厚度相对于周长小得多。所以剪开铺平的时候，圆周的弯曲可以忽略：<mark>一张薄纸卷成筒再展开，展开后就是一张平的长方形</mark>，道理完全一样。</p>
+  <p>严格地说，展开后那两块不是一个完美的长方形，会有极微小的褶皱误差；但它是比 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 更高阶的量，几百上千个累加起来仍然趋于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>0</mn></math></span>。这就是微元法允许我们「先近似、后累加」的底气。</p>
+  <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=508">08:28</a>老师说他觉得这个方法「挺好看、也挺好理解」——它的确比圆盘法更直观，因为它把一个非规则立体直接拆成了一个个长方形方块。</p>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="左边是一条细条绕y轴旋转，中间箭头，右边是剪开铺平后的长方体，标注长2πx、高f(x)、厚dx">
+    <text x="46" y="24" class="m-txt" font-size="12.5">取一小条，绕 y 轴转出一层薄壳</text>
+    <line x1="110" y1="255" x2="110" y2="50" class="m-line" stroke-width="1.3"></line>
+    <polygon points="110,44 106,54 114,54" class="m-fill"></polygon>
+    <line x1="96" y1="235" x2="300" y2="235" class="m-line" stroke-width="1.3"></line>
+    <polygon points="306,235 296,231 296,239" class="m-fill"></polygon>
+    <path d="M 170 200 C 210 165 250 132 290 120 L 290 235 L 170 235 Z" class="m-area"></path>
+    <path d="M 170 200 C 210 165 250 132 290 120" fill="none" class="m-acc" stroke-width="1.9"></path>
+    <path d="M 238 144 L 246 142 L 246 235 L 238 235 Z" class="m-bg-g"></path>
+    <path d="M 238 144 L 246 142 L 246 235 L 238 235 Z" fill="none" class="m-good" stroke-width="1.4"></path>
+    <text x="300" y="104" class="m-acc" font-size="12">y = f(x)</text>
+    <text x="184" y="150" class="m-sub" font-size="11.5">高 = f(x)</text>
+    <text x="164" y="251" class="m-sub" font-size="11.5">a</text>
+    <text x="284" y="251" class="m-sub" font-size="11.5">b</text>
+    <text x="250" y="251" class="m-fill-g" font-size="11.5">dx</text>
+    <text x="308" y="251" class="m-sub" font-size="11.5">x</text>
+    <text x="118" y="46" class="m-sub" font-size="11.5">y</text>
+
+    <line x1="308" y1="146" x2="344" y2="146" class="m-acc" stroke-width="1.6"></line>
+    <polygon points="352,146 342,142 342,150" class="m-fill-a"></polygon>
+    <text x="306" y="128" class="m-sub" font-size="11.5">绕 y 轴</text>
+
+    <text x="398" y="24" class="m-txt" font-size="12.5">剪开、铺平：一个长方体</text>
+    <polygon points="404,178 420,154 588,154 572,178" class="m-panel-s"></polygon>
+    <polygon points="572,178 588,154 588,212 572,236" class="m-panel-s"></polygon>
+    <rect x="404" y="178" width="168" height="58" class="m-panel-hi"></rect>
+    <line x1="404" y1="178" x2="572" y2="178" class="m-line" stroke-width="1.2"></line>
+    <line x1="572" y1="178" x2="588" y2="154" class="m-line" stroke-width="1.2"></line>
+    <line x1="404" y1="178" x2="420" y2="154" class="m-line" stroke-width="1.2"></line>
+    <line x1="420" y1="154" x2="588" y2="154" class="m-line" stroke-width="1.2"></line>
+    <text x="414" y="214" class="m-sub" font-size="11.5">高 = f(x)</text>
+    <text x="492" y="146" class="m-fill-g" font-size="11.5">厚 = dx</text>
+    <text x="404" y="252" class="m-acc" font-size="12">长 = 周长 = 2πx</text>
+    <text x="398" y="284" class="m-math" font-size="12">dV = 长 × 厚 × 高 = 2πx · f(x) · dx</text>
+  </svg>
+  <figcaption><b>壳法的全部机关都在这张图里。</b>左边：在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 处取一条宽 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>、高 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 的细条（绿色），让它绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴转一圈，扫出一层薄圆筒。右边：把这层圆筒沿一条母线剪开、压平，它就变成一个长方体——<strong>长是圆筒的周长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>，高是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>，厚是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span></strong>。<em>注意「长」这一项里带着 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>，这是壳法与圆盘法最大的形式差别：圆盘法里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo></math></span>，壳法里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>。</em></figcaption>
+</figure>
+
+<h2 id="s4"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=658">10:58</a>用壳法回验：结果必须一样</h2>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例（续）</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=658">10:58</a>同一个例子：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>−</mo><mn>1</mn></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>∈</mo><mo>[</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>]</mo></math></span>，绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴。这次用壳法算。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：不用反解，直接写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span></span>
+    <p>老师说得很坦白：「这例子有的时候也是我上课的时候随便举的，行不行呢我也不知道，那咱们就算算看。」</p>
+    <p>公式里需要的东西全都在手上：半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，高是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>x</mi><mo>−</mo><mn>1</mn></math></span>，积分限就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 的范围 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn></math></span>。所以</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></munderover><mi>x</mi><mo>(</mo><mi>x</mi><mo>−</mo><mn>1</mn><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>=</mo><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></munderover><mrow><mo stretchy="true">(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mi>x</mi><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+    <p>被积函数很简单，直接积：</p>
+    <div class="mb plain"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><msubsup><mrow><mo stretchy="true">[</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="true">]</mo></mrow><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></msubsup></math></div>
+    <p>上限代入：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>8</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><mn>2</mn><mo>=</mo><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac></math></span>；下限代入：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>1</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>6</mn></mrow></mfrac></math></span>。相减得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mn>2</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>6</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>6</mn></mrow></mfrac></math></span>，所以</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><mo>⋅</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>6</mn></mrow></mfrac><mo>=</mo><mfrac><mrow><mn>5</mn></mrow><mrow><mn>3</mn></mrow></mfrac><mo>π</mo></math></div>
+    <p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=713">11:53</a>老师当场对比了两个结果，发现完全一致，说了句「这么巧，算的是一样的」。<strong>这不是巧合</strong>——两种方法算的是同一个立体，只是切法不同。</p>
+    <div class="note">
+      <span class="lbl">顺手对比一下两种做法的「工作量」</span>
+      <p>圆盘法：先反解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>y</mi><mo>+</mo><mn>1</mn></math></span>，再算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>0</mn></mrow><mrow><mn>1</mn></mrow></munderover><mrow><mo stretchy="true">[</mo><mn>4</mn><mo>−</mo><mo>(</mo><mi>y</mi><mo>+</mo><mn>1</mn><msup><mo>)</mo><mrow><mn>2</mn></mrow></msup><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>，被积函数是一个二项式的平方。</p>
+      <p>壳法：不用反解，直接算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></munderover><mo>(</mo><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup><mo>−</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>，被积函数是一个二次多项式。</p>
+      <p><mark>这道题两种方法差不多；但只要反解变难，壳法的优势就会立刻拉开。</mark></p>
+    </div>
+  </div>
+</div>
+
+<h2 id="s5">为什么会有两种方法</h2>
+
+<p>这是本节真正要回答的问题。既然结果永远一样，为什么还要准备两套工具？</p>
+
+<p>答案全在「反解」这两个字上。</p>
+
+<div class="why">
+  <span class="lbl">圆盘法绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴，绕不开反解</span>
+  <p>圆盘法横着切，切出来是圆环，内半径是「这一片离转轴最近的那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」。而这一片所在的高度是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，所以内半径必须写成 <strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mo>φ</mo><mo>(</mo><mi>y</mi><mo>)</mo></math></span></strong>——于是必须先反解。</p>
+  <p>反解有时候很轻松（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>−</mo><mn>1</mn></math></span> 立刻得 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>y</mi><mo>+</mo><mn>1</mn></math></span>），有时候很丑，有时候<strong>干脆写不出来</strong>。像 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><msup><mi>x</mi><mrow><mn>3</mn></mrow></msup><mo>+</mo><mi>x</mi><mo>+</mo><mn>1</mn></math></span> 这样的函数，虽然它单调、确实有反函数，但那个反函数不是初等表达式，硬用圆盘法就走进死胡同了。</p>
+  <p>壳法完全没有这个问题：每一片薄壳的半径<strong>就是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 本身</strong>，它在积分变量里现成摆着，一个反解都不需要。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">换个角度：两种方法「切的方向」正好差 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>9</mn><msup><mn>0</mn><mo>∘</mo></msup></math></span></span>
+  <p>把所有细节抽掉，两种方法的骨架其实极其对称：</p>
+  <ul class="tight">
+    <li><strong>圆盘法</strong>：刀垂直于转轴 → 切出来的是<strong>圆盘或圆环</strong> → 用「面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>R</mi><mrow><mn>2</mn></mrow></msup></math></span>」这一套 → 绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 积分。</li>
+    <li><strong>壳法</strong>：刀平行于转轴 → 切出来的是<strong>薄圆筒</strong> → 用「长×宽×高」这一套 → 绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴时对 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 积分。</li>
+  </ul>
+  <p>一个用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo></math></span>（圆面积），一个用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>（圆周长）；一个横着看，一个竖着看。<mark>它们不是谁替代谁，而是同一件事的两种「坐标系」</mark>——哪一套顺手，就用哪一套。</p>
+</div>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>比较项</th><th>圆盘法（截面法）</th><th>壳法（柱壳法）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>刀怎么下</td><td>垂直于转轴</td><td>平行于转轴</td></tr>
+      <tr><td>切出的一片是</td><td>圆盘 / 圆环</td><td>薄圆筒（一层壳）</td></tr>
+      <tr><td>算的是</td><td>圆（环）的面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>R</mi><mrow><mn>2</mn></mrow></msup></math></span></td><td>长方体体积 长×宽×高</td></tr>
+      <tr><td>绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴时积分变量</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></td></tr>
+      <tr><td>绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴时积分限</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>c</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>d</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span></td></tr>
+      <tr><td>绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴时公式</td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>c</mi></mrow><mrow><mi>d</mi></mrow></munderover><mrow><mo stretchy="true">[</mo><msubsup><mi>f</mi><mrow><mn>2</mn></mrow><mrow><mn>2</mn></mrow></msubsup><mo>(</mo><mi>y</mi><mo>)</mo><mo>−</mo><msubsup><mi>f</mi><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></msubsup><mo>(</mo><mi>y</mi><mo>)</mo><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>a</mi></mrow><mrow><mi>b</mi></mrow></munderover><mi>x</mi><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span></td></tr>
+      <tr><td>要不要反解 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span></td><td><strong>要</strong>（反解可能失败）</td><td><strong>不要</strong></td></tr>
+      <tr><td>被积函数的复杂度</td><td>半径要平方，常有高次项</td><td>一次乘法，通常更简单</td></tr>
+      <tr><td>什么时候吃亏</td><td>反解不出来、或反解结果很难看</td><td>区域上下边界会「换人」，必须分段</td></tr>
+      <tr><td>一句话</td><td>把立体横着切成薄片</td><td>把立体拆成一层层筒</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 300" role="img" aria-label="同一块区域上的两种切法：横着切得到圆环，竖着切得到薄壳，右侧画出这两种切片的样子">
+    <text x="40" y="22" class="m-txt" font-size="12.5">同一块区域，两种切法</text>
+    <line x1="90" y1="255" x2="90" y2="50" class="m-line" stroke-width="1.3"></line>
+    <polygon points="90,44 86,54 94,54" class="m-fill"></polygon>
+    <line x1="74" y1="240" x2="420" y2="240" class="m-line" stroke-width="1.3"></line>
+    <polygon points="426,240 416,236 416,244" class="m-fill"></polygon>
+    <path d="M 90 232 C 170 198 280 148 400 118 L 400 240 L 90 240 Z" class="m-area"></path>
+    <path d="M 90 232 C 170 198 280 148 400 118" fill="none" class="m-acc" stroke-width="1.9"></path>
+
+    <line x1="90" y1="190" x2="184" y2="190" class="m-good" stroke-width="2"></line>
+    <line x1="250" y1="240" x2="250" y2="166" class="m-warn" stroke-width="2"></line>
+    <line x1="90" y1="240" x2="250" y2="240" class="m-warn" stroke-width="1.6"></line>
+    <circle cx="184" cy="190" r="3.2" class="m-fill-g"></circle>
+    <circle cx="250" cy="166" r="3.2" class="m-fill-w"></circle>
+
+    <text x="96" y="210" class="m-good" font-size="12">横着切 → 圆环</text>
+    <text x="96" y="228" class="m-good" font-size="11.5">内半径 x 要反解</text>
+    <text x="258" y="210" class="m-warn" font-size="12">竖着切 → 薄壳</text>
+    <text x="258" y="228" class="m-warn" font-size="11.5">半径就是 x，不反解</text>
+    <text x="98" y="52" class="m-sub" font-size="11.5">y</text>
+    <text x="392" y="256" class="m-sub" font-size="11.5">b</text>
+    <text x="428" y="256" class="m-sub" font-size="11.5">x</text>
+    <text x="160" y="256" class="m-warn" font-size="11.5">半径 x</text>
+
+    <ellipse cx="512" cy="130" rx="62" ry="24" class="m-area"></ellipse>
+    <ellipse cx="512" cy="130" rx="62" ry="24" fill="none" class="m-acc" stroke-width="1.4"></ellipse>
+    <ellipse cx="512" cy="130" rx="30" ry="11" class="m-hole"></ellipse>
+    <text x="582" y="134" class="m-sub" font-size="11.5">圆环</text>
+    <polygon points="470,214 482,196 580,196 568,214" class="m-panel-s"></polygon>
+    <rect x="470" y="214" width="98" height="36" class="m-panel-hi"></rect>
+    <text x="584" y="238" class="m-sub" font-size="11.5">薄壳</text>
+  </svg>
+  <figcaption><b>把两种切法画在同一块区域上，区别一目了然。</b>绿色那条是<strong>横着切</strong>：切出来是一片圆环，它的内半径要用「<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 对应的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>」表示，必须反解。橙色那条是<strong>竖着切</strong>：切出来是一层薄壳，它的半径就是眼前这个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，随手就能写。<em>右侧那两样东西就是两种切法的产物：上面是圆环，下面是铺平后的长方体。选哪种，就看哪条路更短。</em></figcaption>
+</figure>
+
+<h2 id="s6"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=58&amp;t=759">12:39</a>什么时候用哪个：一条判据</h2>
+
+<p>老师说壳法不是来取代圆盘法的，是来<strong>补位</strong>的。判断顺序可以固定下来：</p>
+
+<ol class="steps">
+  <li><span class="sh">绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 轴转 → 一律用圆盘法。</span>切出来的片本来就是圆盘，半径是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>，公式一路顺到底，没有任何理由换别的。</li>
+  <li><span class="sh">绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴转 → 先看 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> 好不好反解。</span>
+    <ul class="tight">
+      <li>反解顺利（像 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mi>x</mi><mo>−</mo><mn>1</mn></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi><mo>=</mo><mn>3</mn><mi>x</mi></math></span> 这类）→ 两种都行，选算起来短的那个；</li>
+      <li>反解不出来，或者反解结果很丑 → 直接上<strong>壳法</strong>。</li>
+    </ul>
+  </li>
+  <li><span class="sh">区域被两条曲线夹着时，壳法要写成「高」的差。</span>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 在上、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi></math></span> 在下，那么每一层壳的高是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>：</li>
+</ol>
+
+<div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>a</mi></mrow><mrow><mi>b</mi></mrow></munderover><mi>x</mi><mrow><mo stretchy="true">[</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></div>
+
+<div class="note">
+  <span class="lbl">用壳法之前要核对的三个前提</span>
+  <ul class="tight">
+    <li><strong>转轴是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴</strong>。若转轴换成竖直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mi>k</mi></math></span>，每一层壳的半径就变成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>|</mo><mi>x</mi><mo>−</mo><mi>k</mi><mo>|</mo></math></span>，公式里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 要整体换掉——所以它本质上永远是<strong>半径</strong>，不是「横坐标」。</li>
+    <li><strong>上下边界不能换人</strong>。从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span>，如果 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span> 和 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>g</mi></math></span> 的上下关系发生了交换，就必须在交点处切开分段——这条规矩和求面积时一模一样（见 <a href="../P054-定积分应用（求面积）/index.html">定积分应用（求面积）</a>）。</li>
+    <li><strong>层要够薄</strong>。<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 相对周长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 必须很小，这是「剪开能铺平」的前提。正常题目都满足。</li>
+  </ul>
+</div>
+
+<div class="why">
+  <span class="lbl"><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 到底是什么</span>
+  <p>这是初学者最容易糊涂的地方：公式里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 一会儿看着像「横坐标」，一会儿又像「半径」。正确的读法是——<strong>它就是这一层壳到转轴的距离，也就是半径。</strong></p>
+  <p>因为这一节的转轴恰好是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴（也就是直线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>=</mo><mn>0</mn></math></span>），而「某点到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴的距离」正好等于它的横坐标 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>，两件事才碰巧重合。所以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 就是<mark>圆周长公式 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>R</mi></math></span> 里那个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span></mark>。</p>
+  <p>把它拆开读一遍：<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mo>×</mo></math></span>半径 = 周长（铺平后的长），<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span> = 高，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> = 厚</strong>。三者相乘是长方体体积，再沿半径方向一层层套起来——这就是壳法的全部内容。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p>壳法 = <mark>竖着切、让细条绕 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 轴转成薄筒、把筒剪开铺平成长方体</mark>，体积是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span>。</p>
+
+  <h3>公式</h3>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>a</mi></mrow><mrow><mi>b</mi></mrow></munderover><mi>x</mi><mspace width="1em"></mspace><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="2em"></mspace><mo>(</mo><mtext>绕 </mtext><mi>y</mi><mtext> 轴，单曲线</mtext><mo>)</mo></math></div>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>V</mi><mo>=</mo><mn>2</mn><mo>π</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mrow><mi>a</mi></mrow><mrow><mi>b</mi></mrow></munderover><mi>x</mi><mrow><mo stretchy="true">[</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo stretchy="true">]</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="2em"></mspace><mo>(</mo><mtext>绕 </mtext><mi>y</mi><mtext> 轴，夹在两曲线间</mtext><mo>)</mo></math></div>
+
+  <h3>一条链</h3>
+  <div class="chain">
+    <span class="n"><b>竖着切一条</b> 宽 dx、高 f(x)</span><span class="ar">→</span>
+    <span class="n"><b>绕 y 轴转成薄筒</b> 半径是 x</span><span class="ar">→</span>
+    <span class="n"><b>剪开铺平</b> 长 2πx、厚 dx</span><span class="ar">→</span>
+    <span class="n"><b>长×厚×高 再积分</b> 得体积</span>
+  </div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li><strong>长 = 周长 = <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span></strong>，不是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span>。壳法里是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>，圆盘法里才是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo></math></span>。</li>
+    <li>壳法里的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 是<strong>半径</strong>（到转轴的距离），不是普通的横坐标。</li>
+    <li>壳法<strong>不做反解</strong>：半径 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 本来就在积分变量里，这是它最大的优点。</li>
+    <li>用壳法算完，可以和圆盘法的结果对一对——两者必须完全相同。这本身就是一道免费的验算。</li>
+    <li>两条曲线夹着时，高是<strong>上减下</strong>：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo><mi>g</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span>。</li>
+  </ul>
+
+  <h3>两个坑</h3>
+  <ol class="tight">
+    <li><strong>把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>x</mi></math></span> 写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>x</mi><mrow><mn>2</mn></mrow></msup></math></span>。</strong>那是圆<em>面积</em>，不是圆<em>周长</em>。壳法用的是周长，所以系数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo></math></span>、指数是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>1</mn></math></span>。</li>
+    <li><strong>上下边界换人时忘了分段。</strong>壳法要求从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span> 一路只用同一个 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>f</mi></math></span>；一旦曲线交叉，就必须在交点处切开，逐段算再加。</li>
+  </ol>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P057-求旋转体的体积/index.html">求旋转体的体积</a> 旋转体的体积（圆盘法 / 圆环法，本页的对照对象）</li>
+      <li><a href="../P055-微元法/index.html">微元法</a> 微元法（切、近似、累加）</li>
+      <li><a href="../P054-定积分应用（求面积）/index.html">定积分应用（求面积）</a> 定积分应用 · 求面积（曲线纠缠时要分段）</li>
+      <li><span class="cur">圆的周长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>R</mi></math></span> 与面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>R</mi><mrow><mn>2</mn></mrow></msup></math></span>、圆柱（长方体）体积公式</span></li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P059-求体积非旋转体的体积/index.html">求体积非旋转体的体积</a> 平行截面面积已知的立体体积（彻底离开旋转体）</li>
+      <li><a href="../P060-定积分应用（求平面曲线的弧长）/index.html">定积分应用（求平面曲线的弧长）</a> 定积分的其他应用（弧长、侧面积等）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>圆盘法用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>R</mi><mrow><mn>2</mn></mrow></msup></math></span>（面积），壳法用 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mn>2</mn><mo>π</mo><mspace width="0.25em"></mspace><mi>R</mi></math></span>（周长）</li>
+      <li>如果先试圆盘法反解不出来，就别硬撑，换壳法</li>
+      <li>两种方法答案一定相同，可以用它互相验算</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 58 讲</span><a href="../P057-求旋转体的体积/index.html">← P057</a><a href="../index.html">全部目录</a><a href="../P059-求体积非旋转体的体积/index.html">P059 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">00:34先看清：绕 y 轴的题，麻烦到底在哪</a>
+    <a href="#s2">03:01传统做法先走一遍：横着切，得到圆环</a>
+    <a href="#s3">06:34换一个方向下刀：壳法</a>
+    <a href="#s4">10:58用壳法回验：结果必须一样</a>
+    <a href="#s5">为什么会有两种方法</a>
+    <a href="#s6">12:39什么时候用哪个：一条判据</a>
+  </aside>
+</div>
+</body>
+</html>

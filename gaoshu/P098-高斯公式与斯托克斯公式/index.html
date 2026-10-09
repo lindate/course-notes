@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>高斯公式与斯托克斯公式：三维里的格林，以及它的曲面积分版 · 高等数学笔记</title>
+<meta name="description" content="格林公式是二维的「区域=边界」，高斯公式是它的升维：把闭曲面上的第二类曲面积分变成三重积分。斯托克斯公式则是「空间闭曲线积分 ↔ 曲面积分」。三者加上牛顿–莱布尼茨，是同一个模式在不同维度上的重演。">
+<meta name="color-scheme" content="light dark">
+<style>
+/* ==========================================================================
+   高等数学笔记 · 设计系统  (note.css)
+   --------------------------------------------------------------------------
+   目标：一张可以长期使用的数学知识地图。
+   设计原则：
+     · 数学内容是视觉中心，界面退到后面
+     · 用「细线 + 极浅底色 + 左规则条」区分信息类型，而不是卡片堆
+     · 留白充足，长文连续阅读不疲劳
+     · 层级清晰：核心知识最容易被发现，辅助内容退到次级
+   本文件由 pipeline/notebuild.py 内联进每张独立页面，
+   因此页面零外部依赖、可离线双击打开。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* 表面：外壳灰 + 纸面白 —— 让正文像一页纸，而不是一整片白 */
+  --bg:        #f4f4f6;
+  --paper:     #ffffff;
+  --paper-2:   #fafafb;
+
+  /* 墨色梯度 */
+  --ink:       #16181d;
+  --ink-2:     #52565e;
+  --ink-3:     #8b8f98;
+  --ink-4:     #b6bac1;
+
+  /* 分隔线 */
+  --line:      #e8e8ec;
+  --line-2:    #d6d7dc;
+
+  /* 强调色：安静的靛蓝，只用于「核心」与「连接」 */
+  --accent:      #0b5fc4;
+  --accent-ink:  #0a51a8;
+  --accent-bg:   #eef4fd;
+  --accent-line: #bcd6f6;
+
+  /* 语义色：各自克制，不喧哗 */
+  --violet:      #5a49c0;
+  --violet-bg:   #f3f1fd;
+  --good:        #0e7a55;
+  --good-bg:     #eefaf4;
+  --warn:        #a85a09;
+  --warn-bg:     #fdf6ea;
+  --warn-line:   #edd9b4;
+
+  /* 记忆入口：全页唯一允许「重」的地方 */
+  --recall-bg:   #16181d;
+  --recall-ink:  #f3f4f6;
+  --recall-ink2: #a9aeb8;
+  --recall-line: #33373f;
+
+  /* 字体 */
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --math: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* 版面 */
+  --measure: 44rem;      /* 正文栏宽 */
+  --radius:  5px;
+  --radius-s: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:        #0d0e10;
+    --paper:     #141518;
+    --paper-2:   #191a1e;
+    --ink:       #eceef2;
+    --ink-2:     #a8adb6;
+    --ink-3:     #787d86;
+    --ink-4:     #565a62;
+    --line:      #24262b;
+    --line-2:    #33363c;
+    --accent:      #63a6f5;
+    --accent-ink:  #8dbcfa;
+    --accent-bg:   #16233a;
+    --accent-line: #2b466e;
+    --violet:      #a99df5;
+    --violet-bg:   #1e1c33;
+    --good:        #57c79c;
+    --good-bg:     #12271f;
+    --warn:        #e0a95e;
+    --warn-bg:     #2a2114;
+    --warn-line:   #55401f;
+    --recall-bg:   #1c1f24;
+    --recall-ink:  #eceef2;
+    --recall-ink2: #9aa0aa;
+    --recall-line: #2e3238;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.82;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-bg); }
+
+/* --------------------------------------------------------------------------
+   3. 版面骨架
+   -------------------------------------------------------------------------- */
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 3.5rem;
+}
+
+article.doc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 5rem;
+}
+
+/* 宽屏时右侧挂一条常驻小目录 */
+@media (min-width: 72rem) {
+  .shell { grid-template-columns: minmax(0, var(--measure)) 13rem; }
+  article.doc { margin: 0; }
+}
+
+aside.toc {
+  display: none;
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-top: 6.5rem;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+@media (min-width: 72rem) { aside.toc { display: block; } }
+aside.toc .toc-t {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+aside.toc a {
+  display: block;
+  padding: .22rem 0 .22rem .75rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-left: 1px solid var(--line-2);
+}
+aside.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+aside.toc a.sub { padding-left: 1.5rem; font-size: .95em; color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   4. 页首
+   -------------------------------------------------------------------------- */
+.doc-head { padding: 4.5rem 0 2.5rem; }
+
+.crumb {
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  margin-bottom: 1.15rem;
+}
+.crumb b { color: var(--ink-2); font-weight: 500; }
+.crumb .sep { margin: 0 .5em; color: var(--ink-4); }
+
+h1.title {
+  font-size: 2.05rem;
+  line-height: 1.3;
+  font-weight: 640;
+  letter-spacing: -.012em;
+  margin: 0 0 1.5rem;
+}
+h1.title .pnum {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: .7rem;
+}
+
+/* 一句话核心结论 */
+.lede {
+  margin: 0 0 1.9rem;
+  padding: .95rem 0 .95rem 1.15rem;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, var(--accent-bg), transparent 78%);
+  font-size: 1.06rem;
+  line-height: 1.72;
+  color: var(--ink);
+}
+.lede .lbl { display: block; }
+.lede p { margin: 0; }
+
+/* 元信息条 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.4rem;
+  align-items: baseline;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+.meta a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.meta a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.meta .w { color: var(--accent); letter-spacing: .08em; }
+
+/* --------------------------------------------------------------------------
+   5. 标题层级
+   -------------------------------------------------------------------------- */
+h2 {
+  font-size: 1.42rem;
+  line-height: 1.4;
+  font-weight: 620;
+  letter-spacing: -.008em;
+  margin: 3.4rem 0 .3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2.6rem; }
+
+h3 {
+  font-size: 1.06rem;
+  font-weight: 620;
+  margin: 2.1rem 0 .5rem;
+  color: var(--ink);
+}
+h4 {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 1.5rem 0 .35rem;
+  color: var(--ink-2);
+}
+
+/* 章节自动编号（可选：给 <article> 加 class="numbered"） */
+article.numbered { counter-reset: sec; }
+article.numbered h2 { counter-increment: sec; }
+article.numbered h2::before {
+  content: counter(sec);
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--ink-4);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   6. 正文元素
+   -------------------------------------------------------------------------- */
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+strong, b { font-weight: 620; color: var(--ink); }
+em { font-style: normal; color: var(--accent-ink); }        /* 中文不用斜体 */
+del { color: var(--ink-3); }
+
+/* 术语：最轻量的一种强调 */
+.t { color: var(--accent-ink); font-weight: 560; }
+
+/* 荧光笔式强调（关键结论） */
+mark {
+  background: linear-gradient(transparent 58%, var(--accent-bg) 58%);
+  color: inherit;
+  padding: 0 .1em;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+a:hover { border-bottom-color: var(--accent); }
+
+ul, ol { margin: 0 0 1.05em; padding-left: 1.3em; }
+li { margin: .3em 0; }
+li::marker { color: var(--ink-4); }
+ul.tight li, ol.tight li { margin: .12em 0; }
+
+hr { border: none; border-top: 1px solid var(--line); margin: 2.6rem 0; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .87em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .08em .34em;
+}
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.1rem;
+  overflow-x: auto;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+pre code { background: none; border: none; padding: 0; }
+
+/* --------------------------------------------------------------------------
+   7. 数学公式
+   -------------------------------------------------------------------------- */
+math { font-family: var(--math); font-size: 1.04em; }
+
+/* 行内公式：不换行、基线自然对齐 */
+.mi { white-space: nowrap; }
+
+/* 独立公式：充足呼吸 */
+.mb {
+  margin: 1.5em 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: .1rem 0;
+}
+.mb > math { font-size: 1.12em; }
+
+/* 关键公式：给一点底色和左规则条，做题时一眼能找到 */
+.mb.hl {
+  text-align: left;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .9rem 1.2rem;
+  margin: 1.6em 0;
+}
+.mb.plain {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .9rem 1.2rem;
+}
+
+/* 公式编号 */
+.mb { position: relative; }
+.eqno {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   8. 语义区块
+   基调：细线 + 极浅底色 + 左规则条。不做卡片堆。
+   -------------------------------------------------------------------------- */
+.blk {
+  margin: 1.6em 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--line-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--paper-2);
+}
+.blk > :last-child { margin-bottom: 0; }
+
+/* 区块标签 */
+.lbl {
+  display: block;
+  font-size: .76rem;
+  font-weight: 640;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+  margin-bottom: .45rem;
+}
+.lbl .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-4);
+  margin-right: .45em;
+}
+
+/* 严格定义 */
+.def { border-left-color: var(--accent); background: var(--accent-bg); }
+.def .lbl { color: var(--accent-ink); }
+
+/* 定理 / 结论 */
+.thm { border-left-color: var(--violet); background: var(--violet-bg); }
+.thm .lbl { color: var(--violet); }
+
+/* 通俗理解 */
+.plain { border-left-color: var(--good); background: var(--good-bg); }
+.plain .lbl { color: var(--good); }
+
+/* 为什么 —— 不着底色，靠缩进与灰阶退到次级，但保留可发现性 */
+.why {
+  margin: 1.4em 0;
+  padding: .2rem 0 .2rem 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .96em;
+}
+.why .lbl { color: var(--ink-3); }
+
+/* 易错 / 反例 / 边界 */
+.trap { border-left-color: var(--warn); background: var(--warn-bg); }
+.trap .lbl { color: var(--warn); }
+.trap .bad { color: var(--warn); font-weight: 560; }
+.trap .good { color: var(--good); font-weight: 560; }
+
+/* 旁注 */
+.note {
+  margin: 1.4em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line);
+  color: var(--ink-3);
+  font-size: .9em;
+  line-height: 1.72;
+}
+.note .lbl { color: var(--ink-4); }
+
+/* 条件 → 结论 之类的键值对 */
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .3em 1.1em; margin: .7em 0; }
+.kv dt { color: var(--ink-2); font-size: .9em; padding-top: .06em; white-space: nowrap; }
+.kv dd { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   9. 推理链 / 步骤
+   -------------------------------------------------------------------------- */
+ol.steps { counter-reset: st; list-style: none; padding-left: 0; margin: 1.3em 0; }
+ol.steps > li {
+  counter-increment: st;
+  position: relative;
+  padding-left: 2.35rem;
+  margin: .9em 0;
+}
+ol.steps > li::before {
+  content: counter(st);
+  position: absolute;
+  left: 0; top: .28em;
+  width: 1.5rem; height: 1.5rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+ol.steps > li::after {
+  content: "";
+  position: absolute;
+  left: .75rem; top: 2.05em; bottom: -.9em;
+  width: 1px;
+  background: var(--line-2);
+}
+ol.steps > li:last-child::after { display: none; }
+ol.steps > li > .sh { font-weight: 600; }
+
+/* 推理链（已知 → 求 → 判据 → 步骤 → 结论） */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .6rem;
+  margin: 1.2em 0;
+  font-size: .9rem;
+}
+.chain .n {
+  padding: .3rem .75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+.chain .n b { color: var(--ink); font-weight: 600; }
+.chain .ar { color: var(--ink-4); }
+
+/* --------------------------------------------------------------------------
+   10. 例题
+   采用教材式「上下细线 + 无框」，与正文连续，又有独立结构
+   -------------------------------------------------------------------------- */
+.ex {
+  margin: 2.2em 0;
+  padding: 1.15rem 0;
+  border-top: 1.5px solid var(--line-2);
+  border-bottom: 1.5px solid var(--line-2);
+}
+.ex-h {
+  font-size: .95rem;
+  font-weight: 620;
+  margin: 0 0 .8rem;
+  color: var(--ink);
+}
+.ex-h .n {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 640;
+  letter-spacing: .06em;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--radius-s);
+  padding: .12em .5em;
+  margin-right: .6em;
+  vertical-align: .12em;
+}
+.ex-q { color: var(--ink); }
+.ex .sol { margin-top: .9rem; }
+.ex .sol > .lbl { color: var(--ink-3); }
+
+/* --------------------------------------------------------------------------
+   11. 对比表
+   -------------------------------------------------------------------------- */
+.tbl-wrap { margin: 1.5em 0; overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.68;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: .62em .85em;
+  border-bottom: 1px solid var(--line);
+}
+thead th {
+  font-weight: 620;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--line-2);
+  padding-bottom: .55em;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+/* 对比表：第一列作为比较维度，退到次级 */
+table.cmp th:first-child, table.cmp td:first-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 1%;
+}
+table.cmp thead th:not(:first-child) { color: var(--accent-ink); }
+table.cmp tbody tr:hover td { background: var(--paper-2); }
+
+table.k th { white-space: nowrap; width: 1%; color: var(--ink-2); font-weight: 500; }
+table.k td:first-child { white-space: nowrap; }
+
+/* 分组行：公式卡里用来分族（三角 / 指数对数 / 幂型 …）
+   它不是数据行，所以退成一条小标签 + 细分隔线 */
+table tr.grp td {
+  border-bottom: 1px solid var(--line-2);
+  padding: .95em .85em .4em;
+  font-size: .74rem;
+  font-weight: 620;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+table tr.grp:first-child td { padding-top: .35em; }
+table tr.grp td em { color: var(--ink-4); font-style: normal; letter-spacing: 0; font-weight: 400; }
+
+/* --------------------------------------------------------------------------
+   11b. 视频溯源：时间戳 与 视频地图
+   这套讲义是「视频的替身」——回看时最需要的就是**一键跳回视频那一分钟**。
+   所以时间戳必须是可点的链接（指向 bilibili 播放页的该秒），
+   但在版面上要足够安静，不能把数学内容挤下去。
+   -------------------------------------------------------------------------- */
+.vts {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .73rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  padding: .02em .44em;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: .1em;
+}
+.vts::before { content: "▸"; margin-right: .28em; color: var(--ink-4); font-size: .88em; }
+.vts:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-line);
+}
+.vts:hover::before { color: var(--accent); }
+
+/* 视频地图：把「这节课到底讲了什么」压成一张可扫读的清单 */
+.vmap {
+  margin: 1.7em 0;
+  padding: 1.1rem 1.3rem 1.15rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.vmap > .lbl { margin-bottom: .75rem; }
+.vmap ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vmap li {
+  display: grid;
+  grid-template-columns: 1.6rem auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 .55rem;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .92rem;
+  line-height: 1.62;
+}
+.vmap li:last-child { border-bottom: none; }
+.vmap li > .no {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.vmap li > .vv { min-width: 0; }
+.vmap li b { font-weight: 620; color: var(--ink); }
+.vmap li .grp {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--ink-4);
+  margin: .9rem 0 .1rem;
+}
+.vmap li.sep {
+  display: block;
+  padding-top: 1rem;
+  border-bottom: none;
+}
+
+/* 引用视频原话（老师的原话最有记忆点，逐字保留以便对上视频） */
+.said {
+  margin: 1.3em 0;
+  padding-left: 1.15rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: .95em;
+}
+.said .lbl { color: var(--ink-3); }
+.said q { quotes: "“" "”"; }
+
+/* --------------------------------------------------------------------------
+   12. 图
+   -------------------------------------------------------------------------- */
+figure.fig {
+  margin: 2em 0;
+  text-align: center;
+}
+figure.fig svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+figure.fig img { max-width: 100%; height: auto; }
+figcaption {
+  margin-top: .85rem;
+  font-size: .84rem;
+  line-height: 1.68;
+  color: var(--ink-3);
+  text-align: left;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* SVG 内通用配色（图内元素统一用这些变量，保证暗色下可读） */
+figure.fig svg .m-line   { stroke: var(--ink-2); }
+figure.fig svg .m-thin   { stroke: var(--line-2); }
+figure.fig svg .m-acc    { stroke: var(--accent); }
+figure.fig svg .m-good   { stroke: var(--good); }
+figure.fig svg .m-warn   { stroke: var(--warn); }
+figure.fig svg .m-fill   { fill: var(--ink-2); }
+figure.fig svg .m-fill-a { fill: var(--accent); }
+figure.fig svg .m-fill-g { fill: var(--good); }
+figure.fig svg .m-fill-w { fill: var(--warn); }
+figure.fig svg .m-vio    { stroke: var(--violet); }
+figure.fig svg .m-fill-v { fill: var(--violet); }
+figure.fig svg .m-bg     { fill: var(--paper); }
+figure.fig svg .m-bg-a   { fill: var(--accent-bg); }
+figure.fig svg .m-bg-g   { fill: var(--good-bg); }
+/* 虚线框：注意 SVG 的「表示属性」里不能写 var()，必须走 class */
+figure.fig svg .m-box-a  { fill: none; stroke: var(--accent); stroke-dasharray: 3 3; opacity: .45; }
+figure.fig svg .m-box-g  { fill: none; stroke: var(--good); stroke-dasharray: 3 3; opacity: .45; }
+/* 区域 / 挖洞：「区域与其边界」这类关系图需要大块底色和挖空 */
+figure.fig svg .m-area   { fill: var(--accent-bg); stroke: none; }
+figure.fig svg .m-hole   { fill: var(--paper); stroke: var(--line-2); }
+/* 关系图里被强调的那个面板 */
+figure.fig svg .m-panel-hi { fill: var(--accent-bg); stroke: var(--accent); }
+/* 关系图用的面板：需要同时带 fill 和 stroke，所以单独给类 */
+figure.fig svg .m-panel   { fill: var(--paper); stroke: var(--line-2); }
+figure.fig svg .m-panel-a { fill: var(--accent-bg); stroke: var(--accent-line); stroke-dasharray: 4 3; }
+figure.fig svg .m-panel-s { fill: var(--paper-2); stroke: var(--line); }
+figure.fig svg .m-txt    { fill: var(--ink); font-family: var(--sans); }
+figure.fig svg .m-sub    { fill: var(--ink-3); font-family: var(--sans); }
+figure.fig svg .m-math   { fill: var(--ink); font-family: var(--math); font-style: italic; }
+
+/* --------------------------------------------------------------------------
+   13. 记忆入口（全页唯一允许重的地方）
+   -------------------------------------------------------------------------- */
+.recall {
+  margin: 4rem 0 0;
+  padding: 1.75rem 1.9rem 1.85rem;
+  border-radius: 8px;
+  background: var(--recall-bg);
+  color: var(--recall-ink);
+}
+.recall .lbl {
+  color: var(--accent);
+  font-size: .74rem;
+  letter-spacing: .14em;
+  margin-bottom: .95rem;
+}
+.recall h3 {
+  color: var(--recall-ink);
+  font-size: .95rem;
+  margin: 1.5rem 0 .55rem;
+}
+.recall h3:first-child { margin-top: 0; }
+.recall p { color: var(--recall-ink); }
+.recall strong, .recall b { color: #fff; }
+.recall .t { color: var(--accent); }
+.recall ul, .recall ol { padding-left: 1.15em; margin: .5em 0 0; }
+.recall li { color: var(--recall-ink); margin: .34em 0; line-height: 1.7; }
+.recall li::marker { color: var(--accent); }
+.recall code {
+  background: var(--recall-line);
+  border-color: transparent;
+  color: var(--recall-ink);
+}
+.recall .mb {
+  background: rgba(255, 255, 255, .06);
+  border-left-color: var(--accent);
+  color: var(--recall-ink);
+}
+.recall .mb math { color: var(--recall-ink); }
+.recall .mb.plain { background: var(--recall-line); border-color: transparent; }
+.recall mark { background: linear-gradient(transparent 58%, rgba(99, 166, 245, .35) 58%); }
+.recall .kv dt { color: var(--recall-ink2); }
+.recall .kv dd { color: var(--recall-ink); }
+.recall .eqno { color: var(--recall-ink2); }
+.recall hr { border-top-color: var(--recall-line); }
+
+/* --------------------------------------------------------------------------
+   14. 知识连接
+   -------------------------------------------------------------------------- */
+.conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.2rem 2rem;
+  margin: 3rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+.conn .k {
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--ink-4);
+  margin-bottom: .5rem;
+}
+.conn ul { list-style: none; padding: 0; margin: 0; }
+.conn li { margin: .3em 0; font-size: .9rem; line-height: 1.62; }
+.conn a { border-bottom: none; }
+.conn a:hover { border-bottom: 1px solid var(--accent); }
+.conn .cur { color: var(--ink-2); }
+
+/* 尚未撰写的课次：不制造死链，只如实标出 */
+.todo-ref {
+  color: var(--ink-3);
+  border-bottom: 1px dashed var(--line-2);
+  cursor: help;
+}
+
+/* --------------------------------------------------------------------------
+   15. 页脚
+   -------------------------------------------------------------------------- */
+.doc-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-size: .8rem;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.2rem;
+}
+.doc-foot a { color: var(--ink-3); border-bottom-color: var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   16. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  html { font-size: 16px; }
+  .shell { padding: 0 1.15rem; }
+  .doc-head { padding: 3rem 0 1.8rem; }
+  h1.title { font-size: 1.6rem; }
+  h2 { font-size: 1.24rem; margin-top: 2.8rem; }
+  .recall { padding: 1.4rem 1.25rem; margin-top: 3rem; }
+  .mb { text-align: left; }            /* 窄屏公式左对齐更好读 */
+  .eqno { position: static; display: block; text-align: right; transform: none; }
+  table { font-size: .86rem; }
+  th, td { padding: .5em .6em; }
+
+  /* 窄屏必须允许公式换行，否则一个长式子就能把整页撑出横向滚动条 */
+  .mi { white-space: normal; }
+
+  /* 注意：不要给 .mi 加 overflow-x，也不要改成 inline-block。
+     CSS 规定 overflow 非 visible 的 inline-block，其基线取「底边距边」，
+     会让内联公式整体上浮 3~5px，与周围文字错位（已实测）。
+     真正的对策只有一条：**过长的行内公式要写成独立公式块**
+     （$$. ... $$），由 .mb 的 overflow-x 接管。notecheck.py 会报出越界元素。 */
+
+  /* 键值对在小屏上改成上下排列，给值留出整行宽度 */
+  .kv { grid-template-columns: minmax(0, 1fr); gap: .1em 0; }
+  .kv dt { padding-top: .7em; font-weight: 560; color: var(--ink-3); }
+  .kv dt:first-of-type { padding-top: 0; }
+
+  /* 视频地图在窄屏去掉序号列：时间戳已经能定位，序号是冗余的 */
+  .vmap { padding: .9rem 1rem; }
+  .vmap li { grid-template-columns: auto minmax(0, 1fr); gap: 0 .5rem; }
+  .vmap li > .no { display: none; }
+  /* 行内时间戳可能出现两个并排，允许换行避免撑宽 */
+  .vts { white-space: normal; }
+}
+
+/* 打印：讲义留档 */
+@media print {
+  :root {
+    --bg: #fff; --paper: #fff; --paper-2: #fff;
+    --ink: #000; --ink-2: #333; --ink-3: #666;
+    --line: #ccc; --line-2: #999;
+  }
+  body { background: #fff; font-size: 10.5pt; }
+  aside.toc, .doc-foot { display: none; }
+  .shell { display: block; max-width: none; padding: 0; }
+  article.doc { max-width: none; }
+  h2 { page-break-after: avoid; }
+  .ex, .blk, figure.fig, .recall { page-break-inside: avoid; }
+  .recall { background: #f2f2f2 !important; color: #000 !important; }
+  .recall * { color: #000 !important; }
+  a { border-bottom: none; }
+}
+
+@media (max-width: 46rem) {
+  .mi.miw {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: bottom;
+  }
+  .mi.miwb {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: .55em 0;
+    padding: .1em 0;
+    text-align: left;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <article class="doc numbered">
+  <header class="doc-head">
+    <div class="crumb"><b>第 10 章 重积分与曲线曲面积分</b><span class="sep">·</span>宋浩《高等数学》全程教学 2.0版<span class="sep">·</span>第 98 讲</div>
+    <h1 class="title"><span class="pnum">P098</span>高斯公式与斯托克斯公式：三维里的格林，以及它的曲面积分版</h1>
+    <div class="lede"><span class="lbl">一句话核心</span><p>格林公式是二维的「区域=边界」，高斯公式是它的<strong>升维</strong>：把闭曲面上的第二类曲面积分变成三重积分。斯托克斯公式则是「空间闭曲线积分 ↔ 曲面积分」。三者加上牛顿–莱布尼茨，是<strong>同一个模式在不同维度上的重演</strong>。</p></div>
+    <div class="meta"><span>时长 1h20m</span><span class="w" title="考试权重">●●●●●</span><a href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98" target="_blank" rel="noopener">原视频 ↗</a></div>
+  </header>
+<div class="vmap">
+  <span class="lbl">视频地图 · 点时间戳可直接跳回原视频的对应位置</span>
+  <ol>
+    <li><span class="no">01</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=12">00:12</a><span class="vv">高斯公式登场：Ω 是实心立体区域，Σ 是它的边界闭曲面。</span></li>
+    <li><span class="no">02</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=161">02:41</a><span class="vv">公式陈述：第二类曲面积分 = 散度的三重积分。</span></li>
+    <li><span class="no">03</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=236">03:56</a><span class="vv">使用条件：曲面必须封闭、取外侧、偏导连续。</span></li>
+    <li><span class="no">04</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=373">06:13</a><span class="vv">不封闭就「补面」：加一块、用高斯、再减掉（可乐瓶比喻）。</span></li>
+    <li><span class="no">05</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=468">07:48</a><span class="vv">少 X 少 Y 少 Z：快速锁定 P、Q、R 分别是谁。</span></li>
+    <li><span class="no">06</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=550">09:10</a><span class="vv">例 1（圆柱）：先码对 PQR，散度为 0，结果直接是 0。</span></li>
+    <li><span class="no">07</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=1173">19:33</a><span class="vv">例 2（圆锥下侧）：缺顶面，补上后用高斯，再减去补面。</span></li>
+    <li><span class="no">08</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=1967">32:47</a><span class="vv">补的那块怎么单独算：顶圆面法向朝上，cosγ=1。</span></li>
+    <li><span class="no">09</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=2254">37:34</a><span class="vv">斯托克斯公式：空间闭曲线积分 ↔ 曲面积分。</span></li>
+    <li><span class="no">10</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=2354">39:14</a><span class="vv">右手法则定正向：四指沿边界，拇指指法向。</span></li>
+    <li><span class="no">11</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=2636">43:56</a><span class="vv">斯托克斯公式陈述（旋度形式）与行列式记忆法。</span></li>
+    <li><span class="no">12</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=2830">47:10</a><span class="vv">降维/上帝视角：四个公式是同一件事在四个维度。</span></li>
+    <li><span class="no">13</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=3569">59:29</a><span class="vv">例 3（平面三角形边界）：旋度恒定，结果等于 √3·面积。</span></li>
+    <li><span class="no">14</span><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=3190">53:10</a><span class="vv">三大公式统一表：维度阶梯关系。</span></li>
+  </ol>
+</div>
+
+<h2 id="s1">先认门：Ω 是实心，Σ 是皮儿</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=12">00:12</a>高斯公式处理的对象比格林公式更「立体」。老师拿了个可乐瓶子打比方：</p>
+
+<ul class="tight">
+  <li><strong>Ω（欧米伽）</strong>是积分区域——它是一块<em>实心的三维立体</em>，比如那个可乐瓶子内部的全部空间。</li>
+  <li><strong>Σ</strong>是它的边界，一个<em>封闭曲面</em>，也就是瓶子的「皮儿」：底面、顶面、侧面合起来那一张闭合的壳。</li>
+</ul>
+
+<p>对坐标的曲面积分我们已在 <a href="../P096-对坐标的曲面积分/index.html">对坐标的曲面积分</a> 里吃过苦头——它<strong>一定要讲侧</strong>。高斯公式里这个 Σ 要求取<strong>外侧</strong>：无论瓶子是球、是圆柱还是长方体，法向量一律朝外。</p>
+<p>老师拿了个可乐瓶子打比方：瓶身是圆柱面，底面、顶面、侧面合起来那张壳就是 Σ。他顺带吐槽自己「尽量别喝可乐，放那么久都不坏」；那个红色水杯是齐鲁网送的礼物。意思是：把立体想成「一瓶实心的东西」，Σ 就是它的包装皮——皮必须完整包住里面的肉，公式才成立。</p>
+
+<h2 id="s2">高斯公式</h2>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 高斯（Gauss）公式</span>
+  <p>设空间闭区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 由<strong>分片光滑的闭曲面</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 围成，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 上具有<strong>一阶连续偏导数</strong>，且 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 取<strong>外侧</strong>，则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∯</mo><mrow><mo>Σ</mo></mrow></munder><mspace width="0.25em"></mspace><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>R</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∭</mo><mrow><mo>Ω</mo></mrow></munder><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></div>
+  <p>右端括号里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac></math></span> 是向量场 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi><mo>)</mo></math></span> 的<strong>散度</strong>（以后在场上会专门讲）。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">高斯公式的来历直觉：把立体切成小盒子</span>
+  <p>为什么「闭曲面上的曲面积分」会等于「立体里的三重积分」？可以这样想：把立体 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 切成无数个小立方体。每个小立方体有六个面，相邻的两个小立方体<strong>公共面上一进一出、通量抵消</strong>；只剩最外层的面（拼起来正是边界 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span>）上的通量没被抵消。所以「整个立体里散度的累加」正好等于「外壳上的总通量」——高斯公式就是这个抵消过程的极限版本。</p>
+  <p>这也解释了为什么要求<strong>封闭</strong>：不封闭的曲面，内部某些面的通量无法成对抵消，等式就断了。理解到这一层，三个使用条件（封闭、外侧、偏导连续）不再是死记，而是「抵消要彻底」的自然要求。</p>
+</div>
+
+<div class="note">
+  <span class="lbl">散度 = 单位体积的「净流出率」</span>
+  <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac></math></span> 这个量，物理上描述向量场在一点「往外冒」的强弱：为正表示源（净流出），为负表示汇（净流入），为零表示无源。高斯公式左端是「整个外壳的净通量」，右端是「立体里每点的净流出率积分起来」——两者相等，正是「总量 = 局部之和」的体现。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">为什么非得「外侧」</span>
+  <p>高斯公式右端算的是「场从立体里往外流出的净通量」。取外侧时，法向量朝外，流出记正、流入记负，正合「净流出」之意。若取内侧，法向量全部反向，整个积分变号，公式右边就要加一个负号。所以「外侧」不是随便的约定，它和「散度 = 净流出率」的物理含义绑死——这也是为什么老师反复强调：用高斯公式前，先确认 Σ 是封死的、且法向朝外。</p>
+</div>
+
+<dl class="kv">
+  <dt><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=236">03:56</a>四个条件，少一个都可能错</dt>
+  <dd>① Σ 必须<strong>封闭</strong>；② 取<strong>外侧</strong>；③ <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span> 的偏导在 Ω 上<strong>连续</strong>；④ 偏导在被积区域上处处存在。这四条和格林公式的「闭、正向、偏导连续」是同一个灵魂的升维。</dd>
+  <dt>为什么必须封闭</dt>
+  <dd>右端是立体上的积分，「立体」要求有一张完整的壳把它包住。曲线不闭格林公式用不了，曲面不闭高斯公式也用不了。</dd>
+</dl>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 372" role="img" aria-label="牛顿-莱布尼茨、格林、高斯、斯托克斯是同一模式在一维到三维的重演，边界维数逐级升高">
+    <text x="34" y="22" class="m-txt" font-size="12">同一个模式：把「区域内部的总量」等于「它边界上的量」</text>
+    <line x1="40" y1="48" x2="40" y2="350" class="m-acc" stroke-width="1.6"></line>
+    <text x="20" y="200" class="m-sub" font-size="11" transform="rotate(-90 20 200)">边界维数升高 →</text>
+
+    <rect x="70" y="34" width="540" height="66" rx="6" class="m-panel-s"></rect>
+    <text x="86" y="56" class="m-txt" font-size="12">牛顿–莱布尼茨 · 一维</text>
+    <text x="86" y="78" class="m-math" font-size="12.5">∫_a^b f(x) dx = F(b) − F(a)</text>
+    <text x="524" y="60" class="m-sub" font-size="10.5">边界：两个端点（0 维）</text>
+
+    <rect x="70" y="112" width="540" height="66" rx="6" class="m-panel-s"></rect>
+    <text x="86" y="134" class="m-txt" font-size="12">格林 · 二维</text>
+    <text x="86" y="156" class="m-math" font-size="12.5">∮_L P dx + Q dy = ∬_D (Q_x − P_y) dσ</text>
+    <text x="524" y="138" class="m-sub" font-size="10.5">边界：闭曲线 L（1 维）</text>
+
+    <rect x="70" y="190" width="540" height="70" rx="6" class="m-panel-hi" stroke-width="1.8"></rect>
+    <text x="86" y="212" class="m-txt" font-size="12">高斯 · 三维（本讲主角）</text>
+    <text x="86" y="236" class="m-math" font-size="12.5">∯_Σ P dy dz + Q dz dx + R dx dy = ∭_Ω (P_x+Q_y+R_z) dV</text>
+    <text x="524" y="216" class="m-sub" font-size="10.5">边界：闭曲面 Σ（2 维）</text>
+
+    <rect x="70" y="272" width="540" height="80" rx="6" class="m-panel-s"></rect>
+    <text x="86" y="294" class="m-txt" font-size="12">斯托克斯 · 三维</text>
+    <text x="86" y="316" class="m-math" font-size="12">∮_Γ P dx + Q dy + R dz = ∬_Σ rot(F)·dS</text>
+    <text x="86" y="338" class="m-sub" font-size="11">边界：闭曲线 Γ（1 维）　区域：张在 Γ 上的曲面 Σ</text>
+  </svg>
+  <figcaption><b>四个公式，一条脉络。</b>牛顿–莱布尼茨把「区间」和它的「两个端点」连起来；格林把「平面区域」和它的「闭曲线边界」连起来；高斯把「立体」和它的「闭曲面边界」连起来；斯托克斯把「空间闭曲线」和它的「张成曲面」连起来。左边这条竖轴就是<strong>边界维数在逐级升高</strong>。看清这一层，高斯和斯托克斯就不再是两张需要硬背的公式，而是格林的「亲戚」。</figcaption>
+</figure>
+
+<h2 id="s3">最常见误用：曲面不封闭 → 补面</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=373">06:13</a>做题时给的曲面常常<strong>少一块</strong>。老师用可乐瓶打比方：瓶口那圈没封上，它就不是闭曲面，高斯公式不能直接用。办法是——</p>
+
+<ol class="steps">
+  <li><span class="sh">补一块。</span>把缺的那块曲面补上去，让整体变成封闭曲面（比如把瓶口用一个圆面封住）。</li>
+  <li><span class="sh">用高斯。</span>对补好的封闭曲面套高斯公式，算出「整圈」的积分。</li>
+  <li><span class="sh">再减掉。</span>把补上去那块曲面的积分单独算出来，从整圈结果里减去，就得到原来那块不完整曲面的积分。</li>
+</ol>
+
+<div class="why">
+  <span class="lbl">这步「减」为什么不是加</span>
+  <p>补面是为了凑封闭，凑出来的那块<strong>并不属于原题</strong>。所以高斯算出来的是「原题那块 + 补的那块」，要还原原题就<strong>减去</strong>补块。符号的关键在补块取的侧：为了让整圈是外侧，补块通常取与原立体一致的侧（例如顶盖取上侧），算它时方向要核对清楚。</p>
+</div>
+
+<h3 id="s4">先解决一个上手难点：P、Q、R 到底是谁</h3>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=468">07:48</a>题目往往不老实地按 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span> 的顺序给，甚至只给两个、顺序还乱。老师给了一个极好用的口诀——<strong>「少 X 少 Y 少 Z」</strong>：</p>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>微元</th><th>「少」哪个变量</th><th>对应</th><th>投影到哪个坐标面</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span></td><td>少 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi><mi>O</mi><mi>Z</mi></math></span> 面</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span></td><td>少 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Z</mi><mi>X</mi></math></span> 面</td></tr>
+      <tr><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span></td><td>少 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi></math></span></td><td><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>X</mi><mi>Y</mi></math></span> 面</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>只要把「少 X 少 Y 少 Z」刻进肌肉记忆，看见 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 就立刻知道它配 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi></math></span>、投影到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Y</mi><mi>O</mi><mi>Z</mi></math></span>，永远不会把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span> 认错。这是高斯公式做题的<strong>第一道保险</strong>。</p>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 1</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=550">09:10</a>计算 <span class="mi miwb"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∯</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mo>(</mo><mi>y</mi><mo>−</mo><mi>z</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>+</mo><mn>0</mn><mo>⋅</mo><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mo>(</mo><mi>x</mi><mo>−</mo><mi>y</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 是圆柱面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>=</mo><mn>1</mn></math></span> 被 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>3</mn></math></span> 截出的整张闭曲面，取外侧。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：先用「少 X 少 Y 少 Z」码对 PQR，再算散度</span>
+    <p>逐项对号：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 配 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mi>y</mi><mo>−</mo><mi>z</mi></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 配 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>Q</mi><mo>=</mo><mn>0</mn></math></span>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 配 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>=</mo><mi>x</mi><mo>−</mo><mi>y</mi></math></span>。于是</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>P</mi><mo>=</mo><mi>y</mi><mo>−</mo><mi>z</mi><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>Q</mi><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mi>R</mi><mo>=</mo><mi>x</mi><mo>−</mo><mi>y</mi></math></div>
+    <p>算散度：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo>=</mo><mn>0</mn></math></div>
+    <p>三者之和为零，所以三重积分整体为零：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∯</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mo>(</mo><mi>y</mi><mo>−</mo><mi>z</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>+</mo><mo>(</mo><mi>x</mi><mo>−</mo><mi>y</mi><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∭</mo><mo>Ω</mo></munder><mspace width="0.25em"></mspace><mn>0</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mn>0</mn></math></div>
+    <p><strong>要点</strong>：这道题的「巧」全在<strong>先把 PQR 的顺序码对</strong>。很多同学一看到乱序就慌，其实只要按「少 X 少 Y 少 Z」落座，剩下的只是求导求和。散度为零时，无论立体形状多复杂，答案都是 0。</p>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl">例 1 的「巧」到底巧在哪</span>
+  <p>这道题真正的教学点不是计算量，而是<strong>顺序</strong>：先靠「少 X 少 Y 少 Z」把 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span> 对号入座，再求偏导求和得到散度。一旦散度为 0，不管立体是圆柱、球还是任意形状，三重积分恒为 0。所以遇到高斯公式，<strong>第一反应是算散度</strong>——散度简单（尤其为 0）时，立体的形状、大小全都不用管，这是高斯公式最爽的地方。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 2</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=1173">19:33</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>I</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 是锥面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup></mrow></msqrt></math></span> 介于 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>0</mn></math></span> 与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 之间的侧表面，取下侧（不含顶面圆）。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：侧表面不封闭，先补上顶面圆，用高斯，再减补面</span>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 只是锥的「皮儿」侧面，缺了顶面，不封闭。补一块顶面圆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>Σ</mo><mn>1</mn></msub><mo>:</mo><mspace width="1em"></mspace><mi>z</mi><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span>，取<strong>上侧</strong>（这样 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo><mo>+</mo><msub><mo>Σ</mo><mn>1</mn></msub></math></span> 整体对外侧）。</p>
+    <p>原积分只含 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>R</mi><mo>=</mo><mi>z</mi></math></span>（<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mi>Q</mi><mo>=</mo><mn>0</mn></math></span>），散度 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo>=</mo><mn>1</mn></math></span>。对封闭曲面用高斯：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∯</mo><mrow><mo>Σ</mo><mo>+</mo><msub><mo>Σ</mo><mn>1</mn></msub></mrow></munder><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∭</mo><mo>Ω</mo></munder><mspace width="0.25em"></mspace><mn>1</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><mtext>锥体体积</mtext></math></div>
+    <p>锥体 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo><mo>=</mo><mo>{</mo><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>:</mo><mn>0</mn><mo>≤</mo><mspace width="0.25em"></mspace><mi>z</mi><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>≤</mo><mspace width="0.25em"></mspace><msup><mi>z</mi><mn>2</mn></msup><mo>}</mo></math></span>，体积</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∭</mo><mo>Ω</mo></munder><mspace width="0.25em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi><mo>=</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mspace width="0.25em"></mspace><mo>π</mo><mspace width="0.25em"></mspace><msup><mi>z</mi><mn>2</mn></msup><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+    <p>再单独算补上的顶面圆 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msub><mo>Σ</mo><mn>1</mn></msub></math></span>（上侧）：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msub><mo>Σ</mo><mn>1</mn></msub></mrow></munder><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn></mrow></munder><mspace width="0.25em"></mspace><mn>1</mn><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mo>π</mo></math></div>
+    <p>两式相减得原题：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mi>I</mi><mo>=</mo><mfrac><mrow><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac><mo>−</mo><mo>π</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+    <div class="note">
+      <span class="lbl">验证：直接投影也算同一结果</span>
+      <p>把锥面看作 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi><mo>=</mo><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup></mrow></msqrt></math></span> 在圆盘 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn></math></span> 上的图，取下侧，则</p>
+      <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∬</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mo form="prefix">−</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>≤</mo><mspace width="0.25em"></mspace><mn>1</mn></mrow></munder><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup></mrow></msqrt><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><mo form="prefix">−</mo><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mrow><mn>2</mn><mo>π</mo></mrow></munderover><munderover><mo largeop="true" movablelimits="true">∫</mo><mn>0</mn><mn>1</mn></munderover><mspace width="0.25em"></mspace><mi>r</mi><mo>⋅</mo><mspace width="0.25em"></mspace><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>r</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mo>θ</mo><mo>=</mo><mo form="prefix">−</mo><mfrac><mrow><mn>2</mn><mo>π</mo></mrow><mrow><mn>3</mn></mrow></mfrac></math></div>
+      <p>两种方法一致，说明补面时方向没搞错。<strong>补面法的精髓就是「封、算、减」三步</strong>，方向尤其要核对。</p>
+    </div>
+  </div>
+</div>
+
+<div class="why">
+  <span class="lbl">补面法的本质：借一个「壳」凑封闭</span>
+  <p>补面不是新增难度，而是<strong>「借壳凑封闭、用完再还」</strong>：原式少一块，就借一块补成闭曲面，用高斯算出整体，再减去借来那块。关键永远在「借来的那块取什么侧」——它必须和原立体配合成外侧。例 2 里顶盖取上侧，正是为了和锥面侧表面一起对外；若取反了，减出来的结果会差一个负号。把「封、算、减」三步和「侧要对」绑在一起记，补面题就稳了。</p>
+</div>
+
+<h2 id="s5">斯托克斯公式：把格林搬到空间曲线</h2>
+
+<p><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=2254">37:34</a>格林公式把「平面闭曲线积分」变成「平面区域上的二重积分」。斯托克斯（Stokes）把同样的想法搬到<strong>空间</strong>：左边是空间一条<strong>闭曲线</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 上的曲线积分，右边是「张在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 上任意一张曲面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span>」上的曲面积分。</p>
+
+<figure class="fig">
+  <svg viewBox="0 0 640 286" role="img" aria-label="右手法则：四指沿边界正向弯曲，拇指指向曲面法向；曲面取上侧时边界为逆时针">
+    <text x="34" y="22" class="m-txt" font-size="12">右手法则定正向：四指沿边界 Γ 弯曲，拇指指向有向曲面 Σ 的法向</text>
+    <ellipse cx="270" cy="160" rx="178" ry="84" class="m-area"></ellipse>
+    <ellipse cx="270" cy="160" rx="178" ry="84" fill="none" class="m-line" stroke-width="1.8"></ellipse>
+    <path d="M 270 160 L 300 96" class="m-acc" stroke-width="2.4"></path>
+    <polygon points="300,96 292,104 298,110" class="m-fill-a"></polygon>
+    <text x="306" y="100" class="m-txt" font-size="11.5">法向 n（拇指）</text>
+    <path d="M 392 132 A 150 70 0 0 0 150 132" fill="none" class="m-good" stroke-width="2.4"></path>
+    <polygon points="150,132 160,126 158,138" class="m-fill-g"></polygon>
+    <text x="300" y="118" class="m-good" font-size="11.5">Γ 正向（四指）</text>
+    <text x="40" y="282" class="m-sub" font-size="11.5">左：Σ 取上侧 → 边界逆时针为正；右：把右手翻过来，Σ 取下侧 → 边界顺时针为正</text>
+
+    <ellipse cx="540" cy="160" rx="120" ry="56" class="m-area"></ellipse>
+    <ellipse cx="540" cy="160" rx="120" ry="56" fill="none" class="m-line" stroke-width="1.8"></ellipse>
+    <path d="M 540 160 L 540 224" class="m-warn" stroke-width="2.4"></path>
+    <polygon points="540,224 535,214 545,214" class="m-fill-w"></polygon>
+    <path d="M 610 176 A 95 44 0 0 1 470 176" fill="none" class="m-vio" stroke-width="2.4"></path>
+    <polygon points="470,176 480,170 478,182" class="m-fill-a"></polygon>
+  </svg>
+  <figcaption><b>正向靠右手，不靠记忆。</b>伸出右手，让<strong>四指沿边界 Γ 弯曲的方向</strong>就是正向，此时<strong>大拇指指向的就是有向曲面 Σ 的法向</strong>。左图 Σ 取上侧（拇指朝上），四指给出逆时针边界；右图把右手翻过来，Σ 取下侧（拇指朝下），四指给出顺时针边界。所以「正向」只有一个判据：<em>满足右手法则</em>。格林公式的「区域在左手侧」其实也是同一回事在二维的版本。</figcaption>
+</figure>
+
+<div class="blk thm">
+  <span class="lbl">定理 · 斯托克斯（Stokes）公式</span>
+  <p>设 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 是<strong>分段光滑的空间有向闭曲线</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 是以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 为边界的<strong>分片光滑有向曲面</strong>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 的正向与 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 的侧满足<strong>右手法则</strong>；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span> 在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 及其边界上具有一阶连续偏导数，则</p>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mo>Γ</mo></munder><mspace width="0.25em"></mspace><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>R</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="0.25em"></mspace><mo>=</mo><mspace width="0.25em"></mspace><munder><mo largeop="true" movablelimits="true">∬</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>+</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></div>
+  <p>右端括号里的三项，正是向量场 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi><mo>)</mo></math></span> 的<strong>旋度</strong> <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>r</mi><mi>o</mi><mi>t</mi></mrow></mrow><mrow><mrow><mi>F</mi></mrow></mrow></math></span> 在三个坐标方向的分量。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=2636">43:56</a>斯托克斯怎么记：行列式</span>
+  <p>老师给了一个好记的行列式形式（展开后正是上面的旋度三项）：把第 1 行写成微元、第 2 行写偏导、第 3 行写 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span>。记忆要点还是那个老口诀——<strong><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span>、<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 缺 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span></strong>；偏导那行是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><mo>∂</mo></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>,</mo><mfrac><mrow><mo>∂</mo></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>,</mo><mfrac><mrow><mo>∂</mo></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac></math></span>；最后一行是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi></math></span>。</p>
+  <p>另外，结合本页开头的 <a href="../P097-两种曲面积分之间的联系/index.html">两种曲面积分之间的联系</a> 关系：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>S</mi></math></span> 等，斯托克斯右端还能整体写成 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∬</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mrow><mrow><mi>r</mi><mi>o</mi><mi>t</mi></mrow></mrow><mrow><mrow><mi>F</mi></mrow></mrow><mo>⋅</mo><mrow><mrow><mi>n</mi></mrow></mrow><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>S</mi></math></span>——旋度在法向上的投影累加起来。这条「向量形式」在做题时往往比展开式更好用。</p>
+  <p>展开式那六项也不是凭空来的：把行列式按第一行展开，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow></math></span>，正好是旋度的 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi></math></span> 分量；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>y</mi></math></span> 分量；<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi></math></span> 对应 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>z</mi></math></span> 分量。所以「行列式」不是花活，它就是旋度三个分量分别配三个投影微元的紧凑写法。</p>
+</div>
+
+<div class="why">
+  <span class="lbl"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=2830">47:10</a>上帝视角 / 降维</span>
+  <p>老师用了一个很形象的说法：这四个公式都是在「开挂」。牛顿–莱布尼茨只要两个端点的函数值，不用管中间过程；格林只要边界一圈，不用管区域内部；高斯只要外壳，不用管立体内部；斯托克斯把一张曲面缩成它的边界曲线。</p>
+  <p>用更数学的词叫<strong>降维</strong>：三维降成二维（高斯：立体→表面；斯托克斯：曲面→边界曲线），二维降成一维（格林：区域→边界），一维降成零维（牛顿–莱布尼茨：区间→端点）。两两之间，内部的信息被「折叠」掉，只剩下边界。这是理解全部四个公式的统一视角。</p>
+  <p>对做题的暗示也很直接：<strong>凡是能把「区域/曲面上的积分」换成「其边界上的积分」的，往往大幅简化</strong>——因为边界的维数更低、参数化更轻松。高斯把立体三重积分换成表面积分，斯托克斯把曲面积分换成一条空间曲线积分，都是这个红利。</p>
+</div>
+
+<div class="ex">
+  <p class="ex-h"><span class="n">例 3</span><span class="ex-q"><a class="vts" href="https://www.bilibili.com/video/BV1CAxaeHEeH/?p=98&amp;t=3569">59:29</a>计算 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mo>Γ</mo></munder><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi></math></span>，其中 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 是平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 与三个坐标面交出的三角形边界，取上侧对应的正向。</span></p>
+  <div class="sol">
+    <span class="lbl">思路：用斯托克斯把曲线积分变成「常旋度 × 面积」</span>
+    <p>这里 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>P</mi><mo>=</mo><mi>z</mi><mo>,</mo><mspace width="1em"></mspace><mi>Q</mi><mo>=</mo><mi>x</mi><mo>,</mo><mspace width="1em"></mspace><mi>R</mi><mo>=</mo><mi>y</mi></math></span>。先算旋度各分量：</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>−</mo><mn>0</mn><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>−</mo><mn>0</mn><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1em"></mspace><mspace width="0.25em"></mspace><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>=</mo><mn>1</mn><mo>−</mo><mn>0</mn><mo>=</mo><mn>1</mn></math></div>
+    <p>旋度是常向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span>。于是右端为</p>
+    <div class="mb"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∬</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo><mo>⋅</mo><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>,</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>S</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mo>(</mo><mi mathvariant="normal">cos</mi><mo>α</mo><mo>+</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>+</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>)</mo><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>S</mi></math></div>
+    <p>平面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>x</mi><mo>+</mo><mi>y</mi><mo>+</mo><mi>z</mi><mo>=</mo><mn>1</mn></math></span> 取上侧，单位法向量 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>n</mi></mrow></mrow><mo>=</mo><mfrac><mrow><mo>(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow><mrow><msqrt><mn>3</mn></msqrt></mrow></mfrac></math></span>，即 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi mathvariant="normal">cos</mi><mo>α</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>β</mo><mo>=</mo><mi mathvariant="normal">cos</mi><mo>γ</mo><mo>=</mo><mfrac><mn>1</mn><mrow><msqrt><mn>3</mn></msqrt></mrow></mfrac></math></span>。三项相加为 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mn>3</mn></msqrt></math></span>，与点的位置无关，提出积分号：</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mo>Γ</mo></munder><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><msqrt><mn>3</mn></msqrt><mo>⋅</mo><mtext>面积</mtext><mo>(</mo><mo>Σ</mo><mo>)</mo></math></div>
+    <p><span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 是顶点 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>)</mo><mo>,</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo><mo>,</mo><mo>(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>)</mo></math></span> 的等边三角形，边长 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><msqrt><mn>2</mn></msqrt></math></span>，面积 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mfrac><mrow><msqrt><mn>3</mn></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac></math></span>。故</p>
+    <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mo>Γ</mo></munder><mspace width="0.25em"></mspace><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><msqrt><mn>3</mn></msqrt><mo>⋅</mo><mfrac><mrow><msqrt><mn>3</mn></msqrt></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mfrac><mn>3</mn><mn>2</mn></mfrac></math></div>
+    <p><strong>要点</strong>：斯托克斯最爽的地方就在这里——<strong>旋度是常数时，答案等于「常数模长 × 曲面面积」</strong>，而且「张在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 上的曲面」可以任意选（只要边界是 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span>），因为结果只依赖边界。这道题若直接沿三条边硬算，会麻烦得多。把「能换成边界就换成边界」练成条件反射，三维积分题会顺一大截。</p>
+    <p><strong>补充</strong>：这也说明斯托克斯里的曲面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> <strong>不唯一</strong>——只要它以 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 为边界、侧满足右手法则，选哪张都给出同一结果。实战中就挑最好算的那张（本题正是平面三角形）；若硬去张一张扭曲的曲面，只会自找麻烦。</p>
+  </div>
+</div>
+
+<div class="note">
+  <span class="lbl">斯托克斯实战第一原则</span>
+  <p>公式允许「张在 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 上的曲面任意选」，这本身就是巨大的便利：实战永远挑<strong>最好算</strong>的那张（平面三角形、圆盘、球面帽），别去张扭曲面。本题选平面三角形，旋度又是常数，于是「曲面积分」退化成「常数 × 面积」，一步到位。这也呼应了前面的「降维」思想——把曲面缩成边界，信息被折叠，计算却反而更简单。</p>
+</div>
+
+<h2 id="s6">三大公式统一表</h2>
+
+<div class="tbl-wrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>公式</th><th>左边（内部）</th><th>右边（边界）</th><th>维数阶梯</th><th>方向约定</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>牛顿–莱布尼茨</td>
+        <td>区间 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo>]</mo></math></span> 上的定积分</td>
+        <td>两个端点函数值之差</td>
+        <td>1 维内部 ↔ 0 维边界</td>
+        <td>从 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>a</mi></math></span> 到 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>b</mi></math></span></td>
+      </tr>
+      <tr>
+        <td>格林</td>
+        <td>平面区域 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>D</mi></math></span> 上二重积分</td>
+        <td>闭曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mi>L</mi></math></span> 上第二类曲线积分</td>
+        <td>2 维内部 ↔ 1 维边界</td>
+        <td>正向（区域在左手侧）</td>
+      </tr>
+      <tr>
+        <td>高斯</td>
+        <td>立体 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Ω</mo></math></span> 上三重积分</td>
+        <td>闭曲面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 上第二类曲面积分</td>
+        <td>3 维内部 ↔ 2 维边界</td>
+        <td>外侧</td>
+      </tr>
+      <tr>
+        <td>斯托克斯</td>
+        <td>曲面 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Σ</mo></math></span> 上曲面积分</td>
+        <td>闭曲线 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>Γ</mo></math></span> 上第二类曲线积分</td>
+        <td>2 维曲面 ↔ 1 维边界</td>
+        <td>右手法则</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="blk trap">
+  <span class="lbl">三处最容易翻车</span>
+  <p><span class="bad">翻车一：曲面不封闭就直接套高斯。</span>先问「封了吗」；没封就补面、减补面。</p>
+  <p><span class="bad">翻车二：PQR 认错位置。</span>永远用「少 X 少 Y 少 Z」对号入座，别凭感觉。</p>
+  <p><span class="bad">翻车三：斯托克斯的正向搞反。</span>用右手法则定，不要凭「看着顺眼」。</p>
+</div>
+
+<div class="why">
+  <span class="lbl">三大公式是一家：维度阶梯</span>
+  <p>把牛顿–莱布尼茨、格林、高斯、斯托克斯排成一列，会看见一条清晰的阶梯：内部区域的维数从 0（端点）到 1（曲线）到 2（曲面）到 3（立体），对应的边界维数也同步升高。它们说的是<strong>同一句话</strong>——「把一个区域上的总量，换成它边界上的量」。格林是二维特例，高斯是三维闭曲面的特例，斯托克斯则是「三维里把曲面缩成其边界曲线」的特例。记住这层关系，四个公式就不再是四张孤立的纸，而是一张网。</p>
+</div>
+
+<div class="recall">
+  <span class="lbl">记忆入口 · 一眼回忆</span>
+
+  <h3>一句话</h3>
+  <p><strong>高斯</strong>：闭曲面（外侧）上的第二类曲面积分 = 散度的三重积分。<strong>斯托克斯</strong>：空间闭曲线积分 = 旋度的曲面积分。两者都是格林的升维亲戚。</p>
+
+  <h3>两个核心公式</h3>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∯</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>R</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∭</mo><mo>Ω</mo></munder><mrow><mo stretchy="true">(</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>P</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>x</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi></mrow><mrow><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></mrow></mfrac><mo stretchy="true">)</mo></mrow><mrow><mrow><mi>d</mi></mrow></mrow><mi>V</mi></math></div>
+  <div class="mb hl"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="texmath"><munder><mo largeop="true" movablelimits="true">∮</mo><mo>Γ</mo></munder><mspace width="0.25em"></mspace><mi>P</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>+</mo><mi>Q</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>+</mo><mi>R</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>=</mo><munder><mo largeop="true" movablelimits="true">∬</mo><mo>Σ</mo></munder><mspace width="0.25em"></mspace><mrow><mrow><mi>r</mi><mi>o</mi><mi>t</mi></mrow></mrow><mo>(</mo><mi>P</mi><mo>,</mo><mi>Q</mi><mo>,</mo><mi>R</mi><mo>)</mo><mo>⋅</mo><mrow><mrow><mi>n</mi></mrow></mrow><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>S</mi></math></div>
+
+  <h3>要背的</h3>
+  <ul class="tight">
+    <li>高斯三条件：<strong>封闭、外侧、偏导连续</strong>。</li>
+    <li>少 X 少 Y 少 Z：<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mo>→</mo><mi>P</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>z</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mo>→</mo><mi>Q</mi></math></span>，<span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mrow><mrow><mi>d</mi></mrow></mrow><mi>x</mi><mspace width="1em"></mspace><mrow><mrow><mi>d</mi></mrow></mrow><mi>y</mi><mo>→</mo><mi>R</mi></math></span>。</li>
+    <li>不封闭 → 补面、用高斯、减补面。</li>
+    <li>斯托克斯正向 = 右手法则（四指边界、拇指法向）。</li>
+  </ul>
+
+  <h3>三个坑</h3>
+  <ul class="tight">
+    <li>Σ 不封闭就套高斯 → 先补面。</li>
+    <li>PQR 顺序乱 → 用「少 X 少 Y 少 Z」落座。</li>
+    <li>散度/旋度算错符号（如 <span class="mi"><math xmlns="http://www.w3.org/1998/Math/MathML" class="texmath"><mo>∂</mo><mspace width="0.25em"></mspace><mi>R</mi><mo>/</mo><mo>∂</mo><mspace width="0.25em"></mspace><mi>y</mi><mo>−</mo><mo>∂</mo><mspace width="0.25em"></mspace><mi>Q</mi><mo>/</mo><mo>∂</mo><mspace width="0.25em"></mspace><mi>z</mi></math></span> 别写反）。</li>
+  </ul>
+</div>
+
+<div class="conn">
+  <div>
+    <div class="k">前置知识</div>
+    <ul>
+      <li><a href="../P094-格林公式&amp;积分与路径无关条件/index.html">格林公式&amp;积分与路径无关条件</a> 格林公式（二维版本，本页是它的升维）</li>
+      <li><a href="../P096-对坐标的曲面积分/index.html">对坐标的曲面积分</a> 对坐标的曲面积分（高斯公式左边）</li>
+      <li><a href="../P097-两种曲面积分之间的联系/index.html">两种曲面积分之间的联系</a> 两类曲面积分联系（斯托克斯右端的曲面积分可化为对面积）</li>
+      <li><a href="../P091-三重积分/index.html">三重积分</a> 三重积分</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">接下来</div>
+    <ul>
+      <li><a href="../P099-常数项级数的概念与性质/index.html">常数项级数的概念与性质</a> 常数项级数的概念与性质（进入全新一章）</li>
+      <li>向量场的散度与旋度（场论专门章节）</li>
+    </ul>
+  </div>
+  <div>
+    <div class="k">容易混</div>
+    <ul>
+      <li>高斯右边是<strong>三重</strong>积分、格林右边是<strong>二重</strong>积分——别把维数弄串</li>
+      <li>斯托克斯左边是<strong>曲线</strong>积分、右边是<strong>曲面</strong>积分，和格林「左右」相反</li>
+      <li>高斯要求「闭曲面外侧」，斯托克斯要求「闭曲线 + 右手法则」</li>
+    </ul>
+  </div>
+</div>
+
+  <footer class="doc-foot"><span>宋浩《高等数学》全程教学 2.0版 · 第 98 讲</span><a href="../P097-两种曲面积分之间的联系/index.html">← P097</a><a href="../index.html">全部目录</a><a href="../P099-常数项级数的概念与性质/index.html">P099 →</a></footer>
+  </article>
+  <aside class="toc">
+    <div class="toc-t">本节骨架</div>
+    <a href="#s1">先认门：Ω 是实心，Σ 是皮儿</a>
+    <a href="#s2">高斯公式</a>
+    <a href="#s3">最常见误用：曲面不封闭 → 补面</a>
+    <a class="sub" href="#s4">先解决一个上手难点：P、Q、R 到底是谁</a>
+    <a href="#s5">斯托克斯公式：把格林搬到空间曲线</a>
+    <a href="#s6">三大公式统一表</a>
+  </aside>
+</div>
+</body>
+</html>
